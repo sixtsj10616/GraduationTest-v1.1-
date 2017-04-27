@@ -1,0 +1,22 @@
+Initialize engine version: 5.4.2f2 (b7e030c65c9b)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: NVIDIA GeForce GT 640 (ID=0xfc1)
+    Vendor:   NVIDIA
+    VRAM:     2017 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+- Completed reload, in  0.054 seconds
+Platform assembly: C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\Ming\Documents\GraduationTest(beforeMerge)\20170319_Data\Managed\System.dll (this message is harmless)
+desktop: 1920x1200 59Hz; virtual: 3120x1920 at -1200,0
+<RI> Initializing input.
+<RI> Input initialized.
