@@ -13,52 +13,49 @@ public class BuildingObj : MonoBehaviour {
     public GameObject body;
     public GameObject roof;
 
+	public Vector3 platformCenter;
+	public Vector3 bodyCenter;
+	public Vector3 roofTopCenter;
 
-    //public void initFunction(Vector3 position)
-    //{
-    //    building = new GameObject("building");
-    //    building.transform.position = position;
-    //    //platform = new PlatformController();
-    //    platform = building.AddComponent<PlatformController>();
-    //    platform.InitFunction(this);
-    //    body = building.AddComponent<BodyController>();
-    //    body.InitFunction(this);
-    //    roof = building.AddComponent<RoofController>();
-    //    roof.InitFunction(this);
-    //}
+	public float buildingHeight;
 
-    public void initFunction(GameObject parent,Vector3 position,float length,float width,float height)
-    {
-        /*
-        building = new GameObject("building");
-        building.transform.position = position;
-        building.transform.parent = parent.transform;
-        platform = building.AddComponent<PlatformController>();
-        //platform.InitFunction(this);
-        platform.InitFunction(this, position, width, length, height);
-        body = building.AddComponent<BodyController>();
-        body.InitFunction(this);
-        roof = building.AddComponent<RoofController>();
-        roof.InitFunction(this);
-        */
-        building = new GameObject("building");
-        building.transform.parent = parent.transform;
-        this.transform.position = position;
-        platform = new GameObject("platform");
-        platform.transform.parent = parent.transform;
-        platform.AddComponent<PlatformController>();
-        platformController = platform.GetComponent<PlatformController>();
-        platformController.InitFunction(this, position, width, length, height);
-        body = new GameObject("body");
-        body.transform.parent = parent.transform;
-        body.AddComponent<BodyController>();
-        bodyController = body.GetComponent<BodyController>();
-        bodyController.InitFunction(this);
-        roof = new GameObject("roof");
-        roof.transform.parent = parent.transform;
-        roof.AddComponent<RoofController>();
-        roofController = roof.GetComponent<RoofController>();
-        roofController.InitFunction(this);
-    }
+	public void initFunction(GameObject building , Vector3 position, float length, float width, float height)
+	{
+		this.building=building;
+		this.building.transform.parent = building.transform;
+
+		platformCenter=position;
+
+		platform = new GameObject("platform");
+		platform.transform.parent = this.building.transform;
+
+		body = new GameObject("body");
+		body.transform.parent = this.building.transform;
+
+		roof = new GameObject("roof");
+		roof.transform.parent = this.building.transform;
+
+		platformController = building.AddComponent<PlatformController>();
+		bodyController = building.AddComponent<BodyController>();
+		roofController = building.AddComponent<RoofController>();
+
+		platformController.InitFunction(this, platformCenter, width, length, height);
+		bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, width, length);
+		roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), bodyController.eaveColumnHeight, bodyController.eaveColumnHeight);
+
+		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter);
+	}
+	public void ResetRoofFunction(int roofType=2)
+	{
+		Destroy(roof);
+
+		roof = new GameObject("roof");
+		roof.transform.parent = this.building.transform;
+
+		roofController.SetRoofType(roofType);
+		roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), bodyController.eaveColumnHeight, roofController.allJijaHeight);
+
+		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter);
+	}
 
 }
