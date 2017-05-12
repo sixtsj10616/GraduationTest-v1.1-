@@ -17,7 +17,7 @@ public class BuildingObj : MonoBehaviour {
 	public Vector3 bodyCenter;
 	public Vector3 roofTopCenter;
 
-	public float buildingHeight;
+	public float buildingHeight;                //建築(樓層)高度
 
 	public void initFunction(GameObject building , Vector3 position, float length, float width, float height)
 	{

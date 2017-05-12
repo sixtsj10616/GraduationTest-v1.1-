@@ -84,6 +84,7 @@ public class MainController : Singleton<MainController>
     {
 		float tmpFloorHeight = Buildings[selectFloor].buildingHeight;
 		int roofType = (int)Buildings[selectFloor].roofController.roofType;
+
 		Destroy(Buildings[selectFloor].gameObject);
         Buildings.RemoveAt(selectFloor);
         for (int iIndex = floor; iIndex < Buildings.Count; iIndex++)
@@ -92,7 +93,10 @@ public class MainController : Singleton<MainController>
         }
         selectFloor = floor - 1;
 
-		if (selectFloor == Buildings.Count - 1) Buildings[selectFloor].ResetRoofFunction(roofType);
+        if (selectFloor == Buildings.Count - 1)
+        {
+            Buildings[selectFloor].ResetRoofFunction(roofType);
+        }
     }
 
     /**
