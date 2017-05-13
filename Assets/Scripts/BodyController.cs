@@ -23,37 +23,37 @@ public class BodyController : MonoBehaviour
 	public float goldColumnRatio2platformOffset;
 
 	public int goldColumnbayNumber = 3;//間數量
-	public int eaveColumnbayNumber = 5;
+	public int eaveColumnbayNumber = 3;
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
-	public float eaveColumnRadius = 1f;
-	public float goldColumnRadius = 1f;
+	public float eaveColumnRadius=1;
+	public float goldColumnRadius =1;
 	public float columnFundationHeight;//柱礎高度
 	public float columnFundationRadius;//柱礎半徑
 	//**********************************************************************************
-	public float friezeWidth;//裝飾物長度
-	public float balustradeWidth;//欄杆長度
+	public float friezeWidth=1.2f;//裝飾物長度
+	public float balustradeWidth = 1.2f;//欄杆長度
 	//***********************************************************************
 	public List<ColumnStruct> eaveColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> goldColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> eaveCornerColumnList = new List<ColumnStruct>();
 	//***********************************************************************
 
-	public void InitFunction(BuildingObj parentObj, List<Vector3> bottomPosList,float platformFrontWidth, float platformHeight)
+	public void InitFunction(BuildingObj parentObj, List<Vector3> bottomPosList, float platformFrontWidth, float platformHeight, float eaveColumnHeight, float goldColumnHeight)
 	{
 		//初始值******************************************************************************
 
 		this.parentObj = parentObj;
-		eaveColumnHeight = eaveColumnRadius * 11;
-		goldColumnHeight = eaveColumnRadius * 11;
+		this.eaveColumnHeight = eaveColumnHeight;
+		this.goldColumnHeight = goldColumnHeight;
 
 		columnFundationHeight = eaveColumnHeight * 0.05f;
 		columnFundationRadius = eaveColumnRadius*1.2f;
 
-		eaveColumnRatio2platformOffset = (platformFrontWidth * 0.1f);
-		goldColumnRatio2platformOffset = eaveColumnRatio2platformOffset * 2.5f;
+		eaveColumnRatio2platformOffset = 1;
+		goldColumnRatio2platformOffset = 5;
 
-		parentObj.bodyCenter = parentObj.platformCenter + new Vector3(0, platformHeight / 2.0f + eaveColumnHeight / 2.0f, 0);
+		parentObj.bodyCenter = parentObj.platformCenter + (platformHeight / 2.0f + eaveColumnHeight / 2.0f) * Vector3.up;
 
 		//**************************************************************************************
 		switch (bodyType)
@@ -67,8 +67,9 @@ public class BodyController : MonoBehaviour
 				}
 				if (eaveColumnList.Count > 0) 
 				{
-					CreateRingFrieze(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.8f * eaveColumnHeight);
-					CreateRingBalustrade(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, -0.8f * eaveColumnHeight);
+				Debug.Log("zzzz");
+					CreateRingFrieze(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.9f * eaveColumnHeight);
+					CreateRingBalustrade(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.1f * eaveColumnHeight);
 				}
 				break;
 			#endregion
@@ -100,10 +101,6 @@ public class BodyController : MonoBehaviour
 			posList.Add((columnStructList[i].bottomPos + columnStructList[i].topPos)/2.0f);
 		}
 		return posList;
-	}
-    public void UpdateFunction()
-	{
-
 	}
 	private ColumnStruct CreateColumn(GameObject parentObj, Vector3 pos, float topRadius, float downRadius, float height, float fundationRadius, float fundationHeight, string name = "Column")
 	{
@@ -141,11 +138,11 @@ public class BodyController : MonoBehaviour
 
 		return columnStruct;
 	}
-	public Vector3 mutiplyVector3(Vector3 a,Vector3 b)
+	private Vector3 mutiplyVector3(Vector3 a,Vector3 b)
 	{
 		return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
 	}
-	public List<ColumnStruct> CreateRingColumn(GameObject parentObj, List<Vector3> posList, float columnTopRadius, float columnDownRadius, float columnHeight,float fundationRadius,float fundationHeight, string columnName) 
+	private List<ColumnStruct> CreateRingColumn(GameObject parentObj, List<Vector3> posList, float columnTopRadius, float columnDownRadius, float columnHeight, float fundationRadius, float fundationHeight, string columnName) 
 	{
 		List<ColumnStruct> columnList = new List<ColumnStruct>();
 		for (int i = 0; i < posList.Count; i++)
@@ -155,7 +152,7 @@ public class BodyController : MonoBehaviour
 		}
 		return columnList;
 	}
-	public void CreateBody(List<Vector3> posList,Vector3 bodyCenter)
+	private void CreateBody(List<Vector3> posList, Vector3 bodyCenter)
 	{
 		List<Vector3> eaveColumnPosList = new List<Vector3>();
 		List<Vector3> goldColumnPosList = new List<Vector3>();
@@ -199,7 +196,7 @@ public class BodyController : MonoBehaviour
 		}
 		
 	}
-	public void CreateRingWall(List<Vector3> columnList,float columnRadius,int bayNumber)
+	private void CreateRingWall(List<Vector3> columnList, float columnRadius, int bayNumber)
 	{
 		for (int i = 0; i < columnList.Count; i++)
 		{
@@ -222,11 +219,12 @@ public class BodyController : MonoBehaviour
 
 		}
 	}
-	public void CreateRingFrieze(ModelController modelController, List<Vector3> columnList, float columnRadius, float heightOffset)
+	private void CreateRingFrieze(ModelController modelController, List<Vector3> columnList, float columnRadius, float heightOffset)
 	{
 
 		for (int i = 0; i < columnList.Count; i++)
 		{
+		Debug.Log("zzz");
 			float width = friezeWidth;
 			float dis = Vector3.Distance(columnList[i], columnList[(i + 1) % columnList.Count]) - columnRadius * 2;
 			float number = Mathf.FloorToInt(dis / width);
@@ -246,7 +244,7 @@ public class BodyController : MonoBehaviour
 			}
 		}
 	}
-	public void CreateRingBalustrade(ModelController modelController, List<Vector3> columnList, float columnRadius, float heightOffset)
+	private void CreateRingBalustrade(ModelController modelController, List<Vector3> columnList, float columnRadius, float heightOffset)
 	{
 		for (int i = 0; i < columnList.Count; i++)
 		{

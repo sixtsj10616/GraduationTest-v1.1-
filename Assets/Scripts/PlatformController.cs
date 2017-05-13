@@ -7,6 +7,8 @@ public class PlatFormStruct
 	public List<Vector3> topPointPosList = new List<Vector3>();
 	public List<Vector3> bottomPointPosList = new List<Vector3>();
 	public List<Vector3> stairPosList = new List<Vector3>();
+
+	public List<GameObject> stairList = new List<GameObject>();
 }
 public class PlatformController : MonoBehaviour
 {
@@ -14,9 +16,9 @@ public class PlatformController : MonoBehaviour
 	public BuildingObj parentObj = null;
 	//Platform**************************************************************************
 	public enum PlatformType { };
-	public float platformFrontWidth = 50;
-	public float platformFrontLength = 50;
-	public float platformHeight = 3;
+	public float platformFrontWidth;
+	public float platformFrontLength;
+	public float platformHeight;
 
 	//Stair**************************************************************************
 	public float stairWidth = 10;
@@ -24,7 +26,7 @@ public class PlatformController : MonoBehaviour
 	public float stairLength = 5;
 	//**********************************************************************************
 	public bool isCurvePlatform = false;
-    public bool isStair = true;
+    public bool isStair = false;
     //***********************************************************************
 	public PlatFormStruct platFormStruct;
 
@@ -35,17 +37,32 @@ public class PlatformController : MonoBehaviour
         this.platformFrontLength = platformFrontLength;
         this.platformHeight = platformHeight;
 		stairHeight = platformHeight;
+
+		parentObj.platformCenter = platformCenter;
         //***********************************************************************
 		 platFormStruct = CreatePlatform(parentObj.platform, platformCenter);
-	
 		//***********************************************************************
-
-        if (isStair)
-        {
-			CreateRingStair(parentObj.platform, platFormStruct.stairPosList, platFormStruct.facadeDir, stairWidth, stairHeight, stairLength);
-        }
     }
-	public PlatFormStruct CreatePlatform(GameObject parentObj, Vector3 pos)
+	public void SetStair(bool isStair) 
+	{
+		if (isStair)
+		{
+			platFormStruct.stairList = CreateRingStair(parentObj.platform, platFormStruct.stairPosList, platFormStruct.facadeDir, stairWidth, stairHeight, stairLength);
+		}
+		else 
+		{
+			if (platFormStruct.stairList.Count>0)
+			{
+				for(int i=0;i<platFormStruct.stairList.Count;i++)
+				{
+					Destroy(platFormStruct.stairList[i]);
+				}
+				platFormStruct.stairList.Clear();
+			}
+		}
+	
+	}
+	private PlatFormStruct CreatePlatform(GameObject parentObj, Vector3 pos)
 	{
 
 		PlatFormStruct platFormStruct=new PlatFormStruct();
@@ -109,7 +126,7 @@ public class PlatformController : MonoBehaviour
 		}
 		return platFormStruct;
 	}
-	public void CreateStair(GameObject parentObj, Vector3 pos,Vector3 dir, float width, float height, float length)
+	private GameObject CreateStair(GameObject parentObj, Vector3 pos, Vector3 dir, float width, float height, float length)
 	{
         GameObject stair = new GameObject("Stair");
 		stair.transform.parent = parentObj.transform;
@@ -119,12 +136,16 @@ public class PlatformController : MonoBehaviour
  
         float rotateAngle = (Vector3.Dot(Vector3.right, dir) > 0 ? 1 : -1) * Vector3.Angle(dir, Vector3.forward);
         MeshCenter.Instance.CreateStairMesh(pos, width, height, length, rotateAngle, meshFilter);
+
+		return stair;
     }
-	public void CreateRingStair(GameObject parentObj, List<Vector3> posList, List<Vector3> dirList, float stairWidth, float stairHeight, float stairLength)
+	private List<GameObject> CreateRingStair(GameObject parentObj, List<Vector3> posList, List<Vector3> dirList, float stairWidth, float stairHeight, float stairLength)
 	{
+		List<GameObject> stairList=new List<GameObject>();
 		for (int i = 0; i < (int)MainController.Instance.sides; i++)
 		{
-			CreateStair(parentObj, posList[i] + platFormStruct.facadeDir[i] * stairLength / 2.0f, dirList[i], stairWidth, stairHeight, stairLength);
+			stairList.Add(CreateStair(parentObj, posList[i] + platFormStruct.facadeDir[i] * stairLength / 2.0f, dirList[i], stairWidth, stairHeight, stairLength));
 		}
+		return stairList;
 	}
 }
