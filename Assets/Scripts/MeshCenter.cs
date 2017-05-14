@@ -41,55 +41,55 @@ public class MeshCenter : Singleton<MeshCenter> {
         mesh.Clear();
 
         #region Vertices
-        Vector3 p0 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, -height * .5f, length * .5f) + centerPos;
-        Vector3 p1 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, -height * .5f, length * .5f) + centerPos;
-        Vector3 p2 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, -height * .5f, -length * .5f) + centerPos;
-        Vector3 p3 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, -height * .5f, -length * .5f) + centerPos;
+        Vector3 p1 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, -height * .5f, -length * .5f) + centerPos;
+        Vector3 p0 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, -height * .5f, -length * .5f) + centerPos;
+        Vector3 p3 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, -height * .5f, length * .5f) + centerPos;
+        Vector3 p2 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, -height * .5f, length * .5f) + centerPos;
 
-        Vector3 p4 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, height * .5f, length * .5f) + centerPos;
-        Vector3 p5 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, height * .5f, length * .5f) + centerPos;
-        Vector3 p6 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, height * .5f, -length * .5f) + centerPos;
-        Vector3 p7 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, height * .5f, -length * .5f) + centerPos;
+        Vector3 p5 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, height * .5f, -length * .5f) + centerPos;
+        Vector3 p4 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, height * .5f, -length * .5f) + centerPos;
+        Vector3 p7 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(-width * .5f, height * .5f, length * .5f) + centerPos;
+        Vector3 p6 = Quaternion.AngleAxis(rotateAngle, Vector3.up) * new Vector3(width * .5f, height * .5f, length * .5f) + centerPos;
 
 
 
         controlPointPosList.Add(p0);
         controlPointPosList.Add(p1);
-        controlPointPosList.Add(p2);
-        controlPointPosList.Add(p3);
+		controlPointPosList.Add(p2);
+		controlPointPosList.Add(p3);
 
-        controlPointPosList.Add(p7);
-        controlPointPosList.Add(p6);
-        controlPointPosList.Add(p5);
         controlPointPosList.Add(p4);
+        controlPointPosList.Add(p5);
+        controlPointPosList.Add(p6);
+        controlPointPosList.Add(p7);
 
         Vector3[] vertices = new Vector3[]
         {
 			// Bottom
-			p0, p1, p2, p3,
+			 p1,p0,  p3,p2,
  
 			// Left
-			p7, p4, p0, p3,
+			 p4,p7,  p3,p0,
  
 			// Front
-			p4, p5, p1, p0,
+			 p5, p4, p0,p1,
  
 			// Back
-			p6, p7, p3, p2,
+			 p7, p6, p2,p3,
  
 			// Right
-			p5, p6, p2, p1,
+			 p6,p5,  p1,p2,
  
 			// Top
-			p7, p6, p5, p4
+			 p6,p7,p4,p5
         };
         #endregion
 
         #region Normales
         Vector3 up = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.up;
         Vector3 down = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.down;
-        Vector3 front = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.forward;
-        Vector3 back = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.back;
+        Vector3 front = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.back;
+        Vector3 back = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.forward;
         Vector3 left = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.left;
         Vector3 right = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Vector3.right;
 
@@ -124,22 +124,22 @@ public class MeshCenter : Singleton<MeshCenter> {
         Vector2[] uvs = new Vector2[]
         {
 			// Bottom
-			_11, _01, _00, _10,
+			 _01,_11,  _10,_00,
  
 			// Left
-			_11, _01, _00, _10,
+			 _01, _11, _10,_00,
  
 			// Front
-			_11, _01, _00, _10,
+			 _01,_11,  _10,_00,
  
 			// Back
-			_11, _01, _00, _10,
+			 _01, _11, _10,_00,
  
 			// Right
-			_11, _01, _00, _10,
+			 _01,_11,  _10,_00,
  
 			// Top
-			_11, _01, _00, _10,
+			 _01, _11, _10,_00,
         };
         #endregion
 
@@ -631,15 +631,15 @@ public class MeshCenter : Singleton<MeshCenter> {
         // Left cap
         for (int i = 0; i < nbSides; i++)
         {
-            normales[i + vert] = Vector3.right;
-            normales[i + vert + nbSides] = -Vector3.right;
+            normales[i + vert] = Vector3.left;
+			normales[i + vert + nbSides] = -Vector3.left;
         }
         vert += nbSides * 2;
         // Right cap
         for (int i = 0; i < nbSides; i++)
         {
-            normales[i + vert] = Vector3.left;
-            normales[i + vert + nbSides] = -Vector3.left;
+			normales[i + vert] = Vector3.right;
+			normales[i + vert + nbSides] = -Vector3.right;
         }
         vert += nbSides * 2;
         // Front cap
@@ -648,7 +648,7 @@ public class MeshCenter : Singleton<MeshCenter> {
             Vector3 nor = Vector3.Cross(vertices[nbSides * j + 1 + vert] - vertices[nbSides * j + vert], vertices[nbSides * j + 2 + vert] - vertices[nbSides * j + vert]).normalized;
             for (int i = 0; i < nbSides; i++)
             {
-                normales[i + nbSides * j + vert] = -nor;
+                normales[i + nbSides * j + vert] = nor;
             }
         }
         vert += nbSides * 4;

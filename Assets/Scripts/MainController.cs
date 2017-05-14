@@ -23,8 +23,11 @@ public class MainController : Singleton<MainController>
     //FormFactor***********************************************************************
     public enum FormFactorSideType { ThreeSide = 3, FourSide = 4, FiveSide = 5, SixSide = 6, EightSide = 8 };
     public FormFactorSideType sides = FormFactorSideType.ThreeSide;
+
+	public enum RoofType { Zan_Jian_Ding = 0, Wu_Dian_Ding = 1, Lu_Ding = 2, Juan_Peng = 3, Shya_Shan_Ding = 4 };//Zan_Jian_Ding攢尖頂, Wu_Dian_Ding廡殿頂,Lu_Ding盝頂,Juan_Peng卷棚
+	public RoofType roofType = RoofType.Zan_Jian_Ding;
     //**********************************************************************************
-	public float initPlatformWidth=50;
+	public float initPlatformWidth=40;
 	public float initPlatformLength = 50;
 	public float initPlatformHeight = 1;
 	public float initEaveColumnHeight=11;
@@ -34,6 +37,8 @@ public class MainController : Singleton<MainController>
 	public float initMainRidgeHeightOffset = -6;
 	public float initAllJijaHeight_DownStair;
 	public float initMainRidgeHeightOffset_DownStair;
+
+	public float floorScaleRatio=0.9f;
     // Use this for initialization
 
     private void Awake()
@@ -62,11 +67,12 @@ public class MainController : Singleton<MainController>
     public void InitFunction()
     {
 		initAllJijaHeight_DownStair = initAllJijaHeight/3.0f;
-		initMainRidgeHeightOffset_DownStair = initMainRidgeHeightOffset/3.0f;
+		//?????這著值不能亂取
+		initMainRidgeHeightOffset_DownStair = initMainRidgeHeightOffset * (1.0f-floorScaleRatio);
 
        GameObject building = new GameObject("building");
 	   building.gameObject.AddComponent<BuildingObj>();
-	   building.GetComponent<BuildingObj>().initFunction(building, Vector3.zero, initPlatformLength, initPlatformWidth, initPlatformHeight, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset, initAllJijaHeight);
+	   building.GetComponent<BuildingObj>().initFunction(building, Vector3.zero, initPlatformLength, initPlatformWidth, initPlatformHeight, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset, initAllJijaHeight, null, false,(int)roofType);
 	   Buildings.Add(building.GetComponent<BuildingObj>());
     }
     /**
@@ -79,10 +85,6 @@ public class MainController : Singleton<MainController>
 			selectFloor++;
 			GameObject newBuilding = new GameObject("building" + Buildings.Count);
 
-			Buildings[selectFloor - 1].ResetRoofFunction(initMainRidgeHeightOffset_DownStair,initAllJijaHeight_DownStair);
-
-			Vector3 nowTopPosition = Buildings[selectFloor - 1].GetComponent<BuildingObj>().roofTopCenter;
-
 			newBuilding.AddComponent<BuildingObj>();
 			Buildings.Insert(selectFloor, newBuilding.GetComponent<BuildingObj>());
 			//UpdatePosition
@@ -90,11 +92,25 @@ public class MainController : Singleton<MainController>
 			{
 				Buildings[iIndex].BuildingMove(Buildings[selectFloor - 1].buildingHeight * Vector3.up);
 			}
-			newBuilding.GetComponent<BuildingObj>().initFunction(newBuilding, nowTopPosition + (initPlatformHeight / 2.0f) * Vector3.up, initPlatformLength * Mathf.Pow(0.9f, Buildings.Count), initPlatformWidth * Mathf.Pow(0.9f, Buildings.Count), initPlatformHeight * Mathf.Pow(0.9f, Buildings.Count), initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset, initAllJijaHeight);
+			newBuilding.GetComponent<BuildingObj>().initFunction(newBuilding, Buildings[selectFloor - 1].roofTopCenter - (initAllJijaHeight-initAllJijaHeight_DownStair)*Vector3.up, initPlatformLength * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformWidth * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformHeight * Mathf.Pow(floorScaleRatio, selectFloor), initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset, initAllJijaHeight, null, false, (int)roofType);
+
+			Buildings[selectFloor - 1].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, 2);
 		}
 		else //select處插入一層盝頂
-		{ 
-		
+		{
+		//錯誤
+			GameObject newBuilding = new GameObject("building" + Buildings.Count);
+			newBuilding.AddComponent<BuildingObj>();
+
+			newBuilding.GetComponent<BuildingObj>().initFunction(newBuilding, Buildings[selectFloor - 1].roofTopCenter, initPlatformLength * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformWidth * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformHeight * Mathf.Pow(floorScaleRatio, selectFloor), initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor].GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
+			//UpdatePosition
+			for (int iIndex = selectFloor; iIndex < Buildings.Count; iIndex++)
+			{
+				Buildings[iIndex].BuildingMove(Buildings[selectFloor].buildingHeight * Vector3.up);
+			}
+			Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
+
+			Buildings.Insert(selectFloor, newBuilding.GetComponent<BuildingObj>());
 		}
 
 
@@ -118,7 +134,7 @@ public class MainController : Singleton<MainController>
 
         if (selectFloor == Buildings.Count - 1)
         {
-			Buildings[selectFloor].ResetRoofFunction(mainRidgeHeightOffset, allJijaHeight, roofType);
+			Buildings[selectFloor].ResetRoofFunction(mainRidgeHeightOffset, allJijaHeight,null, false, roofType);
         }
     }
 

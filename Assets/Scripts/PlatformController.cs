@@ -43,6 +43,21 @@ public class PlatformController : MonoBehaviour
 		 platFormStruct = CreatePlatform(parentObj.platform, platformCenter);
 		//***********************************************************************
     }
+	public void MoveValueUpdate(Vector3 offset)
+	{
+		for (int i = 0; i < platFormStruct.bottomPointPosList.Count; i++)
+		{
+			platFormStruct.bottomPointPosList[i] += offset;
+		}
+		for (int i = 0; i < platFormStruct.topPointPosList.Count; i++)
+		{
+			platFormStruct.topPointPosList[i] += offset;
+		}
+		for (int i = 0; i < platFormStruct.stairPosList.Count; i++)
+		{
+			platFormStruct.stairPosList[i] += offset;
+		}
+	}
 	public void SetStair(bool isStair) 
 	{
 		if (isStair)
@@ -62,14 +77,22 @@ public class PlatformController : MonoBehaviour
 		}
 	
 	}
-	private PlatFormStruct CreatePlatform(GameObject parentObj, Vector3 pos)
+	void ShowPos(Vector3 pos, GameObject parent, Color color, float localScale = 0.2f)
+	{
+		GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		obj.transform.position = pos;
+		obj.transform.parent = parent.transform;
+		obj.transform.localScale = Vector3.one * localScale;
+		obj.GetComponent<MeshRenderer>().material.color = color;
+	}
+	private PlatFormStruct CreatePlatform(GameObject parent, Vector3 pos)
 	{
 
 		PlatFormStruct platFormStruct=new PlatFormStruct();
 
 		GameObject platformBody = new GameObject("PlatformBody");
 		//platformBody.transform.position = pos;
-		platformBody.transform.parent = parentObj.transform;
+		platformBody.transform.parent = parent.transform;
 		MeshFilter meshFilter = platformBody.AddComponent<MeshFilter>();
 		MeshRenderer meshRenderer = platformBody.AddComponent<MeshRenderer>();
 		meshRenderer.material.color = Color.white;
@@ -111,6 +134,9 @@ public class PlatformController : MonoBehaviour
 			platFormStruct.bottomPointPosList.Add(controlPointPosList[i]);
 			platFormStruct.topPointPosList.Add(controlPointPosList[(controlPointPosList.Count - 1) - ((int)(MainController.Instance.sides - 1)) + i]);
 		}
+		ShowPos(platFormStruct.bottomPointPosList[0], platformBody, Color.black, 1.0f);
+		ShowPos(platFormStruct.bottomPointPosList[1], platformBody, Color.red, 1.0f);
+		ShowPos(platFormStruct.bottomPointPosList[2], platformBody, Color.yellow, 1.0f);
 		//計算facadeDir與stair位置
 		platFormStruct.facadeDir.Clear();
 		platFormStruct.stairPosList.Clear();

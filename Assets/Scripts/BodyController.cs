@@ -38,7 +38,6 @@ public class BodyController : MonoBehaviour
 	public List<ColumnStruct> goldColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> eaveCornerColumnList = new List<ColumnStruct>();
 	//***********************************************************************
-
 	public void InitFunction(BuildingObj parentObj, List<Vector3> bottomPosList, float platformFrontWidth, float platformHeight, float eaveColumnHeight, float goldColumnHeight)
 	{
 		//初始值******************************************************************************
@@ -50,8 +49,8 @@ public class BodyController : MonoBehaviour
 		columnFundationHeight = eaveColumnHeight * 0.05f;
 		columnFundationRadius = eaveColumnRadius*1.2f;
 
-		eaveColumnRatio2platformOffset = 1;
-		goldColumnRatio2platformOffset = 5;
+		eaveColumnRatio2platformOffset = platformFrontWidth*0.1f;
+		goldColumnRatio2platformOffset = platformFrontWidth * 0.2f;
 
 		parentObj.bodyCenter = parentObj.platformCenter + (platformHeight / 2.0f + eaveColumnHeight / 2.0f) * Vector3.up;
 
@@ -73,6 +72,24 @@ public class BodyController : MonoBehaviour
 				}
 				break;
 			#endregion
+		}
+	}
+	public void MoveValueUpdate(Vector3 offset) 
+	{ 
+		for(int i=0;i<eaveColumnList.Count;i++)
+		{
+			eaveColumnList[i].topPos += offset;
+			eaveColumnList[i].bottomPos += offset;
+		}
+		for (int i = 0; i < goldColumnList.Count; i++)
+		{
+			goldColumnList[i].topPos += offset;
+			goldColumnList[i].bottomPos += offset;
+		}
+		for (int i = 0; i < eaveCornerColumnList.Count; i++)
+		{
+			eaveCornerColumnList[i].topPos += offset;
+			eaveCornerColumnList[i].bottomPos += offset;
 		}
 	}
 	public List<Vector3> GetColumnStructTopPosList(List<ColumnStruct> columnStructList) 
