@@ -29,7 +29,6 @@ public class PlatformController : MonoBehaviour
     public bool isStair = false;
     //***********************************************************************
 	public PlatFormStruct platFormStruct;
-
     public void InitFunction(BuildingObj parentObj,Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight )
     {
 		this.parentObj = parentObj;

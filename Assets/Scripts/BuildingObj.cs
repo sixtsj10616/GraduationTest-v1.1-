@@ -52,15 +52,17 @@ public class BuildingObj : MonoBehaviour {
 		bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
 		roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);
 
-		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter);
+		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platHeight/2.0f;
+	
 	}
 	public void ResetRoofFunction(float mainRidgeHeightOffset, float allJijaHeight ,List<Vector3> topFloorBorderList,bool isDownFoloor,int roofType)
 	{
 		if (roof!=null) Destroy(roof);
 		roof = new GameObject("roof");
 		roof.transform.parent = this.building.transform;
-		roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platformController.platformFrontWidth, bodyController.eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);
+		roofController.InitFunction(this, this.bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platformController.platformFrontWidth, bodyController.eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);
 
-		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter);
+		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platformHeight/2.0f;
+		Debug.Log("buildingHeight" + buildingHeight);
 	}
 }

@@ -66,7 +66,6 @@ public class BodyController : MonoBehaviour
 				}
 				if (eaveColumnList.Count > 0) 
 				{
-				Debug.Log("zzzz");
 					CreateRingFrieze(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.9f * eaveColumnHeight);
 					CreateRingBalustrade(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.1f * eaveColumnHeight);
 				}
@@ -74,13 +73,15 @@ public class BodyController : MonoBehaviour
 			#endregion
 		}
 	}
+	//?????????????????????????????不用更新
 	public void MoveValueUpdate(Vector3 offset) 
 	{ 
 		for(int i=0;i<eaveColumnList.Count;i++)
 		{
-			eaveColumnList[i].topPos += offset;
-			eaveColumnList[i].bottomPos += offset;
+			//eaveColumnList[i].topPos += offset;
+			//eaveColumnList[i].bottomPos += offset;
 		}
+		Debug.Log("eaveColumnList[0].bottomPos :" + eaveColumnList[0].bottomPos);
 		for (int i = 0; i < goldColumnList.Count; i++)
 		{
 			goldColumnList[i].topPos += offset;
@@ -241,7 +242,6 @@ public class BodyController : MonoBehaviour
 
 		for (int i = 0; i < columnList.Count; i++)
 		{
-		Debug.Log("zzz");
 			float width = friezeWidth;
 			float dis = Vector3.Distance(columnList[i], columnList[(i + 1) % columnList.Count]) - columnRadius * 2;
 			float number = Mathf.FloorToInt(dis / width);

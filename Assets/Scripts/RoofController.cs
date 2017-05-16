@@ -218,6 +218,7 @@ public class RoofController : MonoBehaviour
 	float anchorDis = 0f;//曲線innerPoint換算anchorPoint間距
 	public bool isDownFloor;
 	//******************************************************************************************
+
 	public void InitFunction(BuildingObj parentObj, List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList, float platformWidth, float columnHeight, float mainRidgeHeightOffset, float allJijaHeight, bool isDownFloor,int roofType)
 	{
 		//初始值******************************************************************************
@@ -778,6 +779,7 @@ public class RoofController : MonoBehaviour
 		GameObject midLControlPoint = CreateControlPoint(newRidgeStruct.body, midLControlPointPos, EaveControlPointType.MidLControlPoint.ToString());
 		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidLControlPoint.ToString(), midLControlPoint);
 
+
 		newRidgeStruct.ridgeCatLine.controlPointList.Add(startControlPoint);
 		newRidgeStruct.ridgeCatLine.controlPointList.Add(midRControlPoint);
 		newRidgeStruct.ridgeCatLine.controlPointList.Add(midControlPoint);
@@ -914,6 +916,9 @@ public class RoofController : MonoBehaviour
 		roofSurfaceMidPointLineA.SetLineNumberOfPoints(1000);
 		roofSurfaceMidPointLineA.SetCatmullRom(anchorDis, 1);
 
+		ShowPos(midRoofSurfaceMidPointPos, newMidRidgeStruct.body, Color.green, 1.0f);
+		ShowPos(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()].transform.position, newMidRidgeStruct.body, Color.green, 1.0f);
+		ShowPos(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()].transform.position, newMidRidgeStruct.body, Color.green, 1.0f);
 		// 		for (int f = 0; f < roofSurfaceMidPointLine.anchorInnerPointlist.Count; f++)
 		// 		{
 		// 			ShowPos(roofSurfaceMidPointLine.anchorInnerPointlist[f], newMidRidgeStruct.body, Color.green, 0.1f);
@@ -959,11 +964,11 @@ public class RoofController : MonoBehaviour
 
 			//*** (舊)屋頂表面放置瓦片用脊的中點，依照比例取半圓取線與切平面焦點位置 + 瓦片用脊上下兩點之中點位置
 			//*** 屋頂表面放置瓦片用脊的中點，只用全屋簷中間點曲線
-			roofSurfaceTileRidgeMidPointPos = (roofSurfaceMidPointLineA.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R_A]);
-
+			//roofSurfaceTileRidgeMidPointPos = (roofSurfaceMidPointLine.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R_A]);
+			roofSurfaceTileRidgeMidPointPos = (roofSurfaceTileRidgeUpPointPos + roofSurfaceTileRidgeDownPointPos)/2.0f;
 			//*** 調整(感覺怪怪) 瓦片用脊的中點Y座標，依照比例取半圓曲線與切平面焦點位置 + 全屋簷中間點曲線與切平面焦點位置 + 瓦片用脊上下兩點之中點位置
-			//roofSurfaceTileRidgeMidPointPos = roofSurfaceMidPointLine.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R]* (1.0f - ratioA) + ((roofSurfaceTileRidgeUpPointPos + roofSurfaceTileRidgeDownPointPos) / 2.0f) * ratioA;
-			roofSurfaceTileRidgeMidPointPos.y = (roofSurfaceMidPointLine.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R].y * (1.0f - ratioA) + roofSurfaceMidPointLineA.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R_A].y * ratioA) * (1.0f - ratioA) + ((roofSurfaceTileRidgeUpPointPos.y + roofSurfaceTileRidgeDownPointPos.y) / 2.0f) * ratioA;
+			roofSurfaceTileRidgeMidPointPos.y = roofSurfaceMidPointLineA.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R].y* (1.0f - ratioA) + ((roofSurfaceTileRidgeUpPointPos.y + roofSurfaceTileRidgeDownPointPos.y) / 2.0f) * ratioA;
+			//roofSurfaceTileRidgeMidPointPos.y = (roofSurfaceMidPointLine.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R].y * (1.0f - ratioA) + roofSurfaceMidPointLineA.anchorInnerPointlist[roofSurfaceMidPointStartingIndex_R_A].y * ratioA) * (1.0f - ratioA) + ((roofSurfaceTileRidgeUpPointPos.y + roofSurfaceTileRidgeDownPointPos.y) / 2.0f) * ratioA;
 
 
 			//觀察用
@@ -1557,7 +1562,7 @@ public class RoofController : MonoBehaviour
 				{
 				List<RidgeStruct> MainRidgeList = new List<RidgeStruct>();      //** 主脊列表
 				List<Vector3> VerRidgeBotPosList = new List<Vector3>();         //** 垂脊下方控制點點列表
-				List<Vector3> DownCtrlPointPosList = new List<Vector3>();       //** 垂脊下方控制點點列表
+				List<Vector3> DownCtrlPointPosList = new List<Vector3>();       //** 戧脊下方控制點點列表
 				offsetVector = (columnTopPosList[ColumnIndex_Zero] - columnTopPosList[ColumnIndex_One]).normalized * Shya_Shan_DingMainRidgeWidth;
 
 				//***  v3VerticalOffsetVec : 垂直屋面的向量，eave2eaveColumnOffsetVector : 屋頂中心頂點到各個角柱的xz平面方向向量
