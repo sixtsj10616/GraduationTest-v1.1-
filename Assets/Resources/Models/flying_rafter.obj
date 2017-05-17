@@ -1,0 +1,41 @@
+# File produced by Open Asset Import Library (http://www.assimp.sf.net)
+# (assimp v3.1.187496374)
+
+mtllib flying_rafter.obj.mtl
+
+# 8 vertex positions
+v  0 0 -5
+v  0 0 5
+v  0 -10 5
+v  0 -10 -5
+v  -50 0 -5
+v  -50 -10 -5
+v  -50 -10 5
+v  -50 0 5
+
+# 0 UV coordinates
+
+# 6 vertex normals
+vn 1 0 0
+vn -1 0 0
+vn 0 -1 -0
+vn 0 0 -1
+vn 0 1 0
+vn 0 0 1
+
+# Mesh 'Box011' with 12 faces
+g Box011
+usemtl material233
+f  1//1 2//1 3//1
+f  3//1 4//1 1//1
+f  5//2 6//2 7//2
+f  7//2 8//2 5//2
+f  6//3 4//3 3//3
+f  3//3 7//3 6//3
+f  5//4 1//4 4//4
+f  4//4 6//4 5//4
+f  8//5 2//5 1//5
+f  1//5 5//5 8//5
+f  7//6 3//6 2//6
+f  2//6 8//6 7//6
+

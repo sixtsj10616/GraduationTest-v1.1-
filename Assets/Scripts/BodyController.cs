@@ -32,11 +32,13 @@ public class BodyController : MonoBehaviour
 	public float columnFundationRadius;//柱礎半徑
 	//**********************************************************************************
 	public float friezeWidth=1.2f;//裝飾物長度
+	public float friezeHeight = 1.8f;//裝飾物長度
 	public float balustradeWidth = 1.2f;//欄杆長度
 	//***********************************************************************
 	public List<ColumnStruct> eaveColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> goldColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> eaveCornerColumnList = new List<ColumnStruct>();
+	public List<Vector3> zzz = new List<Vector3>();
 	//***********************************************************************
 	public void InitFunction(BuildingObj parentObj, List<Vector3> bottomPosList, float platformFrontWidth, float platformHeight, float eaveColumnHeight, float goldColumnHeight)
 	{
@@ -66,7 +68,7 @@ public class BodyController : MonoBehaviour
 				}
 				if (eaveColumnList.Count > 0) 
 				{
-					CreateRingFrieze(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.9f * eaveColumnHeight);
+					CreateRingFrieze(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.8f * eaveColumnHeight);
 					CreateRingBalustrade(ModelController.Instance, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.1f * eaveColumnHeight);
 				}
 				break;
@@ -78,10 +80,10 @@ public class BodyController : MonoBehaviour
 	{ 
 		for(int i=0;i<eaveColumnList.Count;i++)
 		{
-			//eaveColumnList[i].topPos += offset;
-			//eaveColumnList[i].bottomPos += offset;
+			eaveColumnList[i].topPos += offset;
+			eaveColumnList[i].bottomPos += offset;
 		}
-		Debug.Log("eaveColumnList[0].bottomPos :" + eaveColumnList[0].bottomPos);
+ 		Debug.Log("eaveColumnList[0].bottomPos :" + eaveColumnList[0].bottomPos);
 		for (int i = 0; i < goldColumnList.Count; i++)
 		{
 			goldColumnList[i].topPos += offset;
@@ -124,30 +126,28 @@ public class BodyController : MonoBehaviour
 	{
 		ColumnStruct columnStruct=new ColumnStruct();
 
-		float columnRemainHeight = height - columnFundationHeight;
-
 		GameObject col = new GameObject(name);
 		//col.transform.position = pos + new Vector3(0, columnRemainHeight / 2.0f + columnFundationHeight, 0);
 		col.transform.parent = parentObj.transform;
 		col.AddComponent<CylinderMesh>();
 
-		Vector3 topPos = pos + (columnRemainHeight / 2.0f + columnFundationHeight)*Vector3.up;
-		Vector3 bottomPos = pos - (columnRemainHeight / 2.0f + columnFundationHeight)*Vector3.up;
+		Vector3 topPos = pos + (height / 2.0f) * Vector3.up;
+		Vector3 bottomPos = pos - (height / 2.0f - columnFundationHeight) * Vector3.up;
 
 		col.GetComponent<CylinderMesh>().CylinderInitSetting(pos, topPos, bottomPos, topRadius, downRadius);
 		col.GetComponent<CylinderMesh>().SetMesh();
 		columnStruct.columnObj=col;
 		columnStruct.columnMesh=col.GetComponent<CylinderMesh>();
 		columnStruct.topPos=topPos;
-		columnStruct.bottomPos=bottomPos;
+		columnStruct.bottomPos = pos - (height / 2.0f) * Vector3.up;
 		//Fundation
 		GameObject fun = new GameObject(name + "Fundation");
 		//fun.transform.position = pos - new Vector3(0, height / 2.0f, 0);
 		fun.transform.parent = col.transform;
 		fun.AddComponent<CylinderMesh>();
 
-		topPos = pos + (columnFundationHeight / 2.0f) * Vector3.up - (height / 2.0f)*Vector3.up;
-		bottomPos = pos - (columnFundationHeight / 2.0f) * Vector3.up - (height / 2.0f) * Vector3.up;
+		topPos = pos + (columnFundationHeight) * Vector3.up - (height / 2.0f)*Vector3.up;
+		bottomPos = pos - (height / 2.0f) * Vector3.up;
 
 		fun.GetComponent<CylinderMesh>().CylinderInitSetting(pos - new Vector3(0, height / 2.0f, 0), topPos, bottomPos, fundationRadius, fundationRadius);
 		fun.GetComponent<CylinderMesh>().SetMesh();
@@ -206,11 +206,12 @@ public class BodyController : MonoBehaviour
 		eaveColumnList = CreateRingColumn(parentObj.body, eaveColumnPosList, eaveColumnRadius, eaveColumnRadius, eaveColumnHeight, columnFundationRadius, columnFundationHeight, "EaveColumn");
 
 		goldColumnList = CreateRingColumn(parentObj.body, goldColumnPosList, goldColumnRadius, goldColumnRadius, goldColumnHeight, columnFundationRadius, columnFundationHeight, "GoldColumn");
-
+		zzz.Clear();
 		if(eaveColumnbayNumber<=0)eaveColumnbayNumber=1;
 		for(int i=0;i<(int)MainController.Instance.sides;i++)
 		{
 			eaveCornerColumnList.Add(eaveColumnList[i * eaveColumnbayNumber]);
+			zzz.Add(eaveColumnList[i * eaveColumnbayNumber].bottomPos);
 		}
 		
 	}
@@ -243,6 +244,7 @@ public class BodyController : MonoBehaviour
 		for (int i = 0; i < columnList.Count; i++)
 		{
 			float width = friezeWidth;
+			float height = friezeHeight;
 			float dis = Vector3.Distance(columnList[i], columnList[(i + 1) % columnList.Count]) - columnRadius * 2;
 			float number = Mathf.FloorToInt(dis / width);
 			Vector3 dir = columnList[(i + 1) % columnList.Count] - columnList[i];
@@ -252,14 +254,36 @@ public class BodyController : MonoBehaviour
 			for (int j = 0; j < number; j++)
 			{
 				Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i] + heightOffset * Vector3.up;
-				GameObject clone = Instantiate(modelController.eaveColumnModelStruct.friezeModelStruct.model, pos, modelController.eaveColumnModelStruct.friezeModelStruct.model.transform.rotation) as GameObject;
-				clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.friezeModelStruct.rotation);
-
-				clone.transform.GetChild(0).localScale = new Vector3(modelController.eaveColumnModelStruct.friezeModelStruct.scale.x, modelController.eaveColumnModelStruct.friezeModelStruct.scale.y, (modelController.eaveColumnModelStruct.friezeModelStruct.scale.z) * (width + disDiff) / friezeWidth);
-			
-				clone.transform.parent = parentObj.body.transform;
+				GameObject frieze = Instantiate(modelController.eaveColumnModelStruct.friezeModelStruct.model, pos, modelController.eaveColumnModelStruct.friezeModelStruct.model.transform.rotation) as GameObject;
+				frieze.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.friezeModelStruct.rotation);
+				frieze.transform.GetChild(0).localScale = new Vector3(modelController.eaveColumnModelStruct.friezeModelStruct.scale.x, modelController.eaveColumnModelStruct.friezeModelStruct.scale.y, (modelController.eaveColumnModelStruct.friezeModelStruct.scale.z) * (width + disDiff) / friezeWidth);
+				frieze.transform.parent = parentObj.body.transform;
 			}
+	
+			//FriezeWall
+			GameObject friezeWall = new GameObject("FriezeWall");
+			MeshFilter meshFilter = friezeWall.AddComponent<MeshFilter>();
+			MeshRenderer meshRenderer = friezeWall.AddComponent<MeshRenderer>();
+			friezeWall.transform.parent = parentObj.transform;
+			meshRenderer.material.color = Color.yellow;
+			float rotateAngleZ = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : 180 - Vector3.Angle(dir, Vector3.right));
+			float friezeWallHeight = (eaveColumnHeight - heightOffset - friezeHeight / 2.0f);
+			Vector3 posZ = (columnList[i] + columnList[(i + 1) % columnList.Count]) / 2.0f + (heightOffset + friezeHeight / 2.0f + friezeWallHeight / 2.0f) * Vector3.up;
+			MeshCenter.Instance.CreateCubeMesh(posZ, dis, friezeWallHeight, 0.5f, rotateAngleZ, meshFilter);
+
+			//sparrowBrace
+			posZ = dir.normalized * (columnRadius) + columnList[i] + (heightOffset-friezeHeight/2.0f) * Vector3.up;
+			GameObject sparrowBrace = Instantiate(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model, posZ, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model.transform.rotation) as GameObject;
+			sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
+			sparrowBrace.transform.GetChild(0).localScale = new Vector3(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.scale.x, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.scale.y, (modelController.eaveColumnModelStruct.sparrowBraceModelStruct.scale.z) * (width + disDiff) / friezeWidth);
+			sparrowBrace.transform.parent = parentObj.body.transform;
+			posZ = -dir.normalized * (columnRadius) + columnList[(i + 1) % columnList.Count] + (heightOffset - friezeHeight / 2.0f) * Vector3.up;
+			sparrowBrace = Instantiate(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model, posZ, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model.transform.rotation) as GameObject;
+			sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
+			sparrowBrace.transform.GetChild(0).localScale = new Vector3(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.scale.x, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.scale.y, (modelController.eaveColumnModelStruct.sparrowBraceModelStruct.scale.z) * (width + disDiff) / friezeWidth);
+			sparrowBrace.transform.parent = parentObj.body.transform;
 		}
+	
 	}
 	private void CreateRingBalustrade(ModelController modelController, List<Vector3> columnList, float columnRadius, float heightOffset)
 	{

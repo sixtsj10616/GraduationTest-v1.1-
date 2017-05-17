@@ -6,11 +6,13 @@ public struct EaveColumnModelStruct
 {
     public ModelStruct friezeModelStruct;
     public ModelStruct balustradeModelStruct;
+	public ModelStruct sparrowBraceModelStruct;
 
-    public EaveColumnModelStruct(ModelStruct friezeModelStruct, ModelStruct balustradeModelStruct)
+    public EaveColumnModelStruct(ModelStruct friezeModelStruct, ModelStruct balustradeModelStruct,ModelStruct sparrowBraceModelStruct)
     {
         this.friezeModelStruct = friezeModelStruct;
         this.balustradeModelStruct = balustradeModelStruct;
+		this.sparrowBraceModelStruct=sparrowBraceModelStruct;
     }
 }
 public struct GoldColumnModelStruct
@@ -40,6 +42,10 @@ public class ModelController : Singleton<ModelController>
     public Vector3 balustradeModelScale = new Vector3(5, 5, 5);
     private ModelStruct balustradeModelStruct;
 
+	public GameObject sparrowBraceModel;
+	public Vector3 sparrowBraceModelRotation = Vector3.zero;
+	public Vector3 sparrowBraceModelScale = new Vector3(5, 5, 5);
+	private ModelStruct sparrowBraceModelStruct;
     [HideInInspector]
     public GoldColumnModelStruct goldColumnModelStruct;
 
@@ -67,6 +73,11 @@ public class ModelController : Singleton<ModelController>
     public Vector3 eaveTileModelScale = Vector3.one;
     private ModelStruct eaveTileModelStruct;
 
+	public GameObject flyingRafterModel;
+	public Vector3 flyingRafterModelRotation = Vector3.zero;
+	public Vector3 flyingRafterModelScale = Vector3.one;
+	private ModelStruct flyingRafterModelStruct;
+
     //************************ 主脊 ************************
     [HideInInspector]
     public MainRidgeModelStruct mainRidgeModelStruct;
@@ -82,7 +93,8 @@ public class ModelController : Singleton<ModelController>
         //*** 欄杆 ***
         friezeModelStruct = new ModelStruct(friezeModel, friezeModelRotation, friezeModelScale);
         balustradeModelStruct = new ModelStruct(balustradeModel, balustradeModelRotation, balustradeModelScale);
-        eaveColumnModelStruct = new EaveColumnModelStruct(friezeModelStruct, balustradeModelStruct);
+		sparrowBraceModelStruct = new ModelStruct(sparrowBraceModel, sparrowBraceModelRotation, sparrowBraceModelScale);
+		eaveColumnModelStruct = new EaveColumnModelStruct(friezeModelStruct, balustradeModelStruct, sparrowBraceModelStruct);
 
         windowModelStruct = new ModelStruct(windowModel, windowModelRotation, windowModelScale);
         goldColumnModelStruct = new GoldColumnModelStruct(windowModelStruct);
@@ -91,7 +103,8 @@ public class ModelController : Singleton<ModelController>
         roundTileModelStruct = new ModelStruct(roundTileModel, roundTileModelRotation, roundTileModelScale);
         flatTileModelStruct = new ModelStruct(flatTileModel, flatTileModelRotation, flatTileModelScale);
         eaveTileModelStruct = new ModelStruct(eaveTileModel, eaveTileModelRotation, eaveTileModelScale);
-        roofSurfaceModelStruct = new RoofSurfaceModelStruct(roundTileModelStruct, flatTileModelStruct, eaveTileModelStruct);
+		flyingRafterModelStruct = new ModelStruct(flyingRafterModel, flyingRafterModelRotation, flyingRafterModelScale);
+		roofSurfaceModelStruct = new RoofSurfaceModelStruct(roundTileModelStruct, flatTileModelStruct, eaveTileModelStruct, flyingRafterModelStruct);
 
         //*** 主瘠結構 : 設定好主脊模組跟旋轉、尺寸向量
         mainRidgeTileModelStruct = new ModelStruct(mainRidgeTileModel, mainRidgeTileModelRotation, mainRidgeTileModelScale);

@@ -28,7 +28,7 @@ public class BuildingObj : MonoBehaviour {
 		platformController.MoveValueUpdate(offset);
 		bodyController.MoveValueUpdate(offset);
 	}
-	public void initFunction(GameObject building, Vector3 position, float platLength, float platWidth, float platHeight, float eaveColumnHeight, float goldColumnHeight, float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList, bool isDownFoloor, int roofType)
+	public void InitFunction(GameObject building, Vector3 position, float platLength, float platWidth, float platHeight, float eaveColumnHeight, float goldColumnHeight, float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList, bool isDownFoloor, int roofType)
 	{
 		this.building=building;
 		this.building.transform.parent = building.transform;
