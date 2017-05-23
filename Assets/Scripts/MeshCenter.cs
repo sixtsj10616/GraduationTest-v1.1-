@@ -871,7 +871,7 @@ public class MeshCenter : Singleton<MeshCenter> {
                 controlPointPosList.Add(pos);
                 //ShowPos(pos, this.Buildings[selectFloor], Color.red, 0.8f);
                 //MainController.ShowPos(pos, MainController.Instance.Buildings[MainController.Instance.selectFloor].building, Color.red, 0.8f);
-                MainController.ShowPos(pos, MainController.Instance.Buildings[MainController.Instance.selectFloor].GetComponent<BuildingObj>().building, Color.red, 0.8f);
+                //MainController.ShowPos(pos, MainController.Instance.Buildings[MainController.Instance.selectFloor].GetComponent<BuildingObj>().building, Color.red, 0.8f);
             }
         }
         #region Vertices

@@ -23,7 +23,6 @@ public class BodyController : MonoBehaviour
 	public float goldColumnRatio2platformOffset;
 
 	public int goldColumnbayNumber = 3;//間數量
-	public int eaveColumnbayNumber = 3;
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
 	public float eaveColumnRadius=1;
@@ -63,6 +62,7 @@ public class BodyController : MonoBehaviour
 				if(goldColumnList.Count>0)
 				{
 					CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
+					//CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
 				}
 				if (eaveColumnList.Count > 0) 
 				{
@@ -204,7 +204,6 @@ public class BodyController : MonoBehaviour
 		}
 		eaveColumnList = CreateRingColumn(parentObj.body, eaveColumnPosList, eaveColumnRadius, eaveColumnRadius, eaveColumnHeight, columnFundationRadius, columnFundationHeight, "EaveColumn");
 
-		goldColumnList = CreateRingColumn(parentObj.body, goldColumnPosList, goldColumnRadius, goldColumnRadius, goldColumnHeight, columnFundationRadius, columnFundationHeight, "GoldColumn");
 
 		if(eaveColumnbayNumber<=0)eaveColumnbayNumber=1;
 		for(int i=0;i<(int)MainController.Instance.sides;i++)
