@@ -48,6 +48,8 @@ public class BuildingObj : MonoBehaviour {
 		bodyController = building.AddComponent<BodyController>();
 		roofController = building.AddComponent<RoofController>();
 
+        if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
+        {
             platformController.InitFunctionForCombinTing(this, platformCenter, platWidth, platLength, platHeight);
             bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
             roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);

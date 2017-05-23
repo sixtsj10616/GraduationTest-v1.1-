@@ -23,6 +23,7 @@ public class BodyController : MonoBehaviour
 	public float goldColumnRatio2platformOffset;
 
 	public int goldColumnbayNumber = 3;//間數量
+	public int eaveColumnbayNumber = 0;
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
 	public float eaveColumnRadius=1;
@@ -61,7 +62,6 @@ public class BodyController : MonoBehaviour
 				CreateBody(bottomPosList, parentObj.bodyCenter);
 				if(goldColumnList.Count>0)
 				{
-					CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
 					//CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
 				}
 				if (eaveColumnList.Count > 0) 
@@ -86,11 +86,11 @@ public class BodyController : MonoBehaviour
 			goldColumnList[i].topPos += offset;
 			goldColumnList[i].bottomPos += offset;
 		}
-		for (int i = 0; i < eaveCornerColumnList.Count; i++)
-		{
-			eaveCornerColumnList[i].topPos += offset;
-			eaveCornerColumnList[i].bottomPos += offset;
-		}
+		//for (int i = 0; i < eaveCornerColumnList.Count; i++)
+		//{
+		//	eaveCornerColumnList[i].topPos += offset;
+		//	eaveCornerColumnList[i].bottomPos += offset;
+		//}
 	}
 	public List<Vector3> GetColumnStructTopPosList(List<ColumnStruct> columnStructList) 
 	{
@@ -204,6 +204,7 @@ public class BodyController : MonoBehaviour
 		}
 		eaveColumnList = CreateRingColumn(parentObj.body, eaveColumnPosList, eaveColumnRadius, eaveColumnRadius, eaveColumnHeight, columnFundationRadius, columnFundationHeight, "EaveColumn");
 
+		//goldColumnList = CreateRingColumn(parentObj.body, goldColumnPosList, goldColumnRadius, goldColumnRadius, goldColumnHeight, columnFundationRadius, columnFundationHeight, "GoldColumn");
 
 		if(eaveColumnbayNumber<=0)eaveColumnbayNumber=1;
 		for(int i=0;i<(int)MainController.Instance.sides;i++)
