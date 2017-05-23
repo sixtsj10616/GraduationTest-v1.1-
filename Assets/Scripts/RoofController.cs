@@ -667,22 +667,22 @@ public class RoofController : MonoBehaviour
 
         //===============================          檐椽用        ===========================================//
 
-        //if(baseListIndex<totalBaseListIndex*0.8f)
-        //{
-        //	GameObject flyRafer = new GameObject("flyRafer");
-        //	MeshFilter meshFilter = flyRafer.AddComponent<MeshFilter>();
-        //	MeshRenderer meshRenderer = flyRafer.AddComponent<MeshRenderer>();
-        //	meshRenderer.material.color = Color.white;
-        //	flyRafer.transform.parent = baseList.body.transform;
-        //	List<Vector3> roofSurfaceTileList2FlyRafter = new List<Vector3>();
-
-        //	for (int i = 0; i < roofSurfaceTileList.Count; i++)
-        //	{
-        //		roofSurfaceTileList2FlyRafter.Add(roofSurfaceTileList[i] + upVectorList[i].normalized * flyingRafterHeightOffset);
-        //	}
-        //	MeshCenter.Instance.CreateCurveCubeMesh(roofSurfaceTileList2FlyRafter, upVectorList, 0.5f, 0.5f, meshFilter);
-        //}
-        //return roofSurfaceTileList;
+//         if(baseListIndex<totalBaseListIndex*0.8f)
+//         {
+//         	GameObject flyRafer = new GameObject("flyRafer");
+//         	MeshFilter meshFilter = flyRafer.AddComponent<MeshFilter>();
+//         	MeshRenderer meshRenderer = flyRafer.AddComponent<MeshRenderer>();
+//         	meshRenderer.material.color = Color.white;
+//         	flyRafer.transform.parent = baseList.body.transform;
+//         	List<Vector3> roofSurfaceTileList2FlyRafter = new List<Vector3>();
+// 
+//         	for (int i = 0; i < roofSurfaceTileList.Count; i++)
+//         	{
+//         		roofSurfaceTileList2FlyRafter.Add(roofSurfaceTileList[i] + upVectorList[i].normalized * flyingRafterHeightOffset);
+//         	}
+//         	MeshCenter.Instance.CreateCurveCubeMesh(roofSurfaceTileList2FlyRafter, upVectorList, 0.5f, 0.5f, meshFilter);
+//         }
+//         return roofSurfaceTileList;
 
         //===============================          檐椽用        ===========================================//
     }
