@@ -94,7 +94,7 @@ public class MainController : Singleton<MainController>
 			GameObject newBuilding = new GameObject("building" + buildingCount++);
 			newBuilding.AddComponent<BuildingObj>();
 
-			newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, Buildings[selectFloor].roofTopCenter - (Buildings[selectFloor].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up, initPlatformLength, initPlatformWidth, initPlatformHeight, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset, initAllJijaHeight, null, false, (int)roofType);
+			newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, Buildings[selectFloor].roofTopCenter - (Buildings[selectFloor].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up, initPlatformLength * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformWidth * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformHeight, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset, initAllJijaHeight, null, false, (int)roofType);
 
 			Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
 
@@ -114,7 +114,7 @@ public class MainController : Singleton<MainController>
 			//增加樓層
 			GameObject newBuilding = new GameObject("building" + buildingCount++);
 			newBuilding.AddComponent<BuildingObj>();
-			newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, (selectFloor > 0) ? (Buildings[selectFloor - 1].roofTopCenter) : (buildingCenter), initPlatformLength, initPlatformWidth, initPlatformHeight, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor].GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
+			newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, (selectFloor > 0) ? (Buildings[selectFloor - 1].roofTopCenter) : (buildingCenter), initPlatformLength * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformWidth * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformHeight, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor].GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
 
 			if (selectFloor > 0)
 			{

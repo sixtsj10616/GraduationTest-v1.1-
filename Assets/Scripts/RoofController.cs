@@ -1315,19 +1315,19 @@ public class RoofController : MonoBehaviour
 			newRoofSurfaceStruct.leftRoofSurfaceTileRidgeList.Add(newLeftRidgeStruct);
 		}
 
-		GameObject flyRaferVer = new GameObject("flyRaferVer");
-		MeshFilter meshFilter = flyRaferVer.AddComponent<MeshFilter>();
-		MeshRenderer meshRenderer = flyRaferVer.AddComponent<MeshRenderer>();
-		meshRenderer.material.color = Color.white;
-		flyRaferVer.transform.parent = newRoofSurfaceStruct.body.transform;
-		List<Vector3> roofSurfaceTileList2FlyRafter = new List<Vector3>();
-		List<Vector3> upVector = new List<Vector3>();
-		for (int i = 0; i < newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList.Count; i++)
-		{
-			roofSurfaceTileList2FlyRafter.Add(newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList[i].tilePosList[0]);
-			upVector.Add(Vector3.up);
-		}
-		MeshCenter.Instance.CreateCurveCubeMesh(roofSurfaceTileList2FlyRafter, upVector, 0.5f, 0.5f, meshFilter);
+// 		GameObject flyRaferVer = new GameObject("flyRaferVer");
+// 		MeshFilter meshFilter = flyRaferVer.AddComponent<MeshFilter>();
+// 		MeshRenderer meshRenderer = flyRaferVer.AddComponent<MeshRenderer>();
+// 		meshRenderer.material.color = Color.white;
+// 		flyRaferVer.transform.parent = newRoofSurfaceStruct.body.transform;
+// 		List<Vector3> roofSurfaceTileList2FlyRafter = new List<Vector3>();
+// 		List<Vector3> upVector = new List<Vector3>();
+// 		for (int i = 0; i < newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList.Count; i++)
+// 		{
+// 			roofSurfaceTileList2FlyRafter.Add(newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList[i].tilePosList[0]);
+// 			upVector.Add(Vector3.up);
+// 		}
+// 		MeshCenter.Instance.CreateCurveCubeMesh(roofSurfaceTileList2FlyRafter, upVector, 0.5f, 0.5f, meshFilter);
 
 		newRoofSurfaceStruct.midRoofSurfaceTileRidge = newMidRidgeStruct;
 
