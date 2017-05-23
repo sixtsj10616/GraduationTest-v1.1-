@@ -999,7 +999,7 @@ MonoBehaviour:
   selectFloor: 0
   sides: 4
   buildingType: 1
-  roofType: 2
+  roofType: 4
   initPlatformWidth: 30
   initPlatformLength: 30
   initPlatformHeight: 1

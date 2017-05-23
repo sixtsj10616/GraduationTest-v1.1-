@@ -195,13 +195,13 @@ public class CombineTing : MonoBehaviour
         //** 依序檢查每一個表面脊 (左、中、右分開做)
         for (int iIndex = 0; iIndex < surface.leftRoofSurfaceTileRidgeList.Count; iIndex++)
         {
-            RidgeStruct surfaceRidge = surface.leftRoofSurfaceTileRidgeList[iIndex];
+			RoofSurfaceRidgeStruct surfaceRidge = surface.leftRoofSurfaceTileRidgeList[iIndex];
             removeSurfacePosByPlane(MidPlane,surfaceRidge,Ting.roofTopCenter);
         }
         removeSurfacePosByPlane(MidPlane, surface.midRoofSurfaceTileRidge, Ting.roofTopCenter);
         for (int iIndex = 0; iIndex < surface.rightRoofSurfaceTileRidgeList.Count; iIndex++)
         {
-            RidgeStruct surfaceRidge = surface.rightRoofSurfaceTileRidgeList[iIndex];
+			RoofSurfaceRidgeStruct surfaceRidge = surface.rightRoofSurfaceTileRidgeList[iIndex];
             removeSurfacePosByPlane(MidPlane, surfaceRidge, Ting.roofTopCenter);
         }
         print("");
@@ -211,7 +211,7 @@ public class CombineTing : MonoBehaviour
      * 刪除超過平面的瓦片位置
      * 輸入: 切割平面、屋面瓦片用脊、同側的基準點
      */
-    private void removeSurfacePosByPlane(Plane MidPlane,RidgeStruct surfaceRidge,Vector3 BasePos)
+    private void removeSurfacePosByPlane(Plane MidPlane,RoofSurfaceRidgeStruct surfaceRidge,Vector3 BasePos)
     {
         if (surfaceRidge.tilePosList.Count > 0 && !MidPlane.SameSide(surfaceRidge.tilePosList[0], BasePos))
         {

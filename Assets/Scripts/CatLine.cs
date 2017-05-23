@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-public class CatLine : MonoBehaviour
+public class CatLine
 {
 	public enum CatLineType { ObjectList = 0, PositionList = 1 };
 	private int numberOfPoints = 50;
