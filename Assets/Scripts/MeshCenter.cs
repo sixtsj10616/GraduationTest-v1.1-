@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MeshCenter : Singleton<MeshCenter> {
+public class MeshCenter : Singleton<MeshCenter>
+{
 
     /**
-     * 點到線距離
-     */
+	 * 點到線距離
+	 */
     public float DistancePointLine(Vector3 point, Vector3 lineStart, Vector3 dir)
     {
         return Vector3.Magnitude(ProjectPointLine(point, lineStart, dir) - point);
     }
     /**
-     * 點投影到線
-     */
+	 * 點投影到線
+	 */
     public Vector3 ProjectPointLine(Vector3 point, Vector3 lineStart, Vector3 dir)
     {
         /*
@@ -30,8 +31,8 @@ public class MeshCenter : Singleton<MeshCenter> {
         return Vector3.Project((point - lineStart), dir) + lineStart;
     }
     /**
-     * 建立長方體的Mesh
-     */
+	 * 建立長方體的Mesh
+	 */
     public List<Vector3> CreateCubeMesh(Vector3 centerPos, float width, float height, float length, float rotateAngle, MeshFilter meshFilter)
     {
         List<Vector3> controlPointPosList = new List<Vector3>();
@@ -55,8 +56,8 @@ public class MeshCenter : Singleton<MeshCenter> {
 
         controlPointPosList.Add(p0);
         controlPointPosList.Add(p1);
-		controlPointPosList.Add(p2);
-		controlPointPosList.Add(p3);
+        controlPointPosList.Add(p2);
+        controlPointPosList.Add(p3);
 
         controlPointPosList.Add(p4);
         controlPointPosList.Add(p5);
@@ -184,8 +185,8 @@ public class MeshCenter : Singleton<MeshCenter> {
         return controlPointPosList;
     }
     /**
-     * 建立規則環狀的Mesh(?)
-     */
+	 * 建立規則環狀的Mesh(?)
+	 */
     public List<Vector3> CreateRegularRingMesh(Vector3 centerPos, int nbSides, float radius, float height, float rotateAngle, MeshFilter meshFilter)
     {
 
@@ -286,7 +287,7 @@ public class MeshCenter : Singleton<MeshCenter> {
 
         #endregion
         #region UVs
-        //Vector2[] uvs = new Vector2[vertices.Length];
+
         #endregion
         #region Triangles
         //int[] triangles = new int[3 * nbSides * 2 + 6 * nbSides];
@@ -537,9 +538,9 @@ public class MeshCenter : Singleton<MeshCenter> {
 
     }
     /**
-     * 建立環狀的Mesh(?)
-     */
-    public void CreateTorusMesh(Vector3 centerPos, float width, float height, float length, float innerWidthRatio, float innerHeightDownRatio, float innerHeightTopRatio, float innerLengthRatio, float rotateAngle, MeshFilter meshFilter)
+	 * 建立環狀的Mesh(?)
+	 */
+    public void CreateDoorMesh(Vector3 centerPos, float width, float height, float length, float innerWidthRatio, float innerHeightDownRatio, float innerHeightTopRatio, float innerLengthRatio, float rotateAngle, MeshFilter meshFilter)
     {
         int nbSides = 4;
 
@@ -632,14 +633,14 @@ public class MeshCenter : Singleton<MeshCenter> {
         for (int i = 0; i < nbSides; i++)
         {
             normales[i + vert] = Vector3.left;
-			normales[i + vert + nbSides] = -Vector3.left;
+            normales[i + vert + nbSides] = -Vector3.left;
         }
         vert += nbSides * 2;
         // Right cap
         for (int i = 0; i < nbSides; i++)
         {
-			normales[i + vert] = Vector3.right;
-			normales[i + vert + nbSides] = -Vector3.right;
+            normales[i + vert] = Vector3.right;
+            normales[i + vert + nbSides] = -Vector3.right;
         }
         vert += nbSides * 2;
         // Front cap
@@ -693,8 +694,8 @@ public class MeshCenter : Singleton<MeshCenter> {
         ;
     }
     /**
-     * 建立樓梯Mesh
-     */
+	 * 建立樓梯Mesh
+	 */
     public void CreateStairMesh(Vector3 centerPos, float width, float height, float length, float rotateAngle, MeshFilter meshFilter)
     {
 
@@ -827,8 +828,8 @@ public class MeshCenter : Singleton<MeshCenter> {
         ;
     }
     /**
-     * 建立規則曲線環狀Mesh(?)
-     */
+	 * 建立規則曲線環狀Mesh(?)
+	 */
     public List<Vector3> CreateRegularCurveRingMesh(Vector3 centerPos, List<Vector3> localPosList, Vector3 axis, int nbSides, int segmentation, float rotateAngle, MeshFilter meshFilter)
     {
 
@@ -871,7 +872,7 @@ public class MeshCenter : Singleton<MeshCenter> {
                 controlPointPosList.Add(pos);
                 //ShowPos(pos, this.Buildings[selectFloor], Color.red, 0.8f);
                 //MainController.ShowPos(pos, MainController.Instance.Buildings[MainController.Instance.selectFloor].building, Color.red, 0.8f);
-                //MainController.ShowPos(pos, MainController.Instance.Buildings[MainController.Instance.selectFloor].GetComponent<BuildingObj>().building, Color.red, 0.8f);
+                MainController.ShowPos(pos, MainController.Instance.Buildings[MainController.Instance.selectFloor].GetComponent<BuildingObj>().building, Color.red, 0.8f);
             }
         }
         #region Vertices
@@ -957,8 +958,8 @@ public class MeshCenter : Singleton<MeshCenter> {
         return controlPointPosList;
     }
     /**
-     * MeshCombine(?)
-     */
+	 * MeshCombine(?)
+	 */
     public void MeshCombineInGameObjectList(GameObject obj, Material materials)
     {
         MeshFilter[] meshFilters = obj.GetComponentsInChildren<MeshFilter>();
@@ -974,5 +975,116 @@ public class MeshCenter : Singleton<MeshCenter> {
         obj.AddComponent<MeshRenderer>();
         obj.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
         obj.GetComponent<MeshRenderer>().material = materials;
+    }
+    public void CreateCurveCubeMesh(List<Vector3> curvePosList, List<Vector3> upVectorList, float width, float height, MeshFilter meshFilter)
+    {
+        if (curvePosList.Count <= 1) return;
+
+        Mesh mesh = new Mesh();
+        meshFilter.mesh = mesh;
+        mesh.Clear();
+        Vector3[] pList = new Vector3[4 * curvePosList.Count];
+        Vector3 quaternionVector = Vector3.one;
+        int vert = 0;
+        for (int i = 0; i < curvePosList.Count; i++)
+        {
+            if (i < curvePosList.Count - 1) quaternionVector = (curvePosList[i] - curvePosList[i + 1]);
+            Vector3 rightVector = Vector3.Cross(upVectorList[i], quaternionVector);
+            pList[vert++] = curvePosList[i] - rightVector.normalized * width / 2.0f - upVectorList[i].normalized * height / 2.0f;
+            pList[vert++] = curvePosList[i] - rightVector.normalized * width / 2.0f + upVectorList[i].normalized * height / 2.0f;
+            pList[vert++] = curvePosList[i] + rightVector.normalized * width / 2.0f + upVectorList[i].normalized * height / 2.0f;
+            pList[vert++] = curvePosList[i] + rightVector.normalized * width / 2.0f - upVectorList[i].normalized * height / 2.0f;
+        }
+
+        #region Vertices
+        Vector3[] vertices = new Vector3[6 * (curvePosList.Count * 4 + 2)];
+        vert = 0;
+        //FrontCap
+        vertices[vert++] = pList[3];
+        vertices[vert++] = pList[1];
+        vertices[vert++] = pList[0];
+
+        vertices[vert++] = pList[3];
+        vertices[vert++] = pList[2];
+        vertices[vert++] = pList[1];
+        //BackCap
+        vertices[vert++] = pList[(curvePosList.Count - 1) * 4];
+        vertices[vert++] = pList[(curvePosList.Count - 1) * 4 + 2];
+        vertices[vert++] = pList[(curvePosList.Count - 1) * 4 + 3];
+
+        vertices[vert++] = pList[(curvePosList.Count - 1) * 4];
+        vertices[vert++] = pList[(curvePosList.Count - 1) * 4 + 1];
+        vertices[vert++] = pList[(curvePosList.Count - 1) * 4 + 2];
+        //MidCap
+        for (int i = 0; i < (curvePosList.Count - 1); i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                vertices[vert++] = pList[i * 4 + j];//0
+                vertices[vert++] = pList[(i + 1) * 4 + (1 + j) % 4];//5
+                vertices[vert++] = pList[(i + 1) * 4 + j];//4
+
+                vertices[vert++] = pList[i * 4 + j];//0
+                vertices[vert++] = pList[i * 4 + (1 + j) % 4];//1
+                vertices[vert++] = pList[(i + 1) * 4 + (1 + j) % 4];//5
+            }
+        }
+        #endregion
+
+        #region Normales
+        Vector3[] normales = new Vector3[vertices.Length];
+        vert = 0;
+        // Fornt cap
+        Vector3 nor = Vector3.Cross(pList[1] - pList[0], pList[3] - pList[0]).normalized;
+        for (int n = 0; n < 6; n++)
+        {
+            normales[vert++] = nor;
+        }
+        // Back cap
+        nor = Vector3.Cross(pList[(curvePosList.Count - 1) * 4 + 1] - pList[(curvePosList.Count - 1) * 4], pList[(curvePosList.Count - 1) * 4 + 3] - pList[(curvePosList.Count - 1) * 4]).normalized;
+        for (int n = 0; n < 6; n++)
+        {
+            normales[vert++] = nor;
+        }
+        for (int i = 0; i < curvePosList.Count - 1; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                nor = Vector3.Cross(pList[i * 4 + (1 + j) % 4] - pList[i * 4 + j], pList[(i + 1) * 4 + j] - pList[i * 4 + j]).normalized;
+                for (int n = 0; n < 6; n++)
+                {
+                    normales[vert++] = nor;
+                }
+            }
+
+
+        }
+        #endregion
+
+        #region UVs
+        Vector2[] uvs = new Vector2[vertices.Length];
+        Vector2 _00 = new Vector2(0f, 0f);
+        Vector2 _10 = new Vector2(1f, 0f);
+        Vector2 _01 = new Vector2(0f, 1f);
+        Vector2 _11 = new Vector2(1f, 1f);
+
+        #endregion
+
+        #region Triangles
+        int[] triangles = new int[vertices.Length];
+        vert = 0;
+        for (int i = 0; i < triangles.Length; i++)
+        {
+            triangles[vert++] = i;
+        }
+        #endregion
+
+        mesh.vertices = vertices;
+        mesh.normals = normales;
+        // 		mesh.uv = uvs;
+        mesh.triangles = triangles;
+
+        mesh.RecalculateBounds();
+        ;
     }
 }

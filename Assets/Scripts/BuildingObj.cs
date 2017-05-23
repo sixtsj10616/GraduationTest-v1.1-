@@ -28,7 +28,7 @@ public class BuildingObj : MonoBehaviour {
 		platformController.MoveValueUpdate(offset);
 		bodyController.MoveValueUpdate(offset);
 	}
-	public void initFunction(GameObject building, Vector3 position, float platLength, float platWidth, float platHeight, float eaveColumnHeight, float goldColumnHeight, float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList, bool isDownFoloor, int roofType)
+	public void InitFunction(GameObject building, Vector3 position, float platLength, float platWidth, float platHeight, float eaveColumnHeight, float goldColumnHeight, float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList, bool isDownFoloor, int roofType)
 	{
 		this.building=building;
 		this.building.transform.parent = building.transform;
@@ -48,6 +48,7 @@ public class BuildingObj : MonoBehaviour {
 		bodyController = building.AddComponent<BodyController>();
 		roofController = building.AddComponent<RoofController>();
 
+
         if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
         {
             platformController.InitFunctionForCombinTing(this, platformCenter, platWidth, platLength, platHeight);
@@ -61,6 +62,7 @@ public class BuildingObj : MonoBehaviour {
             roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);
         }
         buildingHeight = Vector3.Distance(roofTopCenter, platformCenter);
+
 	}
     /**
      * 重製屋頂
@@ -71,8 +73,9 @@ public class BuildingObj : MonoBehaviour {
 		if (roof!=null) Destroy(roof);
 		roof = new GameObject("roof");
 		roof.transform.parent = this.building.transform;
-		roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platformController.platformFrontWidth, bodyController.eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);
-        
-        buildingHeight = Vector3.Distance(roofTopCenter, platformCenter);
+
+		roofController.InitFunction(this, this.bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platformController.platformFrontWidth, bodyController.eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);
+		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platformHeight/2.0f;
+
 	}
 }

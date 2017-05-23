@@ -1,17 +1,17 @@
 fileFormatVersion: 2
-guid: f9cc3d71fc297054cb4c21a90f22ac0e
-timeCreated: 1487580961
+guid: 8c92e11c81087d3419dbf134bd832812
+timeCreated: 1495012587
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
-    100000: Line01
+    100000: Box011
     100002: //RootNode
-    400000: Line01
+    400000: Box011
     400002: //RootNode
-    2300000: Line01
-    3300000: Line01
-    4300000: Line01
+    2300000: Box011
+    3300000: Box011
+    4300000: Box011
   materials:
     importMaterials: 1
     materialName: 0
@@ -74,7 +74,7 @@ ModelImporter:
     rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
     hasExtraRoot: 0
-    skeletonHasParents: 0
+    skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   animationType: 0
   humanoidOversampling: 1
