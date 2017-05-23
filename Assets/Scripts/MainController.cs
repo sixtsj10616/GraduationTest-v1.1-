@@ -1,19 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-public struct ModelStruct//模型旋轉、縮放
-{
-	public GameObject model;
-	public Vector3 rotation;
-	public Vector3 scale;
+using UnityEditor;
 
-	public ModelStruct(GameObject model, Vector3 rotation, Vector3 scale)
-	{
-		this.model = model;
-		this.rotation = rotation;
-		this.scale = scale;
-	}
-}
 public class MainController : Singleton<MainController>
 {
 
@@ -76,6 +65,23 @@ public class MainController : Singleton<MainController>
 		building.gameObject.AddComponent<BuildingObj>();
 		building.GetComponent<BuildingObj>().InitFunction(building, buildingCenter, initPlatformLength, initPlatformWidth, initPlatformHeight, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset, initAllJijaHeight, null, false, (int)roofType);
 		Buildings.Add(building.GetComponent<BuildingObj>());
+
+
+
+		GameObject flyRafer = new GameObject("flyRafer");
+		MeshFilter meshFilter = flyRafer.AddComponent<MeshFilter>();
+		MeshRenderer meshRenderer = flyRafer.AddComponent<MeshRenderer>();
+		meshRenderer.material.color = Color.white;
+		flyRafer.transform.parent = transform;
+		List<Vector3> posList=new List<Vector3>();
+		posList.Add(new Vector3(100,0,100));
+		posList.Add(new Vector3(111, 0, 111));
+		posList.Add(new Vector3(112, 0, 112));
+		List<Vector3> upList = new List<Vector3>();
+		upList.Add(Vector3.up);
+		upList.Add(Vector3.up);
+		upList.Add(Vector3.up);
+		MeshCenter.Instance.CreateCurveCubeMesh(posList, upList, 0.5f, 0.5f, meshFilter);
 	}
 	/**
 	 * 新增樓層
@@ -169,7 +175,6 @@ public class MainController : Singleton<MainController>
 
 			}
 		}
-
 
 		Destroy(Buildings[selectFloor].gameObject);
 		Buildings.RemoveAt(selectFloor);
