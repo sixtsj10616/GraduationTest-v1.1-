@@ -37,6 +37,34 @@ public class BodyController : MonoBehaviour
 	public List<ColumnStruct> eaveCornerColumnList = new List<ColumnStruct>();
 	public List<Vector3> zzz = new List<Vector3>();
 	//***********************************************************************
+	public List<Vector3> GetColumnStructTopPosList(List<ColumnStruct> columnStructList)
+	{
+		List<Vector3> posList = new List<Vector3>();
+		for (int i = 0; i < columnStructList.Count; i++)
+		{
+			posList.Add(columnStructList[i].topPos);
+		}
+		return posList;
+	}
+	public List<Vector3> GetColumnStructBottomPosList(List<ColumnStruct> columnStructList)
+	{
+		List<Vector3> posList = new List<Vector3>();
+		for (int i = 0; i < columnStructList.Count; i++)
+		{
+			posList.Add(columnStructList[i].bottomPos);
+		}
+		return posList;
+	}
+	public List<Vector3> GetColumnStructPosList(List<ColumnStruct> columnStructList)
+	{
+		List<Vector3> posList = new List<Vector3>();
+		for (int i = 0; i < columnStructList.Count; i++)
+		{
+			posList.Add((columnStructList[i].bottomPos + columnStructList[i].topPos) / 2.0f);
+		}
+		return posList;
+	}
+
 	public void InitFunction(BuildingObj parentObj, List<Vector3> bottomPosList, float platformFrontWidth, float platformHeight, float eaveColumnHeight, float goldColumnHeight)
 	{
 		//初始值******************************************************************************
@@ -86,41 +114,8 @@ public class BodyController : MonoBehaviour
 			goldColumnList[i].topPos += offset;
 			goldColumnList[i].bottomPos += offset;
 		}
+	}
 
-		//for (int i = 0; i < eaveCornerColumnList.Count; i++)
-		//{
-		//	eaveCornerColumnList[i].topPos += offset;
-		//	eaveCornerColumnList[i].bottomPos += offset;
-		//}
-
-	}
-	public List<Vector3> GetColumnStructTopPosList(List<ColumnStruct> columnStructList) 
-	{
-		List<Vector3> posList = new List<Vector3>();
-		for (int i = 0; i < columnStructList.Count; i++)
-		{
-			posList.Add(columnStructList[i].topPos);
-		}
-		return posList;
-	}
-	public List<Vector3> GetColumnStructBottomPosList(List<ColumnStruct> columnStructList)
-	{
-		List<Vector3> posList = new List<Vector3>();
-		for (int i = 0; i < columnStructList.Count; i++)
-		{
-			posList.Add(columnStructList[i].bottomPos);
-		}
-		return posList;
-	}
-	public List<Vector3> GetColumnStructPosList(List<ColumnStruct> columnStructList)
-	{
-		List<Vector3> posList = new List<Vector3>();
-		for (int i = 0; i < columnStructList.Count; i++)
-		{
-			posList.Add((columnStructList[i].bottomPos + columnStructList[i].topPos)/2.0f);
-		}
-		return posList;
-	}
 	private ColumnStruct CreateColumn(GameObject parentObj, Vector3 pos, float topRadius, float downRadius, float height, float fundationRadius, float fundationHeight, string name = "Column")
 	{
 		ColumnStruct columnStruct=new ColumnStruct();

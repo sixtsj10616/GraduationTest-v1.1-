@@ -29,7 +29,6 @@ public class PlatformController : MonoBehaviour
     public bool isStair = false;
     //***********************************************************************
 	public PlatFormStruct platFormStruct;
-	public List<Vector3> zzz = new List<Vector3>();
     public void InitFunction(BuildingObj parentObj,Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight )
     {
 		this.parentObj = parentObj;
@@ -113,7 +112,6 @@ public class PlatformController : MonoBehaviour
 		meshRenderer.material.color = Color.white;
 
 		List<Vector3> controlPointPosList = new List<Vector3>();
-		controlPointPosList.Clear();
 
 		//初始值******************************************************************************
 		float platformRadius = (platformFrontWidth / 2.0f) / Mathf.Sin(2f * Mathf.PI / ((int)MainController.Instance.sides * 2));
@@ -144,12 +142,10 @@ public class PlatformController : MonoBehaviour
 		//計算底部與頂部位置
 		platFormStruct.bottomPointPosList.Clear();
 		platFormStruct.topPointPosList.Clear();
-		zzz.Clear();
+
 		for (int i = 0; i < (int)MainController.Instance.sides; i++)
 		{
 			platFormStruct.bottomPointPosList.Add(controlPointPosList[i]);
-			zzz.Add(controlPointPosList[i]);
-
 
 			platFormStruct.topPointPosList.Add(controlPointPosList[(controlPointPosList.Count - 1) - ((int)(MainController.Instance.sides - 1)) + i]);
 		}

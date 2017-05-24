@@ -2,7 +2,50 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
-
+public struct PairVector3
+{
+	Vector3 a;
+	Vector3 b;
+	public PairVector3(Vector3 a, Vector3 b)
+	{
+		this.a = a;
+		this.b = b;
+	}
+	public Vector3 A { get { return a; } set { a = value; } }
+	public Vector3 B { get { return b; } set { b = value; } }
+}
+public class ListPairVector3
+{
+	List<Vector3> listA;
+	List<Vector3> listB;
+	public ListPairVector3()
+	{
+		listA = new List<Vector3>();
+		listB = new List<Vector3>();
+	}
+	public ListPairVector3(List<Vector3> listA, List<Vector3> listB)
+	{
+		this.listA = listA;
+		this.listB = listB;
+	}
+	public List<Vector3> ListA { get { return listA; } set { listA = value; } }
+	public List<Vector3> ListB { get { return listB; } set { listB = value; } }
+	public void Add(Vector3 a, Vector3 b)
+	{
+		listA.Add(a);
+		listB.Add(b);
+	}
+	public void Add(PairVector3 a)
+	{
+		listA.Add(a.A);
+		listB.Add(a.B);
+	}
+	public void Clear()
+	{
+		listA.Clear();
+		listB.Clear();
+	}
+}
 public class MainController : Singleton<MainController>
 {
 
