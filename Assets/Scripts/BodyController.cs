@@ -23,7 +23,7 @@ public class BodyController : MonoBehaviour
 	public float goldColumnRatio2platformOffset;
 
 	public int goldColumnbayNumber = 3;//間數量
-	public int eaveColumnbayNumber = 0;
+	public int eaveColumnbayNumber = 5;
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
 	public float eaveColumnRadius=1;
@@ -89,7 +89,7 @@ public class BodyController : MonoBehaviour
 				CreateBody(bottomPosList, parentObj.bodyCenter);
 				if(goldColumnList.Count>0)
 				{
-					//CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
+					CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
 				}
 				if (eaveColumnList.Count > 0) 
 				{
@@ -269,6 +269,8 @@ public class BodyController : MonoBehaviour
 			Vector3 posZ = (columnList[i] + columnList[(i + 1) % columnList.Count]) / 2.0f + (heightOffset + friezeHeight / 2.0f + friezeWallHeight / 2.0f) * Vector3.up;
 			MeshCenter.Instance.CreateCubeMesh(posZ, dis, friezeWallHeight, 0.5f, rotateAngleZ, meshFilter);
 
+			if (dis >= eaveColumnModelStruct.sparrowBraceModelStruct.bound.size.z)
+			{
 			//sparrowBrace
 			Vector3 posX = dir.normalized * (columnRadius) + columnList[i] + (heightOffset - friezeHeight / 2.0f) * Vector3.up;
 			float rotateAngleX = (Vector3.Dot(Vector3.right, dir) > 0 ? Vector3.Angle(dir, Vector3.forward) : -Vector3.Angle(dir, Vector3.forward));
@@ -283,6 +285,7 @@ public class BodyController : MonoBehaviour
 			sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngleX, Vector3.up) * Quaternion.Euler(eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
 		
 			sparrowBrace.transform.parent = parentObj.body.transform;
+			}
 		}
 	
 	}

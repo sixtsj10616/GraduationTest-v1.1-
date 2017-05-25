@@ -216,8 +216,8 @@ public class RoofController : MonoBehaviour
 	public float roofSurfaceTileHeight = 0.95f;     //屋面瓦片高度
 	public float mainRidgeTileHeight = 0.3f;        //主脊瓦片高度
 
-	public float flyRafterWidth=0.5f;
-	public float flyRafterHeight=0.5f;
+	public float flyRafterWidth=0.6f;
+	public float flyRafterHeight=0.6f;
 	//公式變數*************************************************************************************
 	float anchorDis = 0f;//曲線innerPoint換算anchorPoint間距
 	public bool isDownFloor;

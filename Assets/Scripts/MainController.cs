@@ -95,7 +95,7 @@ public class MainController : Singleton<MainController>
         else if (Input.GetKeyDown(KeyCode.D))
         {
             print("D key was pressed");
-            if (selectFloor != 0 && selectFloor < Buildings.Count)
+            if ( Buildings.Count> 0 && selectFloor < Buildings.Count)
             { 
                 DeleteFloor();
             }
@@ -224,15 +224,13 @@ public class MainController : Singleton<MainController>
 				offsetValue=(Buildings[selectFloor - 1].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up;
 
 				Buildings[selectFloor - 1].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
-
+				//如果原本上層的屋面有調整過舉架高度，要變回預設值時要補上一段offset
 				for (int iIndex = selectFloor; iIndex < Buildings.Count; iIndex++)
 				{
 					Buildings[iIndex].BuildingMove(-offsetValue);
-				}
+ 				}
 			}
 
-
-            //Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
             Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor+1].GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
 
             Buildings.Insert(selectFloor, newBuilding.GetComponent<BuildingObj>());
@@ -284,6 +282,7 @@ public class MainController : Singleton<MainController>
             Debug.Log("TopFloor");
             Vector3 offsetValue = (Buildings[selectFloor - 1].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up;
             Buildings[selectFloor - 1].ResetRoofFunction(mainRidgeHeightOffset, allJijaHeight, null, false, roofType);
+			//如果原本上層的屋面有調整過舉架高度，要變回預設值時要補上一段offset
             for (int iIndex = selectFloor + 1; iIndex < Buildings.Count; iIndex++)
             {
                 Buildings[iIndex].BuildingMove(-offsetValue);
@@ -296,6 +295,7 @@ public class MainController : Singleton<MainController>
             {
                 Vector3 offsetValue = (Buildings[selectFloor + 1].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up;
                 Buildings[selectFloor - 1].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor + 1].GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
+				//如果原本上層的屋面有調整過舉架高度，要變回預設值時要補上一段offset
                 for (int iIndex = selectFloor + 1; iIndex < Buildings.Count; iIndex++)
                 {
                     Buildings[iIndex].BuildingMove(-offsetValue);
