@@ -2,7 +2,50 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
-
+public struct PairVector3
+{
+	Vector3 a;
+	Vector3 b;
+	public PairVector3(Vector3 a, Vector3 b)
+	{
+		this.a = a;
+		this.b = b;
+	}
+	public Vector3 A { get { return a; } set { a = value; } }
+	public Vector3 B { get { return b; } set { b = value; } }
+}
+public class ListPairVector3
+{
+	List<Vector3> listA;
+	List<Vector3> listB;
+	public ListPairVector3()
+	{
+		listA = new List<Vector3>();
+		listB = new List<Vector3>();
+	}
+	public ListPairVector3(List<Vector3> listA, List<Vector3> listB)
+	{
+		this.listA = listA;
+		this.listB = listB;
+	}
+	public List<Vector3> ListA { get { return listA; } set { listA = value; } }
+	public List<Vector3> ListB { get { return listB; } set { listB = value; } }
+	public void Add(Vector3 a, Vector3 b)
+	{
+		listA.Add(a);
+		listB.Add(b);
+	}
+	public void Add(PairVector3 a)
+	{
+		listA.Add(a.A);
+		listB.Add(a.B);
+	}
+	public void Clear()
+	{
+		listA.Clear();
+		listB.Clear();
+	}
+}
 public class MainController : Singleton<MainController>
 {
 
@@ -52,7 +95,7 @@ public class MainController : Singleton<MainController>
         else if (Input.GetKeyDown(KeyCode.D))
         {
             print("D key was pressed");
-            if (selectFloor != 0 && selectFloor < Buildings.Count)
+            if ( Buildings.Count> 0 && selectFloor < Buildings.Count)
             { 
                 DeleteFloor();
             }
@@ -176,13 +219,14 @@ public class MainController : Singleton<MainController>
                 //*** 這個offsetValue ?? 待觀察
                 offsetValue = (Buildings[selectFloor - 1].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up;
 				Buildings[selectFloor - 1].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
+
+				//*** 如果原本上層的屋面有調整過舉架高度，要變回預設值時要補上一段offset
 				for (int iIndex = selectFloor; iIndex < Buildings.Count; iIndex++)
 				{
 					Buildings[iIndex].BuildingMove(-offsetValue);
-				}
+ 				}
 			}
-            //Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
-            //*** 下面這行是不是不用?
+
             Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor+1].GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
 
             Buildings.Insert(selectFloor, newBuilding.GetComponent<BuildingObj>());
@@ -230,7 +274,6 @@ public class MainController : Singleton<MainController>
             float mainRidgeHeightOffset = (int)Buildings[selectFloor].roofController.mainRidgeHeightOffset;
 
             Debug.Log("TopFloor");
-            Vector3 offsetValue = (Buildings[selectFloor - 1].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up;
             Buildings[selectFloor - 1].ResetRoofFunction(mainRidgeHeightOffset, allJijaHeight, null, false, roofType);
         }
         else
@@ -239,10 +282,13 @@ public class MainController : Singleton<MainController>
             {
                 Vector3 offsetValue = (Buildings[selectFloor + 1].roofController.allJijaHeight - initAllJijaHeight_DownStair) * Vector3.up;
                 Buildings[selectFloor - 1].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor + 1].GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
-                //for (int iIndex = selectFloor + 1; iIndex < Buildings.Count; iIndex++)
-                //{
-                //    Buildings[iIndex].BuildingMove(-offsetValue);
-                //}
+
+				//如果原本上層的屋面有調整過舉架高度，要變回預設值時要補上一段offset
+                for (int iIndex = selectFloor + 1; iIndex < Buildings.Count; iIndex++)
+                {
+                    Buildings[iIndex].BuildingMove(-offsetValue);
+                }
+
             }
         }
         Destroy(Buildings[selectFloor].gameObject);

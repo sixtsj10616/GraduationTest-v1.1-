@@ -23,7 +23,7 @@ public class BodyController : MonoBehaviour
 	public float goldColumnRatio2platformOffset;
 
 	public int goldColumnbayNumber = 3;//間數量
-	public int eaveColumnbayNumber = 0;
+	public int eaveColumnbayNumber = 5;
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
 	public float eaveColumnRadius=1;
@@ -37,6 +37,34 @@ public class BodyController : MonoBehaviour
 	public List<ColumnStruct> eaveCornerColumnList = new List<ColumnStruct>();
 	public List<Vector3> zzz = new List<Vector3>();
 	//***********************************************************************
+	public List<Vector3> GetColumnStructTopPosList(List<ColumnStruct> columnStructList)
+	{
+		List<Vector3> posList = new List<Vector3>();
+		for (int i = 0; i < columnStructList.Count; i++)
+		{
+			posList.Add(columnStructList[i].topPos);
+		}
+		return posList;
+	}
+	public List<Vector3> GetColumnStructBottomPosList(List<ColumnStruct> columnStructList)
+	{
+		List<Vector3> posList = new List<Vector3>();
+		for (int i = 0; i < columnStructList.Count; i++)
+		{
+			posList.Add(columnStructList[i].bottomPos);
+		}
+		return posList;
+	}
+	public List<Vector3> GetColumnStructPosList(List<ColumnStruct> columnStructList)
+	{
+		List<Vector3> posList = new List<Vector3>();
+		for (int i = 0; i < columnStructList.Count; i++)
+		{
+			posList.Add((columnStructList[i].bottomPos + columnStructList[i].topPos) / 2.0f);
+		}
+		return posList;
+	}
+
 	public void InitFunction(BuildingObj parentObj, List<Vector3> bottomPosList, float platformFrontWidth, float platformHeight, float eaveColumnHeight, float goldColumnHeight)
 	{
 		//初始值******************************************************************************
@@ -61,7 +89,7 @@ public class BodyController : MonoBehaviour
 				CreateBody(bottomPosList, parentObj.bodyCenter);
 				if(goldColumnList.Count>0)
 				{
-					//CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
+					CreateRingWall(GetColumnStructPosList(goldColumnList), goldColumnRadius, goldColumnbayNumber);
 				}
 				if (eaveColumnList.Count > 0) 
 				{
@@ -86,41 +114,8 @@ public class BodyController : MonoBehaviour
 			goldColumnList[i].topPos += offset;
 			goldColumnList[i].bottomPos += offset;
 		}
+	}
 
-		//for (int i = 0; i < eaveCornerColumnList.Count; i++)
-		//{
-		//	eaveCornerColumnList[i].topPos += offset;
-		//	eaveCornerColumnList[i].bottomPos += offset;
-		//}
-
-	}
-	public List<Vector3> GetColumnStructTopPosList(List<ColumnStruct> columnStructList) 
-	{
-		List<Vector3> posList = new List<Vector3>();
-		for (int i = 0; i < columnStructList.Count; i++)
-		{
-			posList.Add(columnStructList[i].topPos);
-		}
-		return posList;
-	}
-	public List<Vector3> GetColumnStructBottomPosList(List<ColumnStruct> columnStructList)
-	{
-		List<Vector3> posList = new List<Vector3>();
-		for (int i = 0; i < columnStructList.Count; i++)
-		{
-			posList.Add(columnStructList[i].bottomPos);
-		}
-		return posList;
-	}
-	public List<Vector3> GetColumnStructPosList(List<ColumnStruct> columnStructList)
-	{
-		List<Vector3> posList = new List<Vector3>();
-		for (int i = 0; i < columnStructList.Count; i++)
-		{
-			posList.Add((columnStructList[i].bottomPos + columnStructList[i].topPos)/2.0f);
-		}
-		return posList;
-	}
 	private ColumnStruct CreateColumn(GameObject parentObj, Vector3 pos, float topRadius, float downRadius, float height, float fundationRadius, float fundationHeight, string name = "Column")
 	{
 		ColumnStruct columnStruct=new ColumnStruct();
@@ -274,6 +269,8 @@ public class BodyController : MonoBehaviour
 			Vector3 posZ = (columnList[i] + columnList[(i + 1) % columnList.Count]) / 2.0f + (heightOffset + friezeHeight / 2.0f + friezeWallHeight / 2.0f) * Vector3.up;
 			MeshCenter.Instance.CreateCubeMesh(posZ, dis, friezeWallHeight, 0.5f, rotateAngleZ, meshFilter);
 
+			if (dis >= eaveColumnModelStruct.sparrowBraceModelStruct.bound.size.z)
+			{
 			//sparrowBrace
 			Vector3 posX = dir.normalized * (columnRadius) + columnList[i] + (heightOffset - friezeHeight / 2.0f) * Vector3.up;
 			float rotateAngleX = (Vector3.Dot(Vector3.right, dir) > 0 ? Vector3.Angle(dir, Vector3.forward) : -Vector3.Angle(dir, Vector3.forward));
@@ -288,6 +285,7 @@ public class BodyController : MonoBehaviour
 			sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngleX, Vector3.up) * Quaternion.Euler(eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
 		
 			sparrowBrace.transform.parent = parentObj.body.transform;
+			}
 		}
 	
 	}
