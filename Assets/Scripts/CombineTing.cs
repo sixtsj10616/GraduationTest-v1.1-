@@ -224,6 +224,7 @@ public class CombineTing : MonoBehaviour
                     if (!MidPlane.SameSide(surfaceRidge.tilePosList[0], BasePos) && !MidPlane.SameSide(surfaceRidge.tilePosList[1], BasePos))
                     {
                         surfaceRidge.tilePosList.RemoveAt(0);
+                        surfaceRidge.roundTileModelList[0].transform.parent = null;
                         Destroy(surfaceRidge.roundTileModelList[0].gameObject);
                         surfaceRidge.roundTileModelList.RemoveAt(0);
                     }
@@ -236,6 +237,7 @@ public class CombineTing : MonoBehaviour
                 //if (!MidPlane.SameSide(surfaceRidge.tilePosList[0], BasePos))
                 {
                     surfaceRidge.tilePosList.RemoveAt(0);
+                    surfaceRidge.roundTileModelList[0].transform.parent = null;
                     Destroy(surfaceRidge.roundTileModelList[0].gameObject);
                     surfaceRidge.roundTileModelList.RemoveAt(0);
                 }

@@ -30,6 +30,10 @@ public class PlatformController : MonoBehaviour
     //***********************************************************************
 	public PlatFormStruct platFormStruct;
 	public List<Vector3> zzz = new List<Vector3>();
+
+    /**
+     * 初始化基座
+     */
     public void InitFunction(BuildingObj parentObj,Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight )
     {
 		this.parentObj = parentObj;
@@ -58,6 +62,9 @@ public class PlatformController : MonoBehaviour
         platFormStruct = CreatePlatformForCombinTing(parentObj.platform, platformCenter);
         //CreatePlatformForCombinTing(parentObj.platform, RTingCenter);
     }
+    /**
+     * 更新移動後資訊
+     */
     public void MoveValueUpdate(Vector3 offset)
 	{
 		for (int i = 0; i < platFormStruct.bottomPointPosList.Count; i++)
@@ -73,6 +80,9 @@ public class PlatformController : MonoBehaviour
 			platFormStruct.stairPosList[i] += offset;
 		}
 	}
+    /**
+     * 沒用到??
+     */
 	public void SetStair(bool isStair) 
 	{
 		if (isStair)
@@ -90,16 +100,10 @@ public class PlatformController : MonoBehaviour
 				platFormStruct.stairList.Clear();
 			}
 		}
-	
 	}
-	void ShowPos(Vector3 pos, GameObject parent, Color color, float localScale = 0.2f)
-	{
-		GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		obj.transform.position = pos;
-		obj.transform.parent = parent.transform;
-		obj.transform.localScale = Vector3.one * localScale;
-		obj.GetComponent<MeshRenderer>().material.color = color;
-	}
+    /**
+     * 製作基座
+     */
 	private PlatFormStruct CreatePlatform(GameObject parent, Vector3 pos)
 	{
 
@@ -244,6 +248,9 @@ public class PlatformController : MonoBehaviour
         }
         return platFormStruct;
     }
+    /**
+     * 製作樓梯
+     */
     private GameObject CreateStair(GameObject parentObj, Vector3 pos, Vector3 dir, float width, float height, float length)
 	{
         GameObject stair = new GameObject("Stair");
@@ -257,7 +264,10 @@ public class PlatformController : MonoBehaviour
 
 		return stair;
     }
-	private List<GameObject> CreateRingStair(GameObject parentObj, List<Vector3> posList, List<Vector3> dirList, float stairWidth, float stairHeight, float stairLength)
+    /**
+     * 建築一圈皆製作樓梯
+     */
+    private List<GameObject> CreateRingStair(GameObject parentObj, List<Vector3> posList, List<Vector3> dirList, float stairWidth, float stairHeight, float stairLength)
 	{
 		List<GameObject> stairList=new List<GameObject>();
 		for (int i = 0; i < (int)MainController.Instance.sides; i++)
