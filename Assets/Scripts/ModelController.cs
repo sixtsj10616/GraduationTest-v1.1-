@@ -14,7 +14,6 @@ public struct ModelStruct//模型旋轉、縮放
 		this.scale = scale;
 
 		this.bound = model.GetComponentInChildren<Collider>().bounds;
-
 		model.transform.GetChild(0).localScale = Vector3.Scale(scale, model.transform.GetChild(0).localScale);
 		bound.SetMinMax(Vector3.Scale(bound.min, scale), Vector3.Scale(bound.max, scale));
 

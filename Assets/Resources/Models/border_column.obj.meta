@@ -1,17 +1,17 @@
 fileFormatVersion: 2
-guid: 25c5d9da06cb13645a99d38f08c201f5
-timeCreated: 1487650482
+guid: 3747cf18a2081ed4da426a2b627fc430
+timeCreated: 1495782289
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
     100000: //RootNode
-    100002: object
+    100002: chineseSmall
     400000: //RootNode
-    400002: object
-    2300000: object
-    3300000: object
-    4300000: object
+    400002: chineseSmall
+    2300000: chineseSmall
+    3300000: chineseSmall
+    4300000: chineseSmall
   materials:
     importMaterials: 1
     materialName: 0
@@ -57,7 +57,7 @@ ModelImporter:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
-  importAnimation: 1
+  importAnimation: 0
   copyAvatar: 0
   humanDescription:
     serializedVersion: 2
@@ -74,7 +74,7 @@ ModelImporter:
     rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
     hasExtraRoot: 0
-    skeletonHasParents: 0
+    skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   animationType: 0
   humanoidOversampling: 1

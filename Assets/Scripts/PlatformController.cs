@@ -16,9 +16,9 @@ public class PlatformController : MonoBehaviour
 	public BuildingObj parentObj = null;
 	//Platform**************************************************************************
 	public enum PlatformType { };
-	public float platformFrontWidth;
-	public float platformFrontLength;
-	public float platformHeight;
+	public float platWidth;
+	public float platLength;
+	public float platHeight;
 
 	//Stair**************************************************************************
 	public float stairWidth = 10;
@@ -33,32 +33,43 @@ public class PlatformController : MonoBehaviour
     /**
      * 初始化基座
      */
-    public void InitFunction(BuildingObj parentObj,Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight )
+	public void InitFunction(BuildingObj parentObj, Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight, bool isStair)
     {
 		this.parentObj = parentObj;
-        this.platformFrontWidth = platformFrontWidth;
-        this.platformFrontLength = platformFrontLength;
-        this.platformHeight = platformHeight;
+		this.platWidth = platformFrontWidth;
+		this.platLength = platformFrontLength;
+		this.platHeight = platformHeight;
+		this.isStair=isStair;
 		stairHeight = platformHeight;
 
 		parentObj.platformCenter = platformCenter;
         //***********************************************************************
-		 platFormStruct = CreatePlatform(parentObj.platform, platformCenter);
+		platFormStruct = CreatePlatform(parentObj.platform, platformCenter);
+		StartCreateStair(isStair);
 		//***********************************************************************
     }
     /**
      * 組合亭初始化基座
      */
+	void ShowPos(Vector3 pos, GameObject parent, Color color, float localScale = 0.2f)
+	{
+		GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		obj.transform.position = pos;
+		obj.transform.parent = parent.transform;
+		obj.transform.localScale = Vector3.one * localScale;
+		obj.GetComponent<MeshRenderer>().material.color = color;
+	}
     public void InitFunctionForCombinTing(BuildingObj parentObj, Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight)
     {
         
         this.parentObj = parentObj;
-        this.platformFrontWidth = platformFrontWidth;
-        this.platformFrontLength = platformFrontLength;
-        this.platformHeight = platformHeight;
+		this.platWidth = platformFrontWidth;
+		this.platLength = platformFrontLength;
+		this.platHeight = platformHeight;
         stairHeight = platformHeight;
         parentObj.platformCenter = platformCenter;
         platFormStruct = CreatePlatformForCombinTing(parentObj.platform, platformCenter);
+		StartCreateStair(false);
         //CreatePlatformForCombinTing(parentObj.platform, RTingCenter);
     }
     /**
@@ -82,11 +93,14 @@ public class PlatformController : MonoBehaviour
     /**
      * 沒用到??
      */
-	public void SetStair(bool isStair) 
+	public void StartCreateStair(bool isStair) 
 	{
+		this.isStair=isStair;
+
 		if (isStair)
 		{
-			platFormStruct.stairList = CreateRingStair(parentObj.platform, platFormStruct.stairPosList, platFormStruct.facadeDir, stairWidth, stairHeight, stairLength);
+			 if(platFormStruct.stairList.Count==0)
+				platFormStruct.stairList = CreateRingStair(parentObj.platform, platFormStruct.stairPosList, platFormStruct.facadeDir, stairWidth, stairHeight, stairLength);
 		}
 		else 
 		{
@@ -118,7 +132,7 @@ public class PlatformController : MonoBehaviour
 		List<Vector3> controlPointPosList = new List<Vector3>();
 
 		//初始值******************************************************************************
-		float platformRadius = (platformFrontWidth / 2.0f) / Mathf.Sin(2f * Mathf.PI / ((int)MainController.Instance.sides * 2));
+		float platformRadius = (platWidth / 2.0f) / Mathf.Sin(2f * Mathf.PI / ((int)MainController.Instance.sides * 2));
 		//***********************************************************************************
 
 		if (isCurvePlatform)
@@ -129,18 +143,18 @@ public class PlatformController : MonoBehaviour
 			localPosList.Add(new Vector3(16, 0, 16));
 			localPosList.Add(new Vector3(13, -3, 13));
 			localPosList.Add(new Vector3(18, -8, 18));
-            platformHeight = Mathf.Abs(localPosList[0].y - localPosList[localPosList.Count - 1].y);
+			platHeight = Mathf.Abs(localPosList[0].y - localPosList[localPosList.Count - 1].y);
             controlPointPosList = MeshCenter.Instance.CreateRegularCurveRingMesh(pos, localPosList, Vector3.up, (int)MainController.Instance.sides, 100, 360.0f / (int)MainController.Instance.sides / 2, meshFilter);
         }
         else
 		{
             if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
             {
-                controlPointPosList = MeshCenter.Instance.CreateCubeMesh(pos, platformFrontWidth, platformHeight, platformFrontLength, -90, meshFilter);
+				controlPointPosList = MeshCenter.Instance.CreateCubeMesh(pos, platWidth, platHeight, platLength, -90, meshFilter);
             }
             else
             {
-                controlPointPosList = MeshCenter.Instance.CreateRegularRingMesh(pos, (int)MainController.Instance.sides, platformRadius, platformHeight, 360.0f / (int)MainController.Instance.sides / 2, meshFilter);
+				controlPointPosList = MeshCenter.Instance.CreateRegularRingMesh(pos, (int)MainController.Instance.sides, platformRadius, platHeight, 360.0f / (int)MainController.Instance.sides / 2, meshFilter);
             }
         }
 		//計算底部與頂部位置
@@ -153,11 +167,11 @@ public class PlatformController : MonoBehaviour
 
 			platFormStruct.topPointPosList.Add(controlPointPosList[(controlPointPosList.Count - 1) - ((int)(MainController.Instance.sides - 1)) + i]);
 		}
-        /*
+        
 		ShowPos(platFormStruct.bottomPointPosList[0], platformBody, Color.black, 1.0f);
 		ShowPos(platFormStruct.bottomPointPosList[1], platformBody, Color.red, 1.0f);
 		ShowPos(platFormStruct.bottomPointPosList[2], platformBody, Color.yellow, 1.0f);
-        */
+        
 		//計算facadeDir與stair位置
 		platFormStruct.facadeDir.Clear();
 		platFormStruct.stairPosList.Clear();
@@ -191,7 +205,7 @@ public class PlatformController : MonoBehaviour
         controlPointPosList.Clear();
 
         //初始值******************************************************************************
-        float platformRadius = (platformFrontWidth / 2.0f) / Mathf.Sin(2f * Mathf.PI / ((int)MainController.Instance.sides * 2));
+		float platformRadius = (platWidth / 2.0f) / Mathf.Sin(2f * Mathf.PI / ((int)MainController.Instance.sides * 2));
         //***********************************************************************************
 
         if (isCurvePlatform)
@@ -202,18 +216,18 @@ public class PlatformController : MonoBehaviour
             localPosList.Add(new Vector3(16, 0, 16));
             localPosList.Add(new Vector3(13, -3, 13));
             localPosList.Add(new Vector3(18, -8, 18));
-            platformHeight = Mathf.Abs(localPosList[0].y - localPosList[localPosList.Count - 1].y);
+			platHeight = Mathf.Abs(localPosList[0].y - localPosList[localPosList.Count - 1].y);
             controlPointPosList = MeshCenter.Instance.CreateRegularCurveRingMesh(centerPostion, localPosList, Vector3.up, (int)MainController.Instance.sides, 100, 360.0f / (int)MainController.Instance.sides / 2, meshFilter);
         }
         else
         {
             if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
             {
-                controlPointPosList = MeshCenter.Instance.CreateCubeMesh(centerPostion, platformFrontWidth, platformHeight, platformFrontLength, -45, meshFilter);
+				controlPointPosList = MeshCenter.Instance.CreateCubeMesh(centerPostion, platWidth, platHeight, platLength, -45, meshFilter);
             }
             else
             {
-                controlPointPosList = MeshCenter.Instance.CreateRegularRingMesh(centerPostion, (int)MainController.Instance.sides, platformRadius, platformHeight, 360.0f / (int)MainController.Instance.sides / 2, meshFilter);
+				controlPointPosList = MeshCenter.Instance.CreateRegularRingMesh(centerPostion, (int)MainController.Instance.sides, platformRadius, platHeight, 360.0f / (int)MainController.Instance.sides / 2, meshFilter);
             }
         }
         //計算底部與頂部位置
@@ -263,12 +277,13 @@ public class PlatformController : MonoBehaviour
     /**
      * 建築一圈皆製作樓梯
      */
-    private List<GameObject> CreateRingStair(GameObject parentObj, List<Vector3> posList, List<Vector3> dirList, float stairWidth, float stairHeight, float stairLength)
+    private List<GameObject> CreateRingStair(GameObject parent, List<Vector3> posList, List<Vector3> dirList, float stairWidth, float stairHeight, float stairLength)
 	{
 		List<GameObject> stairList=new List<GameObject>();
 		for (int i = 0; i < (int)MainController.Instance.sides; i++)
 		{
-			stairList.Add(CreateStair(parentObj, posList[i] + platFormStruct.facadeDir[i] * stairLength / 2.0f, dirList[i], stairWidth, stairHeight, stairLength));
+			if (!parentObj.entraneIndexList.Contains(i)) { continue; }
+			stairList.Add(CreateStair(parent, posList[i] + platFormStruct.facadeDir[i] * stairLength / 2.0f, dirList[i], stairWidth, stairHeight, stairLength));
 		}
 		return stairList;
 	}
