@@ -23,7 +23,7 @@ public class BodyController : MonoBehaviour
 
 	public float goldColumnRatio2platformOffset;
 
-	public int goldColumnbayNumber = 3;//間數量
+	public int goldColumnbayNumber = 10;//間數量
 	public int eaveColumnbayNumber = 3;
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
@@ -107,7 +107,6 @@ public class BodyController : MonoBehaviour
 			eaveColumnList[i].topPos += offset;
 			eaveColumnList[i].bottomPos += offset;
 		}
-		Debug.Log("eaveColumnList[0].bottomPos :" + eaveColumnList[0].bottomPos);
 		for (int i = 0; i < goldColumnList.Count; i++)
 		{
 			goldColumnList[i].topPos += offset;

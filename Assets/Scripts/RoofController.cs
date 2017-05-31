@@ -244,9 +244,9 @@ public class RoofController : MonoBehaviour
 		beamsHeight = columnHeight * 0.0f;
 
 		parentObj.roofTopCenter = parentObj.bodyCenter + new Vector3(0, columnHeight / 2.0f + this.allJijaHeight, 0);
-		//ShowPos(parentObj.bodyCenter, parentObj.roof, Color.green, 1.0f);
-		//ShowPos(parentObj.platformCenter, parentObj.roof, Color.yellow, 1.0f);
-		//ShowPos(parentObj.roofTopCenter, parentObj.roof, Color.black, 1.0f);
+		ShowPos(parentObj.bodyCenter, parentObj.roof, Color.green, 1.0f);
+		ShowPos(parentObj.platformCenter, parentObj.roof, Color.yellow, 1.0f);
+		ShowPos(parentObj.roofTopCenter, parentObj.roof, Color.black, 1.0f);
 
 
 		Wu_Dian_DingMainRidgeWidth = platformWidth * 0.5f;

@@ -81,7 +81,7 @@ public class BuildingObj : MonoBehaviour {
 		roofController = building.AddComponent<RoofController>();
 
 		//入口位置
-		entraneIndexList.SetEntranceIndex(0, 2);
+		entraneIndexList.SetEntranceIndex(0,1, 2);
 
         if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
         {
@@ -95,7 +95,7 @@ public class BuildingObj : MonoBehaviour {
             bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
             roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, isDownFoloor, roofType);
         }
-        buildingHeight = Vector3.Distance(roofTopCenter, platformCenter);
+		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
 
 	}
     /**

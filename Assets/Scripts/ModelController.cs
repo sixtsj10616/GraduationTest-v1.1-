@@ -19,7 +19,17 @@ public struct ModelStruct//模型旋轉、縮放
 
 	}
 }
+public struct BorderModelStruct
+{
+	public ModelStruct fenceModelStruct;
+	public ModelStruct fenceWallModelStruct;
 
+	public BorderModelStruct(ModelStruct fenceModelStruct, ModelStruct fenceWallModelStruct)
+	{
+		this.fenceModelStruct = fenceModelStruct;
+		this.fenceWallModelStruct = fenceWallModelStruct;
+	}
+}
 public struct EaveColumnModelStruct
 {
     public ModelStruct friezeModelStruct;
@@ -69,8 +79,20 @@ public struct RoofSurfaceModelStruct//屋面模型
 }
 public class ModelController : Singleton<ModelController>
 {
+	//************************ 女兒牆 ************************
+	[HideInInspector]
+	public BorderModelStruct borderModelStruct;
 
-    //************************ 欄杆 ************************
+	public GameObject fenceModel;
+	public Vector3 fenceModelRotation = Vector3.zero;
+	public Vector3 fenceModelScale = new Vector3(1, 1, 1);
+	private ModelStruct fenceModelStruct;
+
+	public GameObject fenceWallModel;
+	public Vector3 fenceWallModelRotation = Vector3.zero;
+	public Vector3 fenceWallModelScale = new Vector3(1, 1, 1);
+	private ModelStruct fenceWallModelStruct;
+    //************************ 檐柱 ************************
     [HideInInspector]
     public EaveColumnModelStruct eaveColumnModelStruct;
 
@@ -88,6 +110,7 @@ public class ModelController : Singleton<ModelController>
 	public Vector3 sparrowBraceModelRotation = Vector3.zero;
 	public Vector3 sparrowBraceModelScale = new Vector3(5, 5, 5);
 	private ModelStruct sparrowBraceModelStruct;
+	//************************ 金柱 ************************
     [HideInInspector]
     public GoldColumnModelStruct goldColumnModelStruct;
 
@@ -132,6 +155,11 @@ public class ModelController : Singleton<ModelController>
     
     void Awake()
     {
+		//*** Border ***
+		fenceModelStruct = new ModelStruct(fenceModel, fenceModelRotation, fenceModelScale);
+		fenceWallModelStruct = new ModelStruct(fenceWallModel, fenceWallModelRotation, fenceWallModelScale);
+		borderModelStruct = new BorderModelStruct(fenceModelStruct, fenceWallModelStruct);
+
         //*** 欄杆 ***
         friezeModelStruct = new ModelStruct(friezeModel, friezeModelRotation, friezeModelScale);
         balustradeModelStruct = new ModelStruct(balustradeModel, balustradeModelRotation, balustradeModelScale);
