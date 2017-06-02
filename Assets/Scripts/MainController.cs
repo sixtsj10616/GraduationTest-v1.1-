@@ -167,22 +167,6 @@ public class MainController : Singleton<MainController>
 			building.GetComponent<BuildingObj>().InitFunction(building, buildingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, false, (int)roofType, true);
             Buildings.Add(building.GetComponent<BuildingObj>());
         }
-
-        GameObject flyRafer = new GameObject("flyRafer");
-        MeshFilter meshFilter = flyRafer.AddComponent<MeshFilter>();
-        MeshRenderer meshRenderer = flyRafer.AddComponent<MeshRenderer>();
-        meshRenderer.material.color = Color.white;
-        flyRafer.transform.parent = transform;
-        List<Vector3> posList = new List<Vector3>();
-        posList.Add(new Vector3(100, 0, 100));
-        posList.Add(new Vector3(111, 0, 111));
-        posList.Add(new Vector3(112, 0, 112));
-        List<Vector3> upList = new List<Vector3>();
-        upList.Add(Vector3.up);
-        upList.Add(Vector3.up);
-        upList.Add(Vector3.up);
-        MeshCenter.Instance.CreateCurveCubeMesh(posList, upList, 0.5f, 0.5f, meshFilter);
-
     }
 
 	/**
@@ -200,7 +184,7 @@ public class MainController : Singleton<MainController>
 				//新加入一層樓
 				GameObject newBuilding = new GameObject("building" + buildingCount++);
 				newBuilding.gameObject.AddComponent<BuildingObj>();
-				newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, pos + (initPlatformHeight_TopStair / 2.0f - (allJijaHeight - initAllJijaHeight_DownStair)) * Vector3.up, initPlatformLength_DownStair * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformWidth_DownStair * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformHeight_TopStair, initEaveColumnHeight, initGoldColumnHeight, mainRidgeHeightOffset, allJijaHeight, null, false, type, false);
+				newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, pos + (initPlatformHeight_TopStair / 2.0f - (allJijaHeight - initAllJijaHeight_DownStair)) * Vector3.up, initPlatformLength_DownStair * Mathf.Pow(floorScaleRatio, selectFloor+1), initPlatformWidth_DownStair * Mathf.Pow(floorScaleRatio, selectFloor+1), initPlatformHeight_TopStair, initEaveColumnHeight, initGoldColumnHeight, mainRidgeHeightOffset, allJijaHeight, null, false, type, false);
 
 				//重新更新selectFloor屋頂
 				Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding);
@@ -224,7 +208,7 @@ public class MainController : Singleton<MainController>
 				//新加入一層樓
 				GameObject newBuilding = new GameObject("building" + buildingCount++);
 				newBuilding.gameObject.AddComponent<BuildingObj>();
-				newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, pos + (initPlatformHeight_TopStair / 2.0f) * Vector3.up, initPlatformLength_DownStair * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformWidth_DownStair * Mathf.Pow(floorScaleRatio, selectFloor), initPlatformHeight_TopStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor + 1].platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding, false);
+				newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, pos + (initPlatformHeight_TopStair / 2.0f) * Vector3.up, initPlatformLength_DownStair * Mathf.Pow(floorScaleRatio, selectFloor+1), initPlatformWidth_DownStair * Mathf.Pow(floorScaleRatio, selectFloor+1), initPlatformHeight_TopStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor + 1].platformController.platFormStruct.bottomPointPosList, true, (int)RoofType.Lu_Ding, false);
 			
 				if (selectFloor != 0)
 				{

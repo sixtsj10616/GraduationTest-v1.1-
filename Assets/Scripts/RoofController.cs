@@ -208,7 +208,7 @@ public class RoofController : MonoBehaviour
 	//Parameter**********************************************************************************
 	private enum MidRoofSurfaceControlPointType { MidRoofSurfaceTopPoint, MidRoofSurfaceMidPoint, MidRoofSurfaceDownPoint };//屋面
 
-	public float flyEaveHeightOffset = 3.0f;        //飛簷上翹程度
+	public float flyEaveHeightOffset = 1.0f;        //飛簷上翹程度
 	public float mainRidgeHeightOffset;             //主脊曲線上翹程度
 	public float roofSurfaceHeightOffset = -1.0f;    //屋面曲線上翹程度
 	public float eaveCurveHeightOffset = -3f;       //屋簷高度
@@ -216,8 +216,8 @@ public class RoofController : MonoBehaviour
 	public float roofSurfaceTileHeight = 0.95f;     //屋面瓦片高度
 	public float mainRidgeTileHeight = 0.3f;        //主脊瓦片高度
 
-	public float flyRafterWidth = 0.6f;
-	public float flyRafterHeight = 0.6f;
+	public float flyRafterWidth = 0.3f;
+	public float flyRafterHeight = 0.3f;
 	//公式變數*************************************************************************************
 	float anchorDis = 0f;//曲線innerPoint換算anchorPoint間距
 	public bool isDownFloor;
@@ -241,7 +241,7 @@ public class RoofController : MonoBehaviour
 		SetRoofType(roofType);
 		eave2eaveColumnOffset = columnHeight * 0.6f;
 		eave2FlyEaveOffset = columnHeight * 0.6f;
-		beamsHeight = columnHeight * 0.0f;
+		beamsHeight = columnHeight * 0.2f;
 
 		parentObj.roofTopCenter = parentObj.bodyCenter + new Vector3(0, columnHeight / 2.0f + this.allJijaHeight, 0);
 		ShowPos(parentObj.bodyCenter, parentObj.roof, Color.green, 1.0f);
@@ -667,119 +667,174 @@ public class RoofController : MonoBehaviour
 
 		return roofSurfaceRidgeStruct;
 
-		//===============================          檐椽用        ===========================================//
-
-		//         if(baseListIndex<totalBaseListIndex*0.8f)
-		//         {
-		//         	GameObject flyRafer = new GameObject("flyRafer");
-		//         	MeshFilter meshFilter = flyRafer.AddComponent<MeshFilter>();
-		//         	MeshRenderer meshRenderer = flyRafer.AddComponent<MeshRenderer>();
-		//         	meshRenderer.material.color = Color.white;
-		//         	flyRafer.transform.parent = baseList.body.transform;
-		//         	List<Vector3> roofSurfaceTileList2FlyRafter = new List<Vector3>();
-		// 
-		//         	for (int i = 0; i < roofSurfaceTileList.Count; i++)
-		//         	{
-		//         		roofSurfaceTileList2FlyRafter.Add(roofSurfaceTileList[i] + upVectorList[i].normalized * flyingRafterHeightOffset);
-		//         	}
-		//         	MeshCenter.Instance.CreateCurveCubeMesh(roofSurfaceTileList2FlyRafter, upVectorList, 0.5f, 0.5f, meshFilter);
-		//         }
-		//         return roofSurfaceTileList;
-
-		//===============================          檐椽用        ===========================================//
+	//===============================          檐椽        ===========================================//
 	}
-	void CreateFlyRafer(RoofSurfaceStruct roofSurfaceStruct, float flyRafterWidth, float flyRafterHeight, float flyRafterHeightOffset, float createRatioOverRoofSurfaceStruct = 1)
+	void CreateFlyRafer(RoofSurfaceStruct roofSurfaceStruct, float flyRafterWidth, float flyRafterHeight, float flyRafterHeightOffset, float rafterDisOverRoofSurfaceStruct,Vector3 rightMainRidgeRafterPos, Vector3 leftMainRidgeRafterPos)
 	{
-		//***********************************   VerticalRafter   ***********************************
-		GameObject flyRafer = new GameObject("flyRafer");
-		flyRafer.transform.parent = roofSurfaceStruct.body.transform;
-
-		ListPairVector3 midPosUpVectorList = new ListPairVector3();
-		List<ListPairVector3> rightPosUpVectorList = new List<ListPairVector3>();
-		List<ListPairVector3> leftPosUpVectorList = new List<ListPairVector3>();
-		//MidRafter
-		#region  MidRafter
+		int flyRaferLayerCount=1;
+		for (int n = 0; n < flyRaferLayerCount; n++)
 		{
-			GameObject mFlyRafter = new GameObject("M_FlyRafer");
-			MeshFilter meshFilter = mFlyRafter.AddComponent<MeshFilter>();
-			MeshRenderer meshRenderer = mFlyRafter.AddComponent<MeshRenderer>();
-			meshRenderer.material.color = Color.white;
-			mFlyRafter.transform.parent = flyRafer.transform;
-			for (int j = 0; j < roofSurfaceStruct.midRoofSurfaceTileRidge.tilePosList.Count; j++)
+			//***********************************   VerticalRafter   ***********************************
+			GameObject flyRafer = new GameObject("flyRafer");
+			flyRafer.transform.parent = roofSurfaceStruct.body.transform;
+
+			ListPairVector3 midPosUpVectorList = new ListPairVector3();
+			List<ListPairVector3> rightPosUpVectorList = new List<ListPairVector3>();
+			List<ListPairVector3> leftPosUpVectorList = new List<ListPairVector3>();
+			//MidRafter
+			#region  MidRafter
 			{
-				midPosUpVectorList.Add(new PairVector3(roofSurfaceStruct.midRoofSurfaceTileRidge.tilePosList[j] + roofSurfaceStruct.midRoofSurfaceTileRidge.tileUpVectorList[j].normalized * flyRafterHeightOffset, roofSurfaceStruct.midRoofSurfaceTileRidge.tileUpVectorList[j].normalized));
-			}
-			MeshCenter.Instance.CreateCurveCubeMesh(midPosUpVectorList.ListA, roofSurfaceStruct.midRoofSurfaceTileRidge.tileUpVectorList, flyRafterWidth, flyRafterHeight, meshFilter);
-		}
-		#endregion
-		//RightRafter
-		#region  RightRafter
-		for (int iIndex = 0; iIndex < roofSurfaceStruct.rightRoofSurfaceTileRidgeList.Count * createRatioOverRoofSurfaceStruct; iIndex++)
-		{
-			GameObject rFlyRafter = new GameObject("R_FlyRafer");
-			MeshFilter meshFilter = rFlyRafter.AddComponent<MeshFilter>();
-			MeshRenderer meshRenderer = rFlyRafter.AddComponent<MeshRenderer>();
-			meshRenderer.material.color = Color.white;
-			rFlyRafter.transform.parent = flyRafer.transform;
-			ListPairVector3 newListPairVector3 = new ListPairVector3();
-
-			for (int j = 0; j < roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tilePosList.Count; j++)
-			{
-				newListPairVector3.Add(new PairVector3(roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tilePosList[j] + roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized * flyRafterHeightOffset, roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized));
-			}
-			MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList, flyRafterWidth, flyRafterHeight, meshFilter);
-
-			rightPosUpVectorList.Add(newListPairVector3);
-		}
-		#endregion
-		//LeftRafer
-		#region  LeftRafter
-		for (int iIndex = 0; iIndex < roofSurfaceStruct.leftRoofSurfaceTileRidgeList.Count * createRatioOverRoofSurfaceStruct; iIndex++)
-		{
-			GameObject lFlyRafter = new GameObject("L_FlyRafer");
-			MeshFilter meshFilter = lFlyRafter.AddComponent<MeshFilter>();
-			MeshRenderer meshRenderer = lFlyRafter.AddComponent<MeshRenderer>();
-			meshRenderer.material.color = Color.white;
-			lFlyRafter.transform.parent = flyRafer.transform;
-			ListPairVector3 newListPairVector3 = new ListPairVector3();
-
-			for (int j = 0; j < roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tilePosList.Count; j++)
-			{
-				newListPairVector3.Add(new PairVector3(roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tilePosList[j] + roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized * flyRafterHeightOffset, roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized));
-			}
-			MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList, flyRafterWidth, flyRafterHeight, meshFilter);
-
-			leftPosUpVectorList.Add(newListPairVector3);
-		}
-		#endregion
-		//***********************************   HorizontalRafter   ***********************************
-		List<ListPairVector3> totalPosList = new List<ListPairVector3>();
-		rightPosUpVectorList.Reverse();
-		totalPosList.AddRange(rightPosUpVectorList);
-		totalPosList.Add(midPosUpVectorList);
-		totalPosList.AddRange(leftPosUpVectorList);
-		for (int iIndex = 0; (iIndex < roofSurfaceStruct.midRoofSurfaceTileRidge.tilePosList.Count); iIndex++)
-		{
-			//間隔5個tile距離才放置凜
-			if ((iIndex % 3 != 0)) continue;
-
-			GameObject vFlyRafter = new GameObject("Lin");
-			MeshFilter meshFilter = vFlyRafter.AddComponent<MeshFilter>();
-			MeshRenderer meshRenderer = vFlyRafter.AddComponent<MeshRenderer>();
-			meshRenderer.material.color = Color.white;
-			vFlyRafter.transform.parent = flyRafer.transform;
-			ListPairVector3 newListPairVector3 = new ListPairVector3();
-			for (int j = 0; j < totalPosList.Count; j++)
-			{
-				if (iIndex < totalPosList[j].ListA.Count)
+				GameObject mFlyRafter = new GameObject("M_FlyRafer");
+				MeshFilter meshFilter = mFlyRafter.AddComponent<MeshFilter>();
+				MeshRenderer meshRenderer = mFlyRafter.AddComponent<MeshRenderer>();
+				meshRenderer.material.color = Color.white;
+				mFlyRafter.transform.parent = flyRafer.transform;
+				for (int j = n; j < roofSurfaceStruct.midRoofSurfaceTileRidge.tilePosList.Count; j++)
 				{
-					newListPairVector3.Add(new PairVector3(totalPosList[j].ListA[iIndex] + flyRafterHeight * totalPosList[j].ListB[iIndex], totalPosList[j].ListB[iIndex]));
+					midPosUpVectorList.Add(new PairVector3(roofSurfaceStruct.midRoofSurfaceTileRidge.tilePosList[j] + roofSurfaceStruct.midRoofSurfaceTileRidge.tileUpVectorList[j].normalized * flyRafterHeightOffset * (n+1), roofSurfaceStruct.midRoofSurfaceTileRidge.tileUpVectorList[j].normalized));
+				}
+				MeshCenter.Instance.CreateCurveCubeMesh(midPosUpVectorList.ListA, roofSurfaceStruct.midRoofSurfaceTileRidge.tileUpVectorList, flyRafterWidth, flyRafterHeight, 1, 1, meshFilter);
+			}
+			#endregion
+
+			int boundaryIndex =0;
+			//RightRafter
+			#region  RightRafter
+			float minDis=float.MaxValue;
+			for (int j = 0; j < roofSurfaceStruct.rightRoofSurfaceTileRidgeList.Count; j++)
+			{
+				float dis = Vector3.Distance(roofSurfaceStruct.rightRoofSurfaceTileRidgeList[j].tilePosList[roofSurfaceStruct.rightRoofSurfaceTileRidgeList[j].tilePosList.Count - 1], rightMainRidgeRafterPos);
+				if (dis < minDis)
+				{
+					minDis = dis;
+					boundaryIndex = j;
+				}
+			}
+	
+			for (int iIndex = 0; iIndex < roofSurfaceStruct.rightRoofSurfaceTileRidgeList.Count-1; iIndex++)
+			{
+				GameObject rFlyRafter = new GameObject("R_FlyRafer");
+				MeshFilter meshFilter = rFlyRafter.AddComponent<MeshFilter>();
+				MeshRenderer meshRenderer = rFlyRafter.AddComponent<MeshRenderer>();
+				meshRenderer.material.color = Color.white;
+				rFlyRafter.transform.parent = flyRafer.transform;
+				ListPairVector3 newListPairVector3 = new ListPairVector3();
+
+
+				if (iIndex < boundaryIndex)
+				{
+					for (int j = n; j < roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tilePosList.Count; j++)
+					{
+						newListPairVector3.Add(new PairVector3(roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tilePosList[j] + roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized * flyRafterHeightOffset * (n + 1), roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized));
+					}
+					MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList, flyRafterWidth, flyRafterHeight, 1, 1, meshFilter);
+				}
+				else
+				{
+					List<Vector3> upVectorList = new List<Vector3>();
+					int lastRidge = (boundaryIndex);
+					int lastRidgeTileCount = roofSurfaceStruct.rightRoofSurfaceTileRidgeList[lastRidge].tilePosList.Count - 1;
+					int size = Mathf.Min(n, roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList.Count - 1);
+
+					newListPairVector3.Add(new PairVector3(roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tilePosList[size] + roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[size].normalized * flyRafterHeightOffset * (n + 1), roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[size].normalized));
+					upVectorList.Add(roofSurfaceStruct.rightRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[size].normalized);
+
+					//newListPairVector3.Add(new PairVector3(roofSurfaceStruct.rightRoofSurfaceTileRidgeList[lastRidge].tilePosList[lastRidgeTileCount] + roofSurfaceStruct.rightRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized * flyRafterHeightOffset * (n + 1), roofSurfaceStruct.rightRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized));
+					newListPairVector3.Add(new PairVector3(rightMainRidgeRafterPos + Vector3.up * flyRafterHeightOffset * (n + 1), roofSurfaceStruct.rightRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized));
+					upVectorList.Add(roofSurfaceStruct.rightRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized);
+
+
+					MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, upVectorList, flyRafterWidth, flyRafterHeight,0,0, meshFilter);
+
+				}
+
+
+				rightPosUpVectorList.Add(newListPairVector3);
+			}
+			#endregion
+			//LeftRafer
+			#region  LeftRafter
+			boundaryIndex = 0;
+			minDis = float.MaxValue;
+			for (int j = 0; j < roofSurfaceStruct.leftRoofSurfaceTileRidgeList.Count; j++)
+			{
+				float dis=Vector3.Distance(roofSurfaceStruct.leftRoofSurfaceTileRidgeList[j].tilePosList[roofSurfaceStruct.leftRoofSurfaceTileRidgeList[j].tilePosList.Count - 1], leftMainRidgeRafterPos);
+				if (dis < minDis)
+				{
+					minDis=dis;
+					boundaryIndex = j;
 				}
 			}
 
-			MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, newListPairVector3.ListB, flyRafterWidth, flyRafterHeight, meshFilter);
-		}
 
+			for (int iIndex = 0; iIndex < roofSurfaceStruct.leftRoofSurfaceTileRidgeList.Count-1; iIndex++)
+			{
+				GameObject lFlyRafter = new GameObject("L_FlyRafer");
+				MeshFilter meshFilter = lFlyRafter.AddComponent<MeshFilter>();
+				MeshRenderer meshRenderer = lFlyRafter.AddComponent<MeshRenderer>();
+				meshRenderer.material.color = Color.white;
+				lFlyRafter.transform.parent = flyRafer.transform;
+				ListPairVector3 newListPairVector3 = new ListPairVector3();
+
+				if (iIndex < boundaryIndex)
+				{
+					for (int j = n; j < roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tilePosList.Count; j++)
+					{
+						newListPairVector3.Add(new PairVector3(roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tilePosList[j] + roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized * flyRafterHeightOffset * (n + 1), roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[j].normalized));
+					}
+					MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList, flyRafterWidth, flyRafterHeight, 1, 1, meshFilter);
+				}
+				else
+				{
+					List<Vector3> upVectorList = new List<Vector3>();
+					int lastRidge = (boundaryIndex);
+					int lastRidgeTileCount = roofSurfaceStruct.leftRoofSurfaceTileRidgeList[lastRidge].tilePosList.Count - 1;
+					int size = Mathf.Min(n, roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList.Count - 1);
+
+					newListPairVector3.Add(new PairVector3(roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tilePosList[size] + roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[size].normalized * flyRafterHeightOffset * (n + 1), roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[size].normalized));
+					upVectorList.Add(roofSurfaceStruct.leftRoofSurfaceTileRidgeList[iIndex].tileUpVectorList[size].normalized);
+					//newListPairVector3.Add(new PairVector3(roofSurfaceStruct.leftRoofSurfaceTileRidgeList[lastRidge].tilePosList[lastRidgeTileCount] + roofSurfaceStruct.leftRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized * flyRafterHeightOffset * (n + 1), roofSurfaceStruct.leftRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized));
+					newListPairVector3.Add(new PairVector3(leftMainRidgeRafterPos +Vector3.up* flyRafterHeightOffset * (n + 1), roofSurfaceStruct.leftRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized));
+					upVectorList.Add(roofSurfaceStruct.leftRoofSurfaceTileRidgeList[lastRidge].tileUpVectorList[lastRidgeTileCount].normalized);
+
+
+					MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, upVectorList, flyRafterWidth, flyRafterHeight,0, 0,meshFilter);
+				}
+
+
+				leftPosUpVectorList.Add(newListPairVector3);
+			}
+			#endregion
+			//***********************************   HorizontalRafter   ***********************************
+			List<ListPairVector3> totalPosList = new List<ListPairVector3>();
+			rightPosUpVectorList.Reverse();
+			totalPosList.AddRange(rightPosUpVectorList);
+			totalPosList.Add(midPosUpVectorList);
+			totalPosList.AddRange(leftPosUpVectorList);
+			for (int iIndex = 0; (iIndex < roofSurfaceStruct.midRoofSurfaceTileRidge.tilePosList.Count); iIndex++)
+			{
+				//間隔3個tile距離才放置凜
+				if ((iIndex % (roofSurfaceStruct.leftRoofSurfaceTileRidgeList[boundaryIndex].tilePosList.Count) != 0)) continue;
+
+				GameObject vFlyRafter = new GameObject("Lin");
+				MeshFilter meshFilter = vFlyRafter.AddComponent<MeshFilter>();
+				MeshRenderer meshRenderer = vFlyRafter.AddComponent<MeshRenderer>();
+				meshRenderer.material.color = Color.white;
+				vFlyRafter.transform.parent = flyRafer.transform;
+				ListPairVector3 newListPairVector3 = new ListPairVector3();
+				for (int j = 0; j < totalPosList.Count; j++)
+				{
+					if (iIndex < totalPosList[j].ListA.Count)
+					{
+						newListPairVector3.Add(new PairVector3(totalPosList[j].ListA[iIndex] + flyRafterHeight * totalPosList[j].ListB[iIndex], totalPosList[j].ListB[iIndex]));
+					}
+				}
+
+				MeshCenter.Instance.CreateCurveCubeMesh(newListPairVector3.ListA, newListPairVector3.ListB, flyRafterWidth, flyRafterHeight,1,1, meshFilter);
+			}
+
+
+		}
 
 	}
 	void ShowPos(Vector3 pos, GameObject parent, Color color, float localScale = 0.2f)
@@ -1248,8 +1303,9 @@ public class RoofController : MonoBehaviour
 		}
 		newRoofSurfaceStruct.midRoofSurfaceTileRidge = newMidRidgeStruct;
 
-		CreateFlyRafer(newRoofSurfaceStruct, flyRafterWidth, flyRafterHeight, -(2 * flyRafterHeight + ModelController.Instance.roofSurfaceModelStruct.flatTileModelStruct.bound.size.y), 0.8f);
 
+		CreateFlyRafer(newRoofSurfaceStruct, flyRafterWidth, flyRafterHeight, -(2 * flyRafterHeight + ModelController.Instance.roofSurfaceModelStruct.flatTileModelStruct.bound.size.y), eave2FlyEaveOffset, RightMainRidgeStruct.ridgeCatLine.anchorInnerPointlist[(int)(RightMainRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count * 0.8f)], LeftMainRidgeStruct.ridgeCatLine.anchorInnerPointlist[(int)(LeftMainRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count * 0.8f)]);
+	
 		return newRoofSurfaceStruct;
 	}
 	/**
@@ -1529,7 +1585,6 @@ public class RoofController : MonoBehaviour
 		}
 		newRoofSurfaceStruct.midRoofSurfaceTileRidge = newMidRidgeStruct;
 
-		CreateFlyRafer(newRoofSurfaceStruct, flyRafterWidth, flyRafterHeight, -(2 * flyRafterHeight + ModelController.Instance.roofSurfaceModelStruct.flatTileModelStruct.bound.size.y), 0.8f);
 
 		return newRoofSurfaceStruct;
 	}
@@ -1583,8 +1638,8 @@ public class RoofController : MonoBehaviour
 		RidgeStruct LeftMainRidgeStructA;
 		RidgeStruct eaveStruct;
 		RidgeStruct eaveStructA;
-		RoofSurfaceStruct roofSurfaceStructList;
-		RoofSurfaceStruct roofSurfaceStructListA;
+		RoofSurfaceStruct roofSurfaceStruct;
+		RoofSurfaceStruct roofSurfaceStructA;
 		Vector3 offsetVector;
 		Vector3 eave2eaveColumnOffsetVector;
 
@@ -1611,9 +1666,9 @@ public class RoofController : MonoBehaviour
 					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
 
 					//RoofSurface
-					roofSurfaceStructList = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
+					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStructList, eaveStruct, RightMainRidgeStruct.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
 					//主脊-MainRidge輔助線 
 					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Two].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Two].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
 					RightMainRidgeStructA = CreateMainRidgeStruct(parentObj.roofTopCenter, columnTopPosList[ColumnIndex_Two] + eave2eaveColumnOffsetVector);
@@ -1622,12 +1677,12 @@ public class RoofController : MonoBehaviour
 					eaveStructA = CreateEaveStruct(RightMainRidgeStructA, LeftMainRidgeStructA);//檐出
 
 					//RoofSurface
-					roofSurfaceStructListA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
+					roofSurfaceStructA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructListA, eaveStructA, RightMainRidgeStructA.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructA, eaveStructA, RightMainRidgeStructA.body);
 
 					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStructList.body, roofSurfaceStructListA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
+					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, roofSurfaceStructA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
 					Destroy(LeftMainRidgeStruct.body);
 
 				}
@@ -1643,13 +1698,13 @@ public class RoofController : MonoBehaviour
 					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
 
 					//RoofSurface
-					roofSurfaceStructList = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
+					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
 
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStructList, eaveStruct, RightMainRidgeStruct.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
 
 					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 360.0f / (int)MainController.Instance.sides, parentObj.roofTopCenter, (int)MainController.Instance.sides, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStructList.body, RightMainRidgeStruct.body);
+					CopyRoofFunction(parentObj.roof, 360.0f / (int)MainController.Instance.sides, parentObj.roofTopCenter, (int)MainController.Instance.sides, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, RightMainRidgeStruct.body);
 					Destroy(LeftMainRidgeStruct.body);
 				}
 
@@ -1666,34 +1721,35 @@ public class RoofController : MonoBehaviour
 					Vector3 leftRoofTopCenter = parentObj.roofTopCenter - offsetVector;
 
 					//主脊-MainRidge輔助線 
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
+					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - rightRoofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - rightRoofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
+
 					RightMainRidgeStruct = CreateMainRidgeStruct(rightRoofTopCenter, columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
+					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - leftRoofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - leftRoofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
 					LeftMainRidgeStruct = CreateMainRidgeStruct(leftRoofTopCenter, columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
 					//Eave輔助線
 					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
 					//RoofSurface
-					roofSurfaceStructList = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
+					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStructList, eaveStruct, RightMainRidgeStruct.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
 
 
 					//主脊-MainRidge輔助線 
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Two].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Two].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
+					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Two].x - rightRoofTopCenter.x, 0, columnTopPosList[ColumnIndex_Two].z - rightRoofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
 					RightMainRidgeStructA = CreateMainRidgeStruct(rightRoofTopCenter, columnTopPosList[ColumnIndex_Two] + eave2eaveColumnOffsetVector);
 					LeftMainRidgeStructA = RightMainRidgeStruct;
 					//Eave輔助線
 					eaveStructA = CreateEaveStruct(RightMainRidgeStructA, LeftMainRidgeStructA);//檐出
 
 					//RoofSurface
-					roofSurfaceStructListA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
+					roofSurfaceStructA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
 
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructListA, eaveStructA, RightMainRidgeStructA.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructA, eaveStructA, RightMainRidgeStructA.body);
 
 
 					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStructList.body, roofSurfaceStructListA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
+					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, roofSurfaceStructA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
 					Destroy(LeftMainRidgeStruct.body);
 				}
 				#endregion
@@ -1736,9 +1792,9 @@ public class RoofController : MonoBehaviour
 					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
 
 					//RoofSurface
-					roofSurfaceStructList = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
+					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStructList, eaveStruct, RightMainRidgeStruct.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
 
 
 
@@ -1747,11 +1803,11 @@ public class RoofController : MonoBehaviour
 					eaveStructA = CreateEaveStruct(RightMainRidgeStructA, LeftMainRidgeStructA);//檐出
 
 					//RoofSurface
-					roofSurfaceStructListA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
+					roofSurfaceStructA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructListA, eaveStructA, RightMainRidgeStructA.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructA, eaveStructA, RightMainRidgeStructA.body);
 					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStructList.body, roofSurfaceStructListA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
+					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, roofSurfaceStructA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
 					Destroy(LeftMainRidgeStruct.body);
 				}
 				else //FormFactorSideType.ThreeSide
@@ -1781,12 +1837,12 @@ public class RoofController : MonoBehaviour
 					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
 
 					//RoofSurface
-					roofSurfaceStructList = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
+					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
 
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStructList, eaveStruct, RightMainRidgeStruct.body);
+					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
 
 					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 360.0f / (int)MainController.Instance.sides, parentObj.roofTopCenter, (int)MainController.Instance.sides, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStructList.body, RightMainRidgeStruct.body);
+					CopyRoofFunction(parentObj.roof, 360.0f / (int)MainController.Instance.sides, parentObj.roofTopCenter, (int)MainController.Instance.sides, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, RightMainRidgeStruct.body);
 					Destroy(LeftMainRidgeStruct.body);
 				}
 				#endregion
@@ -1835,12 +1891,12 @@ public class RoofController : MonoBehaviour
 					//** 屋簷
 					eaveStruct = CreateEaveStruct(MainRidgeList[3], MainRidgeList[1]); //* 正面屋簷
 					eaveStructA = CreateEaveStruct(MainRidgeList[5], MainRidgeList[3]); //* 側面屋簷
-					roofSurfaceStructList = CreateRoofSurfaceForShyShan(MainRidgeList[3], MainRidgeList[1], eaveStruct);          //* 屋面
-					roofSurfaceStructListA = CreateRoofSurfaceA(MainRidgeList[5], MainRidgeList[3], eaveStructA);
+					roofSurfaceStruct = CreateRoofSurfaceForShyShan(MainRidgeList[3], MainRidgeList[1], eaveStruct);          //* 屋面
+					roofSurfaceStructA = CreateRoofSurfaceA(MainRidgeList[5], MainRidgeList[3], eaveStructA);
 
 					//** 複製表面瓦片
-					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, Vector3.zero, roofSurfaceStructList.body);
-					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, Vector3.zero, roofSurfaceStructListA.body);
+					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, Vector3.zero, roofSurfaceStruct.body);
+					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, Vector3.zero, roofSurfaceStructA.body);
 				}
 				#endregion
 				break;

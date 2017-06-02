@@ -1156,7 +1156,7 @@ public class MeshCenter : Singleton<MeshCenter>
         obj.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
         obj.GetComponent<MeshRenderer>().material = materials;
     }
-    public void CreateCurveCubeMesh(List<Vector3> curvePosList, List<Vector3> upVectorList, float width, float height, MeshFilter meshFilter)
+	public void CreateCurveCubeMesh(List<Vector3> curvePosList, List<Vector3> upVectorList, float width, float height, float widthPruneRatio, float heightPruneRatio, MeshFilter meshFilter)
     {
         if (curvePosList.Count <= 1) return;
 
@@ -1170,10 +1170,10 @@ public class MeshCenter : Singleton<MeshCenter>
         {
             if (i < curvePosList.Count - 1) quaternionVector = (curvePosList[i] - curvePosList[i + 1]);
             Vector3 rightVector = Vector3.Cross(upVectorList[i], quaternionVector);
-            pList[vert++] = curvePosList[i] - rightVector.normalized * width / 2.0f - upVectorList[i].normalized * height / 2.0f;
-            pList[vert++] = curvePosList[i] - rightVector.normalized * width / 2.0f + upVectorList[i].normalized * height / 2.0f;
-            pList[vert++] = curvePosList[i] + rightVector.normalized * width / 2.0f + upVectorList[i].normalized * height / 2.0f;
-            pList[vert++] = curvePosList[i] + rightVector.normalized * width / 2.0f - upVectorList[i].normalized * height / 2.0f;
+			pList[vert++] = curvePosList[i] - rightVector.normalized * Mathf.Lerp(width / 2.0f, (width / 2.0f) * widthPruneRatio, ((float)i / curvePosList.Count)) - upVectorList[i].normalized * Mathf.Lerp(height / 2.0f, (height / 2.0f) * heightPruneRatio, ((float)i / curvePosList.Count));
+			pList[vert++] = curvePosList[i] - rightVector.normalized * Mathf.Lerp(width / 2.0f, (width / 2.0f) * widthPruneRatio, ((float)i / curvePosList.Count)) + upVectorList[i].normalized * Mathf.Lerp(height / 2.0f, (height / 2.0f) * heightPruneRatio, ((float)i / curvePosList.Count));
+			pList[vert++] = curvePosList[i] + rightVector.normalized * Mathf.Lerp(width / 2.0f, (width / 2.0f) * widthPruneRatio, ((float)i / curvePosList.Count)) + upVectorList[i].normalized * Mathf.Lerp(height / 2.0f, (height / 2.0f) * heightPruneRatio, ((float)i / curvePosList.Count));
+			pList[vert++] = curvePosList[i] + rightVector.normalized * Mathf.Lerp(width / 2.0f, (width / 2.0f) * widthPruneRatio, ((float)i / curvePosList.Count)) - upVectorList[i].normalized * Mathf.Lerp(height / 2.0f, (height / 2.0f) * heightPruneRatio, ((float)i / curvePosList.Count));
         }
 
         #region Vertices

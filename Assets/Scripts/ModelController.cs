@@ -46,10 +46,12 @@ public struct EaveColumnModelStruct
 public struct GoldColumnModelStruct
 {
     public ModelStruct windowModelStruct;
+	public ModelStruct doorModelStruct;
 
-    public GoldColumnModelStruct(ModelStruct windowModelStruct)
+	public GoldColumnModelStruct(ModelStruct windowModelStruct, ModelStruct doorModelStruct)
     {
         this.windowModelStruct = windowModelStruct;
+		this.doorModelStruct = doorModelStruct;
     }
 }
 public struct MainRidgeModelStruct//主脊模型
@@ -119,6 +121,11 @@ public class ModelController : Singleton<ModelController>
     public Vector3 windowModelScale = Vector3.one;
     private ModelStruct windowModelStruct;
 
+	public GameObject doorModel;
+	public Vector3 doorModelRotation = Vector3.zero;
+	public Vector3 doorModelScale = Vector3.one;
+	private ModelStruct doorModelStruct;
+
     //************************ 屋瓦 ************************
     [HideInInspector]
     public RoofSurfaceModelStruct roofSurfaceModelStruct;
@@ -167,7 +174,8 @@ public class ModelController : Singleton<ModelController>
 		eaveColumnModelStruct = new EaveColumnModelStruct(friezeModelStruct, balustradeModelStruct, sparrowBraceModelStruct);
 
         windowModelStruct = new ModelStruct(windowModel, windowModelRotation, windowModelScale);
-        goldColumnModelStruct = new GoldColumnModelStruct(windowModelStruct);
+		doorModelStruct = new ModelStruct(doorModel, doorModelRotation, doorModelScale);
+		goldColumnModelStruct = new GoldColumnModelStruct(windowModelStruct, doorModelStruct);
 
         //*** 瓦片結構 : 設定好筒瓦、平瓦、簷瓦模組與個別的旋轉與尺寸向量
         roundTileModelStruct = new ModelStruct(roundTileModel, roundTileModelRotation, roundTileModelScale);

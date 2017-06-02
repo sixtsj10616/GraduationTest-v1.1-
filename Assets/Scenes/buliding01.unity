@@ -8211,6 +8211,9 @@ MonoBehaviour:
   windowModel: {fileID: 132863627}
   windowModelRotation: {x: 0, y: 90, z: 0}
   windowModelScale: {x: 10, y: 10, z: 10}
+  doorModel: {fileID: 1533966700}
+  doorModelRotation: {x: 0, y: 0, z: 0}
+  doorModelScale: {x: 1, y: 1, z: 1}
   roundTileModel: {fileID: 549361497}
   roundTileModelRotation: {x: 0, y: 90, z: 0}
   roundTileModelScale: {x: 1, y: 1, z: 1}
