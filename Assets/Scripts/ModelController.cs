@@ -1,7 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
-public struct ModelStruct//模型旋轉、縮放
+
+
+public struct ModelStruct//模型旋轉、縮放 
 {
+	// x  (Vector3.right)     :width 
+	// y  (Vector3.up)        :height
+	// z  (Vector3.forward)   :lengh
 	public GameObject model;
 	public Vector3 rotation;
 	public Vector3 scale;
@@ -16,7 +21,6 @@ public struct ModelStruct//模型旋轉、縮放
 		this.bound = model.GetComponentInChildren<Collider>().bounds;
 		model.transform.GetChild(0).localScale = Vector3.Scale(scale, model.transform.GetChild(0).localScale);
 		bound.SetMinMax(Vector3.Scale(bound.min, scale), Vector3.Scale(bound.max, scale));
-
 	}
 }
 public struct BorderModelStruct
