@@ -23,10 +23,10 @@ public class BodyController : MonoBehaviour
 
 	public float goldColumnRatio2platformOffset;
 
-	public int goldColumnbayNumber = 3;//間數量
+	public int goldColumnbayNumber = 5;//間數量
 	public int eaveColumnbayNumber = 5;
-	public int unitNumberInBay = 2;
-	public int doorNumber =1;
+	public int unitNumberInBay = 3;
+	public int doorNumber =4;
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
 	public float eaveColumnRadius = 0.5f;
@@ -245,6 +245,10 @@ public class BodyController : MonoBehaviour
 		float doorLengh = goldColumnModelStruct.doorModelStruct.bound.size.z ;//裝飾物深度
 
 
+		float windowWallWidth = goldColumnModelStruct.windowWallModelStruct.bound.size.x;//裝飾物長度
+		float windowWallHeight = goldColumnModelStruct.windowWallModelStruct.bound.size.y;//裝飾物長度
+		float windowWallLengh = goldColumnModelStruct.windowWallModelStruct.bound.size.z;//裝飾物深度
+
 		float doorMidIndex = ((float)goldColumnbayNumber / 2);
 		doorNumber = Mathf.Clamp(doorNumber,0 ,Mathf.CeilToInt(doorMidIndex));
 		int doorMaxIndex = (int)((goldColumnbayNumber % 2 == 1) ? (doorMidIndex + (doorNumber - 1)) : (doorMidIndex + (doorNumber - 1)+0.5f));
@@ -252,12 +256,13 @@ public class BodyController : MonoBehaviour
 		for (int i = 0; i < columnList.Count; i++)
 		{
 			float dis = Vector3.Distance(columnList[i], columnList[(i + 1) % columnList.Count]) - columnRadius * 2;
-			float width = dis / bayNumber;
+	
 			Vector3 dir = columnList[(i + 1) % columnList.Count] - columnList[i];
 			//門
 			if (((i % (goldColumnbayNumber)) <= doorMaxIndex) && ((i % (goldColumnbayNumber) >= doorMinIndex)))
 			{
-				for (int j = 0; j < bayNumber; j++)
+				float width = dis;
+				for (int j = 0; j < 1; j++)
 				{
 					float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
 					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i];
@@ -267,7 +272,7 @@ public class BodyController : MonoBehaviour
 				//door
 				GameObject clone = Instantiate(goldColumnModelStruct.doorModelStruct.model, pos, goldColumnModelStruct.doorModelStruct.model.transform.rotation) as GameObject;
 				clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(goldColumnModelStruct.doorModelStruct.rotation);
-				clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x * doorWidthScale, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z) * doorHeightScale);
+				clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x * doorWidthScale, clone.transform.GetChild(0).localScale.y * doorHeightScale, (clone.transform.GetChild(0).localScale.z));
 				//clone.transform.GetChild(0).localScale = Vector3.Scale(clone.transform.GetChild(0).localScale, clone.transform.rotation * clone.transform.GetChild(0).transform.rotation * (new Vector3(doorWidthScale, doorHeightScale, 1)));
 				clone.transform.parent = parentObj.body.transform;
 
@@ -276,9 +281,25 @@ public class BodyController : MonoBehaviour
 			}
 			else//窗
 			{
-		
+				float width = dis / bayNumber;
 				for (int j = 0; j < bayNumber; j++)
 				{
+				#region windowWall
+					float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i];
+					float disDiff = windowWallWidth - width;
+					float windowWallWidthScale = (width) / (windowWallWidth);
+					float windowWallHeightScale = wallHeight / (windowWallHeight);
+					//windowWall
+					GameObject clone = Instantiate(goldColumnModelStruct.windowWallModelStruct.model, pos, goldColumnModelStruct.windowWallModelStruct.model.transform.rotation) as GameObject;
+					clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(goldColumnModelStruct.windowWallModelStruct.rotation);
+					clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x * windowWallWidthScale, clone.transform.GetChild(0).localScale.y * windowWallHeightScale, (clone.transform.GetChild(0).localScale.z));
+	
+					clone.transform.parent = parentObj.body.transform;
+
+				#endregion
+				#region windowInWall
+				/*
 					GameObject wall = new GameObject("Wall");
 					MeshFilter meshFilter = wall.AddComponent<MeshFilter>();
 					MeshRenderer meshRenderer = wall.AddComponent<MeshRenderer>();
@@ -300,7 +321,8 @@ public class BodyController : MonoBehaviour
 					clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z) * windowWidthScale);
 
 					//clone.transform.GetChild(0).localScale = Vector3.Scale(clone.transform.GetChild(0).localScale, clone.transform.rotation * clone.transform.GetChild(0).transform.rotation * (new Vector3(windowWidthScale, 1, windowLengthScale)));
-					clone.transform.parent = wall.transform;
+					clone.transform.parent = wall.transform;*/
+					#endregion
 				}
 			}
 			//CreateWindowModel

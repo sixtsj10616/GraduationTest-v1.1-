@@ -81,7 +81,7 @@ public class BuildingObj : MonoBehaviour {
 		roofController = building.AddComponent<RoofController>();
 
 		//入口位置
-		//entraneIndexList.SetEntranceIndex(1, 2);
+		entraneIndexList.SetEntranceIndex(0,1, 2);
 
         if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
         {
