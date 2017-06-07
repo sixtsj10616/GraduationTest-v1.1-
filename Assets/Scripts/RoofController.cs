@@ -491,7 +491,9 @@ public class RoofController : MonoBehaviour
 
 	/**
 	 * 建立屋頂表面的瓦片，用相鄰的屋面脊
-	 * 輸入 : roofSurfaceModelStructGameObject (欲貼上瓦片模組)、parent (Parent Obj)、baseList(欲產生瓦片的屋面脊)、refList(上一組屋面脊)、midRidgeStruct (屋面中間脊)、eaveStructList (屋簷)、mainRidgeStruct (生成方向的主脊)、roofSurfaceTileRidgeUpPointPos (屋面脊的上點位置)
+	 * 輸入 : roofSurfaceModelStructGameObject (欲貼上瓦片模組)、parent (Parent Obj)、baseList(欲產生瓦片的屋面脊)、
+     * refList(上一組屋面脊)、midRidgeStruct (屋面中間脊)、eaveStructList (屋簷)、mainRidgeStruct (生成方向的主脊)、
+     * roofSurfaceTileRidgeUpPointPos (屋面脊的上點位置)
 	 *      
 	 */
 
@@ -611,55 +613,82 @@ public class RoofController : MonoBehaviour
 			constraintPlaneA.SetNormalAndPosition(constraintPlaneNormalA, mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position);
 			constraintPlaneB.SetNormalAndPosition((baseList.tilePosList[p] - baseList.tilePosList[Mathf.Max(p - 1, 0)]).normalized, roofSurfaceTileRidgeUpPointPos);
 
-			//if (Vector3.Dot((baseList.tilePosList[p] - roofSurfaceTileRidgeUpPointPos), v1) == Vector3.Dot((baseList.tilePosList[Mathf.Max(p - 1, 0)] - roofSurfaceTileRidgeUpPointPos),v1))
-			{
-				//RoundTile&EaveTile
-				if (p == 0)
-				{
+            //if (Vector3.Dot((baseList.tilePosList[p] - roofSurfaceTileRidgeUpPointPos), v1) == Vector3.Dot((baseList.tilePosList[Mathf.Max(p - 1, 0)] - roofSurfaceTileRidgeUpPointPos),v1))
+            if (p != baseList.tilePosList.Count - 1)
+            {
+                //RoundTile&EaveTile
+                if (p == 0)
+                {
 
-					GameObject eaveTileModel = Instantiate(roofSurfaceModelStructGameObject.eaveTileModelStruct.model, baseList.tilePosList[0], roofSurfaceModelStructGameObject.eaveTileModelStruct.model.transform.rotation) as GameObject;
-					eaveTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.eaveTileModelStruct.rotation);
-					eaveTileModel.transform.parent = parent.transform;
+                    GameObject eaveTileModel = Instantiate(roofSurfaceModelStructGameObject.eaveTileModelStruct.model, baseList.tilePosList[0], roofSurfaceModelStructGameObject.eaveTileModelStruct.model.transform.rotation) as GameObject;
+                    eaveTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.eaveTileModelStruct.rotation);
+                    eaveTileModel.transform.parent = parent.transform;
 
-					roofSurfaceRidgeStruct.roundTileModelList.Add(eaveTileModel);
-					mainModel = eaveTileModel;
-				}
-				else
-				{
+                    roofSurfaceRidgeStruct.roundTileModelList.Add(eaveTileModel);
+                    mainModel = eaveTileModel;
+                }
+                else
+                {
 
-					GameObject roundTileModel = Instantiate(roofSurfaceModelStructGameObject.roundTileModelStruct.model, baseList.tilePosList[p], roofSurfaceModelStructGameObject.roundTileModelStruct.model.transform.rotation) as GameObject;
-					roundTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.roundTileModelStruct.rotation);
-					roundTileModel.transform.parent = parent.transform;
-					roofSurfaceRidgeStruct.roundTileModelList.Add(roundTileModel);
-					mainModel = roundTileModel;
-				}
+                    GameObject roundTileModel = Instantiate(roofSurfaceModelStructGameObject.roundTileModelStruct.model, baseList.tilePosList[p], roofSurfaceModelStructGameObject.roundTileModelStruct.model.transform.rotation) as GameObject;
+                    roundTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.roundTileModelStruct.rotation);
+                    roundTileModel.transform.parent = parent.transform;
+                    roofSurfaceRidgeStruct.roundTileModelList.Add(roundTileModel);
+                    mainModel = roundTileModel;
+                }
 
-				//FlatTile : 平瓦放置在兩筒瓦中間
-				if (dir != 0)
-				{
-					if (p < refList.tilePosList.Count)
-						pos = (baseList.tilePosList[p] + refList.tilePosList[p]) / 2.0f + flatTileModelHeightOffset * upVector;
+                //FlatTile : 平瓦放置在兩筒瓦中間
+                if (dir != 0)
+                {
+                    if (p < refList.tilePosList.Count)
+                        pos = (baseList.tilePosList[p] + refList.tilePosList[p]) / 2.0f + flatTileModelHeightOffset * upVector;
 
-					GameObject flatTileModel = Instantiate(roofSurfaceModelStructGameObject.flatTileModelStruct.model, pos, roofSurfaceModelStructGameObject.flatTileModelStruct.model.transform.rotation) as GameObject;
+                    GameObject flatTileModel = Instantiate(roofSurfaceModelStructGameObject.flatTileModelStruct.model, pos, roofSurfaceModelStructGameObject.flatTileModelStruct.model.transform.rotation) as GameObject;
 
-					flatTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.flatTileModelStruct.rotation);
-					if (p < refList.tilePosList.Count && p < baseList.tilePosList.Count)
-					{
-						float width = roofSurfaceModelStructGameObject.flatTileModelStruct.bound.size.x;
-						float dis = Vector3.Distance(baseList.tilePosList[p], refList.tilePosList[p]);
-						float disDiff = (dis - width);
-						flatTileModel.transform.GetChild(0).localScale = new Vector3(flatTileModel.transform.GetChild(0).localScale.x * (width + disDiff) / width, flatTileModel.transform.GetChild(0).localScale.y, (flatTileModel.transform.GetChild(0).localScale.z));
-					}
-					flatTileModel.transform.parent = mainModel.transform;
+                    flatTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.flatTileModelStruct.rotation);
+                    if (p < refList.tilePosList.Count && p < baseList.tilePosList.Count)
+                    {
+                        float width = roofSurfaceModelStructGameObject.flatTileModelStruct.bound.size.x;
+                        float dis = Vector3.Distance(baseList.tilePosList[p], refList.tilePosList[p]);
+                        //float disDiff = (dis - width);
+                        //** 調整平瓦大小
+                        flatTileModel.transform.GetChild(0).localScale = new Vector3(flatTileModel.transform.GetChild(0).localScale.x * dis / width, flatTileModel.transform.GetChild(0).localScale.y, flatTileModel.transform.GetChild(0).localScale.z);
+                    }
+                    flatTileModel.transform.parent = mainModel.transform;
 
-					roofSurfaceRidgeStruct.flatTileModelList.Add(flatTileModel);
-					//  flatTileModelList.Add(mainModel);
+                    roofSurfaceRidgeStruct.flatTileModelList.Add(flatTileModel);
+                    //  flatTileModelList.Add(mainModel);
 
-				}
-			}
-			//else break;
+                }
+            }
+            else
+            {
+                //** 製作並調整最後一個筒瓦
+                GameObject roundTileModel = Instantiate(roofSurfaceModelStructGameObject.roundTileModelStruct.model, baseList.tilePosList[p], roofSurfaceModelStructGameObject.roundTileModelStruct.model.transform.rotation) as GameObject;
+                Vector3 roundTileModelScale = roundTileModel.transform.GetChild(0).localScale;
+                roundTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.roundTileModelStruct.rotation);
+                roundTileModel.transform.parent = parent.transform;
+                roundTileModel.transform.GetChild(0).localScale = new Vector3(roundTileModelScale.x, roundTileModelScale.y, roundTileModelScale.z * 0.7f);
+                roofSurfaceRidgeStruct.roundTileModelList.Add(roundTileModel);
+                mainModel = roundTileModel;
+
+                //** 製作並調整最後一個平瓦
+                
+                pos = (baseList.tilePosList[p] + refList.tilePosList[p]) / 2.0f + flatTileModelHeightOffset * upVector;
+                GameObject flatTileModel = Instantiate(roofSurfaceModelStructGameObject.flatTileModelStruct.model, pos, roofSurfaceModelStructGameObject.flatTileModelStruct.model.transform.rotation) as GameObject;
+                Vector3 flatTileModelScale = flatTileModel.transform.GetChild(0).localScale;
+                flatTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.flatTileModelStruct.rotation);
+               float width = roofSurfaceModelStructGameObject.flatTileModelStruct.bound.size.x;
+               float dis = Vector3.Distance(baseList.tilePosList[p], refList.tilePosList[p]) == 0.0f ? 1.0f :  Vector3.Distance(baseList.tilePosList[p], refList.tilePosList[p]);
+              
+               flatTileModel.transform.GetChild(0).localScale = new Vector3(flatTileModelScale.x * dis / width, flatTileModelScale.y, flatTileModelScale.z );
+                
+                flatTileModel.transform.parent = mainModel.transform;
+                roofSurfaceRidgeStruct.flatTileModelList.Add(flatTileModel);
+            }
 		}
 
+        //*** 刪除多餘的點
 		for (int i = roofSurfaceRidgeStruct.tilePosList.Count - 1; i > p; )
 		{
 			roofSurfaceRidgeStruct.tilePosList.RemoveAt(i);
@@ -933,6 +962,11 @@ public class RoofController : MonoBehaviour
 		}
 		return index;
 	}
+
+    /**
+     * 曲線內點(?)距離
+     * 目前沒用到
+     */
 	float CurveInnerPointDis(RidgeStruct list)
 	{
 		float dis = 0;
@@ -943,17 +977,12 @@ public class RoofController : MonoBehaviour
 		return dis;
 	}
 
-	/**
-	 *  建立主脊結構 (用屋頂頂端控制點與圓柱頂端位置)
-	 *  輸入:圓柱列表索引、屋頂頂端控制點位置
-	 *  流程:建立頭尾與中間控制點後加至控制點列表中，並把曲線的控制點也設為相同點，之後設定畫曲線點數
-	 *  
-	 */
-	/**
+    /**
 	* 建立主脊結構
 	* 輸入:頭尾兩控制點與曲率系數
+    * 流程:建立頭尾與中間控制點後加至控制點列表中，並把曲線的控制點也設為相同點，之後設定畫曲線點數
 	*/
-	RidgeStruct CreateMainRidgeStruct(Vector3 topControlPointPos, Vector3 botControlPointPos, float CurveRate = 1.0f)
+    RidgeStruct CreateMainRidgeStruct(Vector3 topControlPointPos, Vector3 botControlPointPos, float CurveRate = 1.0f)
 	{
 		RidgeStruct newRidgeStruct = CreateRidgeSturct("MainRidge", parentObj.roof);
 		GameObject topControlPoint = CreateControlPoint(newRidgeStruct.body, topControlPointPos, MainRidgeControlPointType.TopControlPoint.ToString());
@@ -985,7 +1014,6 @@ public class RoofController : MonoBehaviour
 		//         }
 
 		return newRidgeStruct;
-
 	}
 
 	/**
@@ -1259,8 +1287,8 @@ public class RoofController : MonoBehaviour
 			 */
 
 			//設定瓦片位置
-			newRightRidgeStruct.tilePosList = newRightRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist, newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
-			newLeftRidgeStruct.tilePosList = newLeftRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist, newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
+			newRightRidgeStruct.tilePosList = newRightRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointListPoolingVer(newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist, newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
+			newLeftRidgeStruct.tilePosList = newLeftRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointListPoolingVer(newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist, newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
 			/*
 				for (int f = 0; f < newLeftRidgeStruct.tilePosList.Count; f++)
 				{
@@ -1534,12 +1562,6 @@ public class RoofController : MonoBehaviour
 				newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist.InsertRange(0, Topline_L.anchorInnerPointlist);
 			}
 			/***************************************用AnchorLength取roofSurfaceTileRidge上的瓦片************************************************************/
-			/*
-			 for (int f = 0; f < newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count; f++)
-						{
-							ShowPos(newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[f], newRightRidgeStruct.body, Color.green, 0.1f);
-						}
-			 */
 
 			//設定瓦片位置
 			newRightRidgeStruct.tilePosList = newRightRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist, newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
@@ -1554,22 +1576,13 @@ public class RoofController : MonoBehaviour
 					ShowPos(newRightRidgeStruct.tilePosList[f], newRightRidgeStruct.body, Color.blue, 0.3f);
 				}
 				*/
-			//Debug.Log(lastRightRidgeStruct.body.name + "   " + lastRightRidgeStruct.tilePosList.Count);
-
-
+			
 			//*** 暫時不顯示瓦片
-
 			// newRightRidgeStruct.tilePosList = CreateRoofSurfaceTile(roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, roofSurfaceTileRidgeUpPointPos);
 			//newLeftRidgeStruct.tilePosList = CreateRoofSurfaceTile(roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(roofSurfaceTileRidgeUpPointPos, (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
 
 			CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, roofSurfaceTileRidgeUpPointPos);
 			CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(roofSurfaceTileRidgeUpPointPos, (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
-
-			// 			Debug.Log("size" + size);
-			// 			Debug.Log(" newRightRidgeStruct.tilePosList.Count" + newRightRidgeStruct.tilePosList.Count);
-			// 			newLeftRidgeStruct.tilePosList.RemoveRange(size, newLeftRidgeStruct.tilePosList.Count - size);
-			// 			newRightRidgeStruct.tilePosList.RemoveRange(size, newRightRidgeStruct.tilePosList.Count - size);
-			// 			Debug.Log(" newRightRidgeStruct.tilePosList.Count" + newRightRidgeStruct.tilePosList.Count);
 
 			MeshCenter.Instance.MeshCombineInGameObjectList(newRightRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
 			MeshCenter.Instance.MeshCombineInGameObjectList(newLeftRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
@@ -1590,8 +1603,8 @@ public class RoofController : MonoBehaviour
 	}
 
 	/**
-	* 依照輸入的主脊列表建立主脊瓦片
-	*/
+	 * 依照輸入的主脊列表建立主脊瓦片
+	 */
 	void createMainRidgeTileFromList(MainRidgeModelStruct mainRidgeModelStructGameObject, List<RidgeStruct> MainRidgeList)
 	{
 		switch (roofType)
@@ -1615,7 +1628,11 @@ public class RoofController : MonoBehaviour
 		}
 	}
 
-	void CopyRoofFunction(GameObject parent, float angle, Vector3 rotationCenter, int times, Vector3 offsetVector, params GameObject[] cloneObject)
+    /**
+	 * 複製屋頂
+     * 輸入:
+	 */
+    void CopyRoofFunction(GameObject parent, float angle, Vector3 rotationCenter, int times, Vector3 offsetVector, params GameObject[] cloneObject)
 	{
 		for (int n = 0; n < cloneObject.Length; n++)
 		{
@@ -1630,7 +1647,13 @@ public class RoofController : MonoBehaviour
 
 	}
 
-	public void CreateRoof(List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList, bool isDownFloor)
+    /**
+	 * 製作屋頂
+     * 輸入:columnTopPosList 角柱位置
+     *      topFloorBorderList 上一層基底邊緣位置，若為頂樓則輸入Null
+     *      isDownFloor 是否有下一層樓 (僅逯頂有用到)
+	 */
+    public void CreateRoof(List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList, bool isDownFloor)
 	{
 		RidgeStruct RightMainRidgeStruct;
 		RidgeStruct LeftMainRidgeStruct;

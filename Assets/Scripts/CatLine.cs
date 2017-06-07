@@ -31,7 +31,7 @@ public class CatLine
 		float dis = 0;
 		List<Vector3> newList = new List<Vector3>();
 		newList.Add(list[startIndex]);
-		int dir=((endIndex - startIndex) > 0 ? 1 : -1);
+		int dir = ((endIndex - startIndex) > 0 ? 1 : -1);
 		for (int i = startIndex; ((endIndex - startIndex) > 0 ? (i < (endIndex)) : (i > (endIndex))); i += dir)
 		{
 			dis += Vector3.Distance(list[i], list[i +dir]);
@@ -54,7 +54,35 @@ public class CatLine
 		}*/
 		return newList;
 	}
-	public void CalculateInnerPointByList(List<Vector3> list, float anchorDis) 
+    public List<Vector3> CalculateAnchorPosByInnerPointListPoolingVer(List<Vector3> list, int startIndex, int endIndex, float anchorDis)
+    {
+        if (list.Count == 0) return list;
+
+        float dis = 0;
+        List<Vector3> newList = new List<Vector3>();
+        newList.Add(list[startIndex]);
+        int dir = ((endIndex - startIndex) > 0 ? 1 : -1);
+        for (int i = startIndex; ((endIndex - startIndex) > 0 ? (i < (endIndex)) : (i > (endIndex))); i += dir)
+        {
+            dis += Vector3.Distance(list[i], list[i + dir]);
+            if (dis >= anchorDis)
+            {
+                newList.Add(list[i]);
+                dis = 0;
+            }
+
+            if ((endIndex - startIndex) > 0 ? (i == (endIndex - 1)) : (i == (endIndex + 1)))
+            {
+                if (dis != 0)
+                {
+                    newList.Add(list[i - 12*dir]);
+                    dis = 0;
+                }
+            }
+        }
+        return newList;
+    }
+    public void CalculateInnerPointByList(List<Vector3> list, float anchorDis) 
 	{
 		if (list.Count < 2) return;
 		else if (list.Count == 2)
