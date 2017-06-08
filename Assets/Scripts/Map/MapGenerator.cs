@@ -30,6 +30,9 @@ public class MapGenerator : MonoBehaviour
 	List<Region> survivingLandRegions;
 	List<Region> survivingWaterRegions;
 	//------------------------
+	List<Region> buildingRegions=new List<Region>();
+	GeneticAlgorithm ga;
+	StimulatedAnnealing sa;
 	void Start()
 	{
 		GenerateMap();
@@ -58,6 +61,26 @@ public class MapGenerator : MonoBehaviour
 			survivingLandRegions.Clear();
 			survivingWaterRegions.Clear();
 			GenerateMap();
+		}
+		if (Input.GetKeyDown(KeyCode.P))
+		{
+			if (buildingRegions.Count>0)
+			{
+				foreach (Region region in buildingRegions)
+				{
+					Destroy(region.regionObject);
+				}
+			}
+			buildingRegions.Clear();
+
+
+ 			ga = new GeneticAlgorithm(map);
+ 			ga.Start();
+ 			buildingRegions = ga.ShowResult();
+// 			sa = new StimulatedAnnealing(map);
+// 			sa.Start();
+// 			buildingRegions = sa.ShowResult();
+			CreateRegionMesh(buildingRegions, Color.green);
 		}
 	}
 	Vector3 CoordToWorldPoint(Coord tile)
@@ -99,10 +122,6 @@ public class MapGenerator : MonoBehaviour
 
 		//ShowRegionOutline(survivingWaterRegions.ToArray(), Color.red);
 
-		GeneticAlgorithm ga=new GeneticAlgorithm(map);
-		ga.Start();
-		List<Region> buildingRegions=ga.ShowResult();
-		CreateRegionMesh(buildingRegions, Color.green);
 	}
 	void CreateRegionMesh(List<Region> regions, Color color)
 	{
