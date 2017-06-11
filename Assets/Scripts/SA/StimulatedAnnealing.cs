@@ -12,8 +12,8 @@ public class StimulatedAnnealing
 	float fitnessCurrent;
 	float fitnessBest;
 	public float tempReduction = 0.95f;
-	public float temperature = 3000;
-	public int iteration = 10000;
+	public float temperature = 30000;
+	public int iteration = 100000;
 	public StimulatedAnnealing(int[,] _map)
 	{
 		map = _map;
@@ -21,7 +21,7 @@ public class StimulatedAnnealing
 	void InitChromosome()
 	{
 		currentSolution = new Chromosome(spots);
-		fitnessCurrent = Fitness(currentSolution);
+		fitnessCurrent = Cost(currentSolution);
 		bestSolution = currentSolution;
 		fitnessBest = fitnessCurrent;
 	}
@@ -50,8 +50,8 @@ public class StimulatedAnnealing
 		for (int i = 0; i < iteration; i++)
 		{
 			Chromosome newSolution = new Chromosome(currentSolution);
-			NeighborhoodSearch(ref newSolution);
-			float fitnessNew = Fitness(newSolution);
+			//NeighborhoodSearch(ref newSolution);
+			float fitnessNew = Cost(newSolution);
 
 			float fitnessDiff = fitnessNew - fitnessCurrent;
 			if (fitnessDiff <= 0)
@@ -78,7 +78,7 @@ public class StimulatedAnnealing
 					fitnessCurrent = fitnessNew;
 				}
 			}
-
+			//Debug.Log("fitnessCurrent" + fitnessCurrent);
 			temperature *= tempReduction;
 		}
 
@@ -89,44 +89,37 @@ public class StimulatedAnnealing
 	}
 	void NeighborhoodSearch(ref Chromosome _chromosome)
 	{
-		for (int i = 0; i < _chromosome.spots.Count; i++)
-		{
-			if (Random.Range(0.0f, 1.0f) < 0.3f) _chromosome.spots[i].RandomCenter();
-		}
+ 		for (int i = 0; i < _chromosome.spots.Count; i++)
+ 		{
+ 			if (Random.Range(0.0f, 1.0f) < 0.3f) _chromosome.spots[i].RandomCenter();
+ 		}
+
 	}
-	float Fitness(Chromosome _chromosome)
+	public float Cost(Chromosome _chromosome)
 	{
 		float fitnessValue = 0;
 
-		float overlapWaterWeight = 100;
-		float overlapWeight = 100;
-		float disCenterXWeight = 10;
+		float overlapWaterWeight = 10.0f;
+		float overlapWeight = 100.0f;
+		float disCenterXWeight = 1.0f;
 		//檢查是否有重疊到水
 		float overlapWaterCount = 0;
 		for (int i = 0; i < _chromosome.spots.Count; i++)
 		{
-			for (int j = 0; j < _chromosome.spots[i].regionCoord.Count; j++)
-			{
-				if (map[_chromosome.spots[i].regionCoord[j].tileX, _chromosome.spots[i].regionCoord[j].tileY] == (int)TileType.Water)
-				{
-					overlapWaterCount++;
-					break;
-				}
-			}
+			overlapWaterCount += (float)_chromosome.spots[i].regionCoordInWater.Count * 100.0f / _chromosome.spots[i].regionCoord.Count;
 		}
-
 		fitnessValue += overlapWaterWeight * overlapWaterCount;
+
 
 		//檢查是否有重疊到彼此
 		float overlapCount = 0;
 		for (int i = 0; i < _chromosome.spots.Count; i++)
 		{
-			for (int j = i + 1; j < _chromosome.spots.Count; j++)
+			for (int j = i; j < _chromosome.spots.Count; j++)
 			{
-				if (_chromosome.spots[i].isOverlapOtherRegionCoordTile(_chromosome.spots[j]))
+				if (_chromosome.spots[i].isOverlapOtherSpot(_chromosome.spots[j]))
 				{
-					overlapCount++;
-					i = j;
+					overlapCount += (float)_chromosome.spots[i].OverlapOtherSpotTileCount(_chromosome.spots[j]) * 100.0f / _chromosome.spots[i].regionCoord.Count;
 				}
 			}
 		}
@@ -144,8 +137,7 @@ public class StimulatedAnnealing
 			disCenterXCount += Mathf.Abs(_chromosome.spots[i].center.tileX - avgX);
 		}
 		fitnessValue += disCenterXWeight * disCenterXCount;
-
-		return 1.0f / fitnessValue;
+		return fitnessValue;
 	}
 	public class Chromosome//染色體
 	{
@@ -166,84 +158,104 @@ public class StimulatedAnnealing
 	}
 	public class Spot //一個區塊當作基因
 	{
-		public Coord center;
+		public Coord center = new Coord();
 		public int xUnit;
 		public int yUnit;
 		public int spotType;
-
 		public List<Coord> regionCoord = new List<Coord>();
+		public List<Coord> regionCoordInWater = new List<Coord>();
 
 		public Spot(Coord _center, int _xUnit, int _yUnit, int _spotType)
 		{
-			this.center = _center;
+			this.center = new Coord(_center);
 			this.xUnit = _xUnit;
 			this.yUnit = _yUnit;
 			this.spotType = _spotType;
-
-			this.regionCoord.Clear();
-			regionCoord = GetRegionCoord();
 		}
 		public Spot(int _xUnit, int _yUnit, int _spotType)
 		{
 			this.xUnit = _xUnit;
 			this.yUnit = _yUnit;
 			this.spotType = _spotType;
-			RandomCenter();
-
-			this.regionCoord.Clear();
-			regionCoord = GetRegionCoord();
 		}
 		public Spot(Spot _newSpot)
 		{
-			this.center = _newSpot.center;
+			this.center = new Coord(_newSpot.center);
 			this.xUnit = _newSpot.xUnit;
 			this.yUnit = _newSpot.yUnit;
 			this.spotType = _newSpot.spotType;
 
-			this.regionCoord.Clear();
-			regionCoord = GetRegionCoord();
+			this.regionCoord = new List<Coord>(_newSpot.regionCoord);
+			this.regionCoordInWater = new List<Coord>(_newSpot.regionCoordInWater);
 		}
 		public void RandomCenter()
 		{
-			int randomX = Random.Range(xUnit, map.GetLength(0) - xUnit - 1);
-			int randomY = Random.Range(yUnit, map.GetLength(0) - yUnit - 1);
+			int randomX = Random.Range(xUnit + 1, map.GetLength(0) - xUnit - 1);
+			int randomY = Random.Range(yUnit + 1, map.GetLength(1) - yUnit - 1);
 			this.center = new Coord(randomX, randomY);
-
-			this.regionCoord.Clear();
-			regionCoord = GetRegionCoord();
+			GetRegionCoord();
 		}
-		public List<Coord> GetRegionCoord()
+		public void SetCenter(Coord _center)
 		{
-			List<Coord> regionCoord = new List<Coord>();
+			this.center = _center;
+
+			GetRegionCoord();
+		}
+		public void GetRegionCoord()
+		{
+			this.regionCoord.Clear();
+			this.regionCoordInWater.Clear();
 			for (int x = -xUnit; x <= xUnit; x++)
 			{
+				int X = center.tileX + x;
 				for (int y = -yUnit; y <= yUnit; y++)
 				{
-					regionCoord.Add(new Coord(center.tileX + x, center.tileY + y));
-				}
-			}
-			return regionCoord;
-		}
-		public int OverlapOtherRegionCoordTileCount(Spot _otherSpot)
-		{
-			int count = 0;
-			foreach (Coord coordA in regionCoord)
-			{
-				foreach (Coord coordB in _otherSpot.regionCoord)
-				{
-					if (coordA.tileX == coordB.tileX && coordA.tileY == coordB.tileY)
+					int Y = center.tileY + y;
+					this.regionCoord.Add(new Coord(X, Y));
+					if (map[X, Y] == (int)TileType.Water)
 					{
-						count++;
+						this.regionCoordInWater.Add(new Coord(X, Y));
 					}
 				}
 			}
-
+		}
+		public int OverlapOtherSpotTileCount(Spot _otherSpot)
+		{
+			int count = 0;
+			// 			foreach(Coord coordA in regionCoord)
+			// 			{
+			// 				foreach (Coord coordB in _otherSpot.regionCoord)
+			// 				{
+			// 					if ((coordA.tileX == coordB.tileX) && (coordA.tileY == coordB.tileY))
+			// 					{
+			// 						count++;
+			// 					}
+			// 				}
+			// 			}
+			if (isOverlapOtherSpot(_otherSpot))
+			{
+				int x = Mathf.Min(_otherSpot.center.tileX + _otherSpot.xUnit, center.tileX + xUnit) - Mathf.Max(_otherSpot.center.tileX - _otherSpot.xUnit, center.tileX - xUnit);
+				int y = Mathf.Min(_otherSpot.center.tileY + _otherSpot.yUnit, center.tileY + yUnit) - Mathf.Max(_otherSpot.center.tileY - _otherSpot.yUnit, center.tileY - yUnit);
+				count = x * y;
+			}
 			return count;
 		}
-		public bool isOverlapOtherRegionCoordTile(Spot _otherSpot)
+		public bool isOverlapOtherSpot(Spot _otherSpot)
 		{
-			return (Mathf.Abs(center.tileX - _otherSpot.center.tileX) < (xUnit + _otherSpot.xUnit) || Mathf.Abs(center.tileY - _otherSpot.center.tileY) < (yUnit + _otherSpot.yUnit));
+			return ((Mathf.Abs(center.tileX - _otherSpot.center.tileX) < (xUnit + _otherSpot.xUnit)) && (Mathf.Abs(center.tileY - _otherSpot.center.tileY) < (yUnit + _otherSpot.yUnit)));
 
+		}
+		public int OverlapOtherRegionCoordTileCountInMap(int _tileType)
+		{
+			int count = 0;
+			foreach (Coord coord in regionCoord)
+			{
+				if (map[coord.tileX, coord.tileY] == _tileType)
+				{
+					count++;
+				}
+			}
+			return count;
 		}
 	}
 	public class SpotCreater
@@ -252,14 +264,17 @@ public class StimulatedAnnealing
 
 		public void Init()
 		{
-			spots.Add(new Spot(new Coord(0, 0), 0, 0, 2));
-			spots.Add(new Spot(new Coord(0, 0), 1, 1, 2));
-			spots.Add(new Spot(new Coord(0, 0), 2, 2, 2));
-			spots.Add(new Spot(new Coord(0, 0), 1, 1, 2));
-			spots.Add(new Spot(new Coord(0, 0), 2, 1, 2));
-			spots.Add(new Spot(new Coord(0, 0), 2, 1, 2));
-			spots.Add(new Spot(new Coord(0, 0), 1, 1, 2));
-			spots.Add(new Spot(new Coord(0, 0), 3, 3, 2));
+			spots.Add(new Spot(4, 4, 2));
+			spots.Add(new Spot(1, 1, 2));
+			spots.Add(new Spot(2, 2, 2));
+			spots.Add(new Spot(3, 3, 2));
+			spots.Add(new Spot(1, 1, 2));
+			spots.Add(new Spot(2, 2, 2));
+			spots.Add(new Spot(3, 3, 2));
+			spots.Add(new Spot(1, 1, 2));
+			spots.Add(new Spot(2, 2, 2));
+			spots.Add(new Spot(3, 3, 2));
+			spots.Add(new Spot(1, 1, 2));
 		}
 	}
 }

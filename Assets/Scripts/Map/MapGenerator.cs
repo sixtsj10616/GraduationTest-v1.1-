@@ -19,7 +19,6 @@ public class MapGenerator : MonoBehaviour
 
 	int smoothTime = 3;
 	float smoothRatio = 0.5f;
-	int borderSize = 0;
 	int passageSize = 5;
 
 	int[,] map;
@@ -107,16 +106,6 @@ public class MapGenerator : MonoBehaviour
 		survivingWaterRegions = new List<Region>();
 		survivingWaterRegions = GetAllRegion((int)TileType.Water);
 		CreateRegionMesh(survivingWaterRegions, Color.blue);
-		for (int i = 0; i < survivingWaterRegions.Count; i++)
-		{
-			for (int j = 0; j < survivingWaterRegions[i].outlinePosList.Count; j++)
-			{
-				for (int k = 0; k < survivingWaterRegions[i].outlinePosList[j].Count-1; k++)
-				{
-					Debug.DrawLine(survivingWaterRegions[i].outlinePosList[j][k], survivingWaterRegions[i].outlinePosList[j][k+1], Color.green, 1000);
-				}
-			}
-		}
 
 		ShowRegionOutline(survivingLandRegions.ToArray(),Color.green);
 
@@ -138,7 +127,7 @@ public class MapGenerator : MonoBehaviour
 			{
 				for (int k = 0; k < regions[i].outlinePosList[j].Count - 1; k++)
 				{
-					Debug.DrawLine(regions[i].outlinePosList[j][k], regions[i].outlinePosList[j][k + 1], color, 10);
+					Debug.DrawLine(regions[i].outlinePosList[j][k], regions[i].outlinePosList[j][k + 1], color, 1);
 				}
 			}
 		}
@@ -186,22 +175,7 @@ public class MapGenerator : MonoBehaviour
 
 			ConnectClosestRegions(survivingLandRegions, (int)TileType.Land);
 		}
-// 		int[,] borderedMap = new int[width + borderSize * 2, height + borderSize * 2];
-// 
-// 		for (int x = 0; x < borderedMap.GetLength(0); x++)
-// 		{
-// 			for (int y = 0; y < borderedMap.GetLength(1); y++)
-// 			{
-// 				if (x >= borderSize && x < width + borderSize && y >= borderSize && y < height + borderSize)
-// 				{
-// 					borderedMap[x, y] = map[x - borderSize, y - borderSize];
-// 				}
-// 				else
-// 				{
-// 					borderedMap[x, y] = (int)TileType.Land;
-// 				}
-// 			}
-// 		}
+
 	}
 	List<Region> GetAllRegion(int regionType)
 	{
@@ -684,16 +658,20 @@ public class Region : IComparable<Region>
 }
 public class Coord
 {
-	public int tileX { get;  set; }
-	public int tileY { get;  set; }
+	public int tileX ;
+	public int tileY ;
 	public Coord() 
 	{ 
 	
 	}
-
-	public Coord(int x, int y)
+	public Coord(Coord  _coord)
 	{
-		tileX = x;
-		tileY = y;
+		tileX = _coord.tileX;
+		tileY = _coord.tileY;
+	}
+	public Coord(int _x, int _y)
+	{
+		tileX = _x;
+		tileY = _y;
 	}
 }
