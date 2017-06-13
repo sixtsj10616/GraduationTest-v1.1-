@@ -11,8 +11,7 @@ public class GeneticAlgorithm {
 	public List<Chromosome> ga_chromosomes = new List<Chromosome>();
 	List<float> wheel = new List<float>();
 	float crossoverRate = 0.95f, mutationRate = 0.025f;
-	int countOfGeneration = 5000, countOfChromosome = 200;
-
+	int countOfGeneration = 4000, countOfChromosome = 250;
 	void InitChromosome()
 	{
 		ga_chromosomes.Clear();
@@ -93,52 +92,61 @@ public class GeneticAlgorithm {
 	{
 		float fitnessValue = 0;
 		
-		float overlapWaterWeight=1;
-		float overlapWeight = 10;
-		float disCenterXWeight = 0.1f;
+		float overlapWaterWeight=20;
+		float overlapWeight = 30;
+		float disCenterXInClusterWeight = 3;
+		float disCenterYInClusterWeight = 5;
+		float disEachClusterWeight = 100;
 		//檢查是否有重疊到水
 		float overlapWaterCount=0;
-		for (int i = 0; i < _chromosome.spots.Count; i++)
+		for (int i = 0; i < _chromosome.spots.Count; i++)//落在x^2
 		{
 		
 			//overlapWaterCount += (float)_chromosome.spots[i].regionCoordInWater.Count * 1.0f/_chromosome.spots[i].regionCoord.Count;
-			overlapWaterCount += (float)_chromosome.spots[i].regionCoordInWater.Count * Mathf.Exp(-1.0f / _chromosome.spots[i].regionCoord.Count);
+			overlapWaterCount += (float)_chromosome.spots[i].regionCoordInWater.Count *(1.0f / _chromosome.spots[i].regionCoord.Count);
 		}
 		fitnessValue += overlapWaterWeight*overlapWaterCount;
 
 
 		//檢查是否有重疊到彼此
 		float overlapCount = 0;
-		for (int i = 0; i < _chromosome.spots.Count; i++)
+		for (int i = 0; i < _chromosome.spots.Count; i++)//落在x^2
 		{
 			for (int j = i; j < _chromosome.spots.Count; j++)
 			{
 				if (_chromosome.spots[i].isOverlapOtherSpot(_chromosome.spots[j])) 
 				{
 					//overlapCount += (float)_chromosome.spots[i].OverlapOtherSpotTileCount(_chromosome.spots[j]) * 1.0f / _chromosome.spots[i].regionCoord.Count;
-					overlapCount += (float)_chromosome.spots[i].OverlapOtherSpotTileCount(_chromosome.spots[j]) * Mathf.Exp(-1.0f / _chromosome.spots[i].regionCoord.Count);
+					overlapCount += (float)_chromosome.spots[i].OverlapOtherSpotTileCount(_chromosome.spots[j]) *(1.0f / _chromosome.spots[i].regionCoord.Count);
 				}
 			}
 		}
 		fitnessValue += overlapWeight*overlapCount;
-		//盡可能中軸相同
-		float disCenterXCount = 0;
-		int avgX=0;
+		//每一群 盡可能中軸相同 落在x
+		float[] disCenterXCount = new float[_chromosome.clusterInfo.clusters.Count];
+		float[] disCenterYCount = new float[_chromosome.clusterInfo.clusters.Count];
 		for (int i = 0; i < _chromosome.spots.Count; i++)
 		{
-			avgX += _chromosome.spots[i].center.tileX;
+			disCenterXCount[_chromosome.spots[i].clusterId] += Mathf.Abs(_chromosome.spots[i].center.tileX - _chromosome.clusterInfo.clusters[_chromosome.spots[i].clusterId].avgX) * (1.0f / _chromosome.spots[i].regionCoord.Count);
+			disCenterYCount[_chromosome.spots[i].clusterId] += Mathf.Abs(_chromosome.spots[i].center.tileY - _chromosome.clusterInfo.clusters[_chromosome.spots[i].clusterId].avgY) * (1.0f / _chromosome.spots[i].regionCoord.Count);
 		}
-		avgX = avgX / _chromosome.spots.Count;
-		for (int i = 0; i < _chromosome.spots.Count; i++)
+		for (int i = 0; i < _chromosome.clusterInfo.clusters.Count; i++)
 		{
-			disCenterXCount += Mathf.Abs(_chromosome.spots[i].center.tileX - avgX);
+			//群集距離
+			fitnessValue += disEachClusterWeight * (1.0f / ((float)_chromosome.clusterInfo.clusters[i].dis2OtherClusterAvg / _chromosome.clusterInfo.clusters[i].count));
+			//Debug.Log(i + " clusterInfo.clusters[i].dis2OtherClusterAvg" + clusterInfo.clusters[i].dis2OtherClusterAvg);
+			//X中軸相同
+			fitnessValue += disCenterXInClusterWeight * disCenterXCount[i] ;
+			//Debug.Log(i + " disCenterXCount[i]" + disCenterXCount[i]);
+			//Y中軸相同
+			fitnessValue += disCenterYInClusterWeight * disCenterYCount[i];
+			//Debug.Log(i + " disCenterYCount[i]" + disCenterYCount[i]);
 		}
-		fitnessValue += disCenterXWeight*disCenterXCount;
 		return fitnessValue;
 	}
 	public void Mutation(ref Chromosome _chromosome)
 	{
-		int count=0;
+	/*	int count=0;
 		while (count<10) 
 		{
 			int randomIndex = Random.Range(0, _chromosome.spots.Count);
@@ -160,6 +168,27 @@ public class GeneticAlgorithm {
 				_chromosome.spots[randomIndex].GetRegionCoord();
 				_chromosome.spots[nextIndex].center = tmp;
 				_chromosome.spots[nextIndex].GetRegionCoord();
+				break;
+			}
+			count++;
+		}*/
+		int count = 0;
+		while (count < 10)
+		{
+			int randomIndex = Random.Range(0, _chromosome.spots.Count);
+			int xDiff = (int)_chromosome.clusterInfo.clusters[_chromosome.spots[randomIndex].clusterId].avgX - _chromosome.spots[randomIndex].center.tileX;
+			int yDiff = (int)_chromosome.clusterInfo.clusters[_chromosome.spots[randomIndex].clusterId].avgY - _chromosome.spots[randomIndex].center.tileY;
+			int randomX = (xDiff > 0) ? Random.Range(0, xDiff) : Random.Range(xDiff, 0);
+			int randomY = (yDiff > 0) ? Random.Range(0, yDiff) : Random.Range(yDiff, 0);
+			if (
+			(_chromosome.spots[randomIndex].center.tileX + _chromosome.spots[randomIndex].xUnit + randomX < map.GetLength(0) - 1) &&
+			(_chromosome.spots[randomIndex].center.tileX - _chromosome.spots[randomIndex].xUnit + randomX > 0) &&
+			(_chromosome.spots[randomIndex].center.tileY + _chromosome.spots[randomIndex].yUnit + randomY < map.GetLength(1) - 1) &&
+			(_chromosome.spots[randomIndex].center.tileY - _chromosome.spots[randomIndex].yUnit + randomY > 0) 
+			)
+			{
+				_chromosome.spots[randomIndex].center = new Coord(_chromosome.spots[randomIndex].center.tileX + randomX, _chromosome.spots[randomIndex].center.tileY + randomY);
+				_chromosome.spots[randomIndex].GetRegionCoord();	
 				break;
 			}
 			count++;
@@ -195,7 +224,7 @@ public class GeneticAlgorithm {
 	{
 		for (int i = 0; i < _c1.spots.Count; i++)
 		{
-			if (_c1.spots[i].regionCoordInWater.Count > _c2.spots[i].regionCoordInWater.Count || (_c1.SpotOverlapTileCount(i) > _c2.SpotOverlapTileCount(i)))
+			if ((_c1.spots[i].regionCoordInWater.Count > _c2.spots[i].regionCoordInWater.Count || (_c1.SpotOverlapTileCount(i) > _c2.SpotOverlapTileCount(i))))
 			{
 				SwapSpot(ref _c1, ref _c2, i);
 			}
@@ -212,9 +241,11 @@ public class GeneticAlgorithm {
 	public class Chromosome//染色體
 	{
 		public List<Spot> spots=new List<Spot>();
+		public ClusterInfo clusterInfo=new ClusterInfo();
 		public Chromosome(Chromosome _chromosome)
 		{
 			this.spots = new List<Spot>(_chromosome.spots);
+			clusterInfo = new ClusterInfo(spots);
 		}
 		public Chromosome(List<Spot> _spots)//初始產生染色體以Random的方式增加變異性
 		{
@@ -224,6 +255,7 @@ public class GeneticAlgorithm {
 				spots.Add(new Spot(_spots[i]));
 				spots[i].RandomCenter();
 			}
+			clusterInfo = new ClusterInfo(spots);
 		}
 		public int SpotOverlapTileCount(int _index) 
 		{ 
@@ -235,29 +267,96 @@ public class GeneticAlgorithm {
 			}
 			return count;
 		}
-	}
 
+		public class ClusterInfo
+		{
+			public class Cluster
+			{
+				public int id;
+				public float avgX = 0;
+				public float avgY = 0;
+				public float count = 0;
+				public int dis2OtherClusterAvg = 0;
+				public int regionCoordCount = 0;
+				public Cluster(int _id)
+				{
+					this.id = _id;
+				}
+			}
+
+			List<Spot> spots;
+			public List<Cluster> clusters = new List<Cluster>();
+			public int totalDis2OtherClusterAvg = 0;
+
+			public ClusterInfo() { }
+			public ClusterInfo(Chromosome _chromosome)
+			{
+				this.spots = _chromosome.spots;
+				CalCluster();
+			}
+			public ClusterInfo(List<Spot> _spots)
+			{
+				this.spots = _spots;
+				CalCluster();
+			}
+			void CalCluster()
+			{
+				clusters.Clear();
+				for (int i = 0; i < spots.Count; i++)
+				{
+					if ((clusters.Count - 1) < spots[i].clusterId)
+					{
+						Cluster cluster = new Cluster(spots[i].clusterId);
+						clusters.Add(cluster);
+					}
+					clusters[spots[i].clusterId].avgX += spots[i].center.tileX;
+					clusters[spots[i].clusterId].avgY += spots[i].center.tileY;
+					clusters[spots[i].clusterId].regionCoordCount += spots[i].regionCoord.Count;
+					clusters[spots[i].clusterId].count++;
+				}
+				for (int i = 0; i < clusters.Count; i++)
+				{
+					clusters[i].avgX /= clusters[i].count;
+					clusters[i].avgY /= clusters[i].count;
+				}
+				for (int i = 0; i < clusters.Count; i++)
+				{
+					for (int j = 0; j < clusters.Count; j++)
+					{
+						if (i == j) continue;
+						clusters[i].dis2OtherClusterAvg += (int)Mathf.Abs(clusters[i].avgX - clusters[j].avgX) + (int)Mathf.Abs(clusters[i].avgY - clusters[j].avgY);
+						totalDis2OtherClusterAvg += clusters[i].dis2OtherClusterAvg;
+					}
+				}
+			}
+		}
+	}
+	
 	public class Spot //一個區塊當作基因
 	{
 		public Coord center=new Coord();
 		public int xUnit;
 		public int yUnit;
 		public int spotType;
+		public int clusterId;
 		public List<Coord> regionCoord = new List<Coord>();
 		public List<Coord> regionCoordInWater = new List<Coord>();
-		
-		public Spot(Coord _center,int _xUnit, int _yUnit, int _spotType)
+
+
+		public Spot(Coord _center, int _xUnit, int _yUnit, int _spotType, int _clusterId = 0)
 		{
 			this.center = new Coord(_center);
 			this.xUnit = _xUnit;
 			this.yUnit = _yUnit;
 			this.spotType = _spotType;
+			this.clusterId = _clusterId;
 		}
-		public Spot(int _xUnit, int _yUnit, int _spotType)
+		public Spot(int _xUnit, int _yUnit, int _spotType, int _clusterId = 0)
 		{
 			this.xUnit = _xUnit;
 			this.yUnit = _yUnit;
 			this.spotType = _spotType;
+			this.clusterId = _clusterId;
 		}
 		public Spot(Spot _newSpot)
 		{
@@ -265,6 +364,7 @@ public class GeneticAlgorithm {
 			this.xUnit = _newSpot.xUnit;
 			this.yUnit = _newSpot.yUnit; 
 			this.spotType = _newSpot.spotType;
+			this.clusterId = _newSpot.clusterId;
 
 			this.regionCoord=new List<Coord> (_newSpot.regionCoord);
 			this.regionCoordInWater = new List<Coord> (_newSpot.regionCoordInWater);
@@ -345,24 +445,26 @@ public class GeneticAlgorithm {
 
 		public void Init()
 		{
-			spots.Add(new Spot(4, 4, 2));
- 			spots.Add(new Spot(1, 1, 2));
- 			spots.Add(new Spot( 2, 2, 2));
- 			spots.Add(new Spot(3, 3, 2));
-			spots.Add(new Spot(1, 1, 2));
-			spots.Add(new Spot(2, 2, 2));
-			spots.Add(new Spot(3, 3, 2));
-			spots.Add(new Spot(1, 1, 2));
-			spots.Add(new Spot(2, 2, 2));
-			spots.Add(new Spot(3, 3, 2));
-			spots.Add(new Spot(1, 1, 2));
-			spots.Add(new Spot(2, 2, 2));
-			spots.Add(new Spot(3, 3, 2));
-			spots.Add(new Spot(1, 1, 2));
-			spots.Add(new Spot(2, 2, 2));
-			spots.Add(new Spot(3, 3, 2));
-			spots.Add(new Spot(1, 1, 2));
+
+			spots.Add(new Spot(4, 4, 2, 0));
+			spots.Add(new Spot(4, 4, 2, 0));
+			spots.Add(new Spot(4, 4, 2, 0));
+			spots.Add(new Spot(4, 4, 2, 0));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(1, 1, 2, 1));
+			spots.Add(new Spot(2, 2, 2, 2));
+			spots.Add(new Spot(2, 2, 2, 2));
+			spots.Add(new Spot(2, 2, 2, 2));
 		}
 	}
+	
 }
 

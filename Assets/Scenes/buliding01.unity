@@ -2388,8 +2388,8 @@ MonoBehaviour:
   unitSize: 10
   width: 50
   height: 50
-  seed: 10
-  useRandomSeed: 1
+  seed: 20
+  useRandomSeed: 0
   landFillPercent: 55
   waterRegionThresholdSize: 10
   landThresholdSize: 10
