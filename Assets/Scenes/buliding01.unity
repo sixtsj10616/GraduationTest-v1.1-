@@ -1627,7 +1627,6 @@ GameObject:
   m_Component:
   - component: {fileID: 230192668}
   - component: {fileID: 230192669}
-  - component: {fileID: 230192670}
   m_Layer: 5
   m_Name: LengthSlider
   m_TagString: Untagged
@@ -1717,36 +1716,6 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.UI.Slider+SliderEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
---- !u!114 &230192670
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 230192667}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1862395651, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates:
-  - eventID: 3
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 1569701938}
-          m_MethodName: UpdateRoofOnSliderPointUp
-          m_Mode: 2
-          m_Arguments:
-            m_ObjectArgument: {fileID: 230192669}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Slider, UnityEngine.UI
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-      m_TypeName: UnityEngine.EventSystems.EventTrigger+TriggerEvent, UnityEngine.UI,
-        Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  delegates: []
 --- !u!1 &234492472
 GameObject:
   m_ObjectHideFlags: 0
@@ -5379,10 +5348,10 @@ MonoBehaviour:
   m_FillRect: {fileID: 1050282107}
   m_HandleRect: {fileID: 1235207842}
   m_Direction: 0
-  m_MinValue: -5
-  m_MaxValue: 10
-  m_WholeNumbers: 1
-  m_Value: 1
+  m_MinValue: -10
+  m_MaxValue: 5
+  m_WholeNumbers: 0
+  m_Value: 3
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -6943,7 +6912,7 @@ MonoBehaviour:
   m_Direction: 0
   m_MinValue: -10
   m_MaxValue: 5
-  m_WholeNumbers: 1
+  m_WholeNumbers: 0
   m_Value: -6
   m_OnValueChanged:
     m_PersistentCalls:
@@ -12491,7 +12460,7 @@ MonoBehaviour:
   selectFloor: 0
   sides: 4
   buildingType: 1
-  roofType: 0
+  roofType: 5
   initPlatformWidth_DownStair: 50
   initPlatformLength_DownStair: 40
   initPlatformHeight_DownStair: 5
@@ -15768,8 +15737,8 @@ MonoBehaviour:
   m_Direction: 0
   m_MinValue: -10
   m_MaxValue: 5
-  m_WholeNumbers: 1
-  m_Value: 0
+  m_WholeNumbers: 0
+  m_Value: -2
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:

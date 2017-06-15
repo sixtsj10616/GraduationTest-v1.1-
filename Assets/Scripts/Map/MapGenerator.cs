@@ -19,7 +19,6 @@ public class MapGenerator : MonoBehaviour
 
 	int smoothTime = 3;
 	float smoothRatio = 0.5f;
-	int borderSize = 0;
 	int passageSize = 5;
 
 	int[,] map;
@@ -30,6 +29,9 @@ public class MapGenerator : MonoBehaviour
 	List<Region> survivingLandRegions;
 	List<Region> survivingWaterRegions;
 	//------------------------
+	List<Region> buildingRegions=new List<Region>();
+	GeneticAlgorithm ga;
+	StimulatedAnnealing sa;
 	void Start()
 	{
 		GenerateMap();
@@ -59,6 +61,26 @@ public class MapGenerator : MonoBehaviour
 			survivingWaterRegions.Clear();
 			GenerateMap();
 		}
+		if (Input.GetKeyDown(KeyCode.P))
+		{
+			if (buildingRegions.Count>0)
+			{
+				foreach (Region region in buildingRegions)
+				{
+					Destroy(region.regionObject);
+				}
+			}
+			buildingRegions.Clear();
+
+
+ 			ga = new GeneticAlgorithm(map);
+ 			ga.Start();
+ 			buildingRegions = ga.ShowResult();
+// 			sa = new StimulatedAnnealing(map);
+// 			sa.Start();
+// 			buildingRegions = sa.ShowResult();
+			CreateRegionMesh(buildingRegions, Color.green);
+		}
 	}
 	Vector3 CoordToWorldPoint(Coord tile)
 	{
@@ -66,7 +88,6 @@ public class MapGenerator : MonoBehaviour
 	}
 	void GenerateMap()
 	{
-
 		//隨機填入0(water),1(land)產生地圖
 		map = new int[width, height];
 		RandomFillMap();
@@ -85,20 +106,11 @@ public class MapGenerator : MonoBehaviour
 		survivingWaterRegions = new List<Region>();
 		survivingWaterRegions = GetAllRegion((int)TileType.Water);
 		CreateRegionMesh(survivingWaterRegions, Color.blue);
-		for (int i = 0; i < survivingWaterRegions.Count; i++)
-		{
-			for (int j = 0; j < survivingWaterRegions[i].outlinePosList.Count; j++)
-			{
-				for (int k = 0; k < survivingWaterRegions[i].outlinePosList[j].Count-1; k++)
-				{
-					Debug.DrawLine(survivingWaterRegions[i].outlinePosList[j][k], survivingWaterRegions[i].outlinePosList[j][k+1], Color.green, 1000);
-				}
-			}
-		}
 
 		ShowRegionOutline(survivingLandRegions.ToArray(),Color.green);
 
 		//ShowRegionOutline(survivingWaterRegions.ToArray(), Color.red);
+
 	}
 	void CreateRegionMesh(List<Region> regions, Color color)
 	{
@@ -115,7 +127,7 @@ public class MapGenerator : MonoBehaviour
 			{
 				for (int k = 0; k < regions[i].outlinePosList[j].Count - 1; k++)
 				{
-					Debug.DrawLine(regions[i].outlinePosList[j][k], regions[i].outlinePosList[j][k + 1], color, 1000);
+					Debug.DrawLine(regions[i].outlinePosList[j][k], regions[i].outlinePosList[j][k + 1], color, 1);
 				}
 			}
 		}
@@ -163,22 +175,7 @@ public class MapGenerator : MonoBehaviour
 
 			ConnectClosestRegions(survivingLandRegions, (int)TileType.Land);
 		}
-// 		int[,] borderedMap = new int[width + borderSize * 2, height + borderSize * 2];
-// 
-// 		for (int x = 0; x < borderedMap.GetLength(0); x++)
-// 		{
-// 			for (int y = 0; y < borderedMap.GetLength(1); y++)
-// 			{
-// 				if (x >= borderSize && x < width + borderSize && y >= borderSize && y < height + borderSize)
-// 				{
-// 					borderedMap[x, y] = map[x - borderSize, y - borderSize];
-// 				}
-// 				else
-// 				{
-// 					borderedMap[x, y] = (int)TileType.Land;
-// 				}
-// 			}
-// 		}
+
 	}
 	List<Region> GetAllRegion(int regionType)
 	{
@@ -498,177 +495,183 @@ public class MapGenerator : MonoBehaviour
 		return landCount;
 	}
 
-	struct Coord
+}
+public class Region : IComparable<Region>
+{
+	public List<Coord> tiles;
+	public List<Coord> edgeTiles;
+	public List<Region> connectedRegions;
+	public int regionSize;
+	public bool isAccessibleFromMainRegion;
+	public bool isMainRegion;
+	public int regionType;
+	public MeshFilter meshFilter;
+	public MeshGenerator meshGen;
+	public List<List<Vector3>> outlinePosList;
+	int[,] map;
+	//List<int> outlines;
+	//HashSet<int> checkedVertices;
+	public GameObject regionObject;
+	public Region()
 	{
-		public int tileX;
-		public int tileY;
-
-		public Coord(int x, int y)
-		{
-			tileX = x;
-			tileY = y;
-		}
 	}
 
-
-	class Region : IComparable<Region>
+	public Region(List<Coord> regionTiles, int regionType, int[,] map)
 	{
-		public List<Coord> tiles;
-		public List<Coord> edgeTiles;
-		public List<Region> connectedRegions;
-		public int regionSize;
-		public bool isAccessibleFromMainRegion;
-		public bool isMainRegion;
-		public int regionType;
-		public MeshFilter meshFilter;
-		public MeshGenerator meshGen;
-		public List<List<Vector3>> outlinePosList;
-		int[,] map;
-		//List<int> outlines;
-		//HashSet<int> checkedVertices;
-		public GameObject regionObject;
-		public Region()
-		{
-		}
+		tiles = regionTiles;
+		regionSize = tiles.Count;
+		this.regionType = regionType;
+		this.map = map;
+		connectedRegions = new List<Region>();
+		edgeTiles = new List<Coord>();
 
-		public Region(List<Coord> regionTiles, int regionType, int[,] map)
+		foreach (Coord tile in tiles)
 		{
-			tiles = regionTiles;
-			regionSize = tiles.Count;
-			this.regionType = regionType;
-			this.map = map;
-			connectedRegions = new List<Region>();
-			edgeTiles = new List<Coord>();
-
-			foreach (Coord tile in tiles)
+			for (int x = Mathf.Max(tile.tileX - 1, 0); x <= Mathf.Min(tile.tileX + 1, map.GetLength(0) - 1); x++)
 			{
-				for (int x = Mathf.Max(tile.tileX - 1, 0); x <= Mathf.Min(tile.tileX + 1, map.GetLength(0) - 1); x++)
+				for (int y = Mathf.Max(tile.tileY - 1, 0); y <= Mathf.Min(tile.tileY + 1, map.GetLength(1) - 1); y++)
 				{
-					for (int y = Mathf.Max(tile.tileY - 1, 0); y <= Mathf.Min(tile.tileY + 1, map.GetLength(1) - 1); y++)
+					if (x == tile.tileX || y == tile.tileY)
 					{
-						if (x == tile.tileX || y == tile.tileY)
+						if (map[x, y] != regionType)
 						{
-							if (map[x, y] != regionType)
-							{
-								edgeTiles.Add(tile);
-							}
+							edgeTiles.Add(tile);
 						}
 					}
 				}
 			}
-			#region Test
-			//edgeTiles = CalculateEdgeOutlines(edgeTiles);
-			#endregion
 		}
 		#region Test
-// 		List<Coord> CalculateEdgeOutlines(List<Coord> edgeTiles)
-// 		{
-// 			checkedVertices = new HashSet<int>();
-// 			outlines = new List<int>();
-// 
-// 			int startIndex = 0;
-// 			if (!checkedVertices.Contains(startIndex))
-// 			{
-// 				int newOutlineVertex = GetConnectedOutlineTile(startIndex, edgeTiles);
-// 				if (newOutlineVertex != -1)
-// 				{
-// 					checkedVertices.Add(startIndex);
-// 					outlines.Add(startIndex);
-// 					FollowOutline(newOutlineVertex);
-// 					outlines.Add(startIndex);
-// 				}
-// 			}
-// 			List<Coord> newEdgeTiles = new List<Coord>();
-// 			for (int i = 0; i < outlines.Count; i++)
-// 			{
-// 				newEdgeTiles.Add(edgeTiles[outlines[i]]);
-// 			}
-// 			return newEdgeTiles;
-// 		}
-// 
-// 		int GetConnectedOutlineTile(int index, List<Coord> edgeTiles)
-// 		{
-// 			for (int i = 0; i < edgeTiles.Count; i++)
-// 			{
-// 				if ((i != index) && !checkedVertices.Contains(i))
-// 				{
-// 					if ((Math.Abs(edgeTiles[i].tileX - edgeTiles[index].tileX) <= 1 && Math.Abs(edgeTiles[i].tileY - edgeTiles[index].tileY) <=1))
-// 					{
-// 						Debug.Log(i);
-// 						return i;
-// 					}
-// 				}
-// 			}
-// 
-// 			return -1;
-// 		}
-// 		List<int> FollowOutline(int vertexIndex)
-// 		{
-// 			outlines.Add(vertexIndex);
-// 			checkedVertices.Add(vertexIndex);
-// 			int nextVertexIndex = GetConnectedOutlineTile(vertexIndex, edgeTiles);
-// 
-// 			if (nextVertexIndex != -1)
-// 			{
-// 				FollowOutline(nextVertexIndex);
-// 			}
-// 			return outlines;
-// 		}
+		//edgeTiles = CalculateEdgeOutlines(edgeTiles);
 		#endregion
-		public void SetAccessibleFromMainRegion()
+	}
+	#region Test
+	// 		List<Coord> CalculateEdgeOutlines(List<Coord> edgeTiles)
+	// 		{
+	// 			checkedVertices = new HashSet<int>();
+	// 			outlines = new List<int>();
+	// 
+	// 			int startIndex = 0;
+	// 			if (!checkedVertices.Contains(startIndex))
+	// 			{
+	// 				int newOutlineVertex = GetConnectedOutlineTile(startIndex, edgeTiles);
+	// 				if (newOutlineVertex != -1)
+	// 				{
+	// 					checkedVertices.Add(startIndex);
+	// 					outlines.Add(startIndex);
+	// 					FollowOutline(newOutlineVertex);
+	// 					outlines.Add(startIndex);
+	// 				}
+	// 			}
+	// 			List<Coord> newEdgeTiles = new List<Coord>();
+	// 			for (int i = 0; i < outlines.Count; i++)
+	// 			{
+	// 				newEdgeTiles.Add(edgeTiles[outlines[i]]);
+	// 			}
+	// 			return newEdgeTiles;
+	// 		}
+	// 
+	// 		int GetConnectedOutlineTile(int index, List<Coord> edgeTiles)
+	// 		{
+	// 			for (int i = 0; i < edgeTiles.Count; i++)
+	// 			{
+	// 				if ((i != index) && !checkedVertices.Contains(i))
+	// 				{
+	// 					if ((Math.Abs(edgeTiles[i].tileX - edgeTiles[index].tileX) <= 1 && Math.Abs(edgeTiles[i].tileY - edgeTiles[index].tileY) <=1))
+	// 					{
+	// 						Debug.Log(i);
+	// 						return i;
+	// 					}
+	// 				}
+	// 			}
+	// 
+	// 			return -1;
+	// 		}
+	// 		List<int> FollowOutline(int vertexIndex)
+	// 		{
+	// 			outlines.Add(vertexIndex);
+	// 			checkedVertices.Add(vertexIndex);
+	// 			int nextVertexIndex = GetConnectedOutlineTile(vertexIndex, edgeTiles);
+	// 
+	// 			if (nextVertexIndex != -1)
+	// 			{
+	// 				FollowOutline(nextVertexIndex);
+	// 			}
+	// 			return outlines;
+	// 		}
+	#endregion
+	public void SetAccessibleFromMainRegion()
+	{
+		if (!isAccessibleFromMainRegion)
 		{
-			if (!isAccessibleFromMainRegion)
+			isAccessibleFromMainRegion = true;
+			foreach (Region connectedRegion in connectedRegions)
 			{
-				isAccessibleFromMainRegion = true;
-				foreach (Region connectedRegion in connectedRegions)
-				{
-					connectedRegion.SetAccessibleFromMainRegion();
-				}
+				connectedRegion.SetAccessibleFromMainRegion();
 			}
 		}
-		public int[,] CaculatedRegionMap()
+	}
+	public int[,] CaculatedRegionMap()
+	{
+		int[,] regionMap = new int[map.GetLength(0), map.GetLength(1)];
+		for (int i = 0; i < tiles.Count; i++)
 		{
-			int[,] regionMap = new int[map.GetLength(0), map.GetLength(1)];
-			for(int i=0;i< tiles.Count;i++)
-			{
-				regionMap[tiles[i].tileX,tiles[i].tileY]=1;
-			}
-			return regionMap;
+			regionMap[tiles[i].tileX, tiles[i].tileY] = 1;
 		}
-		public void CreateRegionMesh(Transform parent, float squareSize, Color color)
-		{
-			regionObject = new GameObject();
-			meshGen = regionObject.AddComponent<MeshGenerator>();
-			meshFilter = regionObject.AddComponent<MeshFilter>();
-			MeshRenderer meshRenderer = regionObject.AddComponent<MeshRenderer>();
-			meshRenderer.material.color = color;
-			regionObject.transform.parent = parent.transform;
-			meshGen.GenerateMesh(CaculatedRegionMap(), squareSize, meshFilter);
-			outlinePosList = meshGen.CalculateMeshOutlinePos();
+		return regionMap;
+	}
+	public void CreateRegionMesh(Transform parent, float squareSize, Color color)
+	{
+		regionObject = new GameObject();
+		meshGen = regionObject.AddComponent<MeshGenerator>();
+		meshFilter = regionObject.AddComponent<MeshFilter>();
+		MeshRenderer meshRenderer = regionObject.AddComponent<MeshRenderer>();
+		meshRenderer.material.color = color;
+		regionObject.transform.parent = parent.transform;
+		meshGen.GenerateMesh(CaculatedRegionMap(), squareSize, meshFilter);
+		outlinePosList = meshGen.CalculateMeshOutlinePos();
 
-		}
-		public static void ConnectRegions(Region rA, Region rB)
+	}
+	public static void ConnectRegions(Region rA, Region rB)
+	{
+		if (rA.isAccessibleFromMainRegion)
 		{
-			if (rA.isAccessibleFromMainRegion)
-			{
-				rB.SetAccessibleFromMainRegion();
-			}
-			else if (rB.isAccessibleFromMainRegion)
-			{
-				rA.SetAccessibleFromMainRegion();
-			}
-			rA.connectedRegions.Add(rB);
-			rB.connectedRegions.Add(rA);
+			rB.SetAccessibleFromMainRegion();
 		}
+		else if (rB.isAccessibleFromMainRegion)
+		{
+			rA.SetAccessibleFromMainRegion();
+		}
+		rA.connectedRegions.Add(rB);
+		rB.connectedRegions.Add(rA);
+	}
 
-		public bool IsConnected(Region otherRegion)
-		{
-			return connectedRegions.Contains(otherRegion);
-		}
+	public bool IsConnected(Region otherRegion)
+	{
+		return connectedRegions.Contains(otherRegion);
+	}
 
-		public int CompareTo(Region otherRegion)
-		{
-			return otherRegion.regionSize.CompareTo(regionSize);
-		}
+	public int CompareTo(Region otherRegion)
+	{
+		return otherRegion.regionSize.CompareTo(regionSize);
+	}
+}
+public class Coord
+{
+	public int tileX ;
+	public int tileY ;
+	public Coord() 
+	{ 
+	
+	}
+	public Coord(Coord  _coord)
+	{
+		tileX = _coord.tileX;
+		tileY = _coord.tileY;
+	}
+	public Coord(int _x, int _y)
+	{
+		tileX = _x;
+		tileY = _y;
 	}
 }

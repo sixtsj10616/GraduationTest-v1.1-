@@ -88,7 +88,6 @@ public class MainController : Singleton<MainController>
     private void Awake()
     {
         InitFunction();
-		PairVector3 a=new PairVector3();
     }
     private void Update()
     {
