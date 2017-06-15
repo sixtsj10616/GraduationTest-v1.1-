@@ -673,8 +673,9 @@ public class RoofController : MonoBehaviour
                 mainModel = roundTileModel;
 
                 //** 製作並調整最後一個平瓦
-                
+				if (p < refList.tilePosList.Count)
                 pos = (baseList.tilePosList[p] + refList.tilePosList[p]) / 2.0f + flatTileModelHeightOffset * upVector;
+
                 GameObject flatTileModel = Instantiate(roofSurfaceModelStructGameObject.flatTileModelStruct.model, pos, roofSurfaceModelStructGameObject.flatTileModelStruct.model.transform.rotation) as GameObject;
                 Vector3 flatTileModelScale = flatTileModel.transform.GetChild(0).localScale;
                 flatTileModel.transform.rotation = rotationVector * Quaternion.Euler(roofSurfaceModelStructGameObject.flatTileModelStruct.rotation);

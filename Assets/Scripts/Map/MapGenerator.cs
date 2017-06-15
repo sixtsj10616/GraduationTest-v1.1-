@@ -5,6 +5,78 @@ using System;
 
 public class MapGenerator : MonoBehaviour
 {
+
+
+		public float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
+		{
+			float[,] noiseMap = new float[mapWidth, mapHeight];
+
+			System.Random prng = new System.Random(seed);
+			Vector2[] octaveOffsets = new Vector2[octaves];
+			for (int i = 0; i < octaves; i++)
+			{
+				float offsetX = prng.Next(-100000, 100000) + offset.x;
+				float offsetY = prng.Next(-100000, 100000) + offset.y;
+				octaveOffsets[i] = new Vector2(offsetX, offsetY);
+			}
+
+			if (scale <= 0)
+			{
+				scale = 0.0001f;
+			}
+
+			float maxNoiseHeight = float.MinValue;
+			float minNoiseHeight = float.MaxValue;
+
+			float halfWidth = mapWidth / 2f;
+			float halfHeight = mapHeight / 2f;
+
+
+			for (int y = 0; y < mapHeight; y++)
+			{
+				for (int x = 0; x < mapWidth; x++)
+				{
+
+					float amplitude = 1;
+					float frequency = 1;
+					float noiseHeight = 0;
+
+					for (int i = 0; i < octaves; i++)
+					{
+						float sampleX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x;
+						float sampleY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y;
+
+						float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
+						noiseHeight += perlinValue * amplitude;
+
+						amplitude *= persistance;
+						frequency *= lacunarity;
+					}
+
+					if (noiseHeight > maxNoiseHeight)
+					{
+						maxNoiseHeight = noiseHeight;
+					}
+					else if (noiseHeight < minNoiseHeight)
+					{
+						minNoiseHeight = noiseHeight;
+					}
+					noiseMap[x, y] = noiseHeight;
+				}
+			}
+
+			for (int y = 0; y < mapHeight; y++)
+			{
+				for (int x = 0; x < mapWidth; x++)
+				{
+					noiseMap[x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseMap[x, y]);
+				}
+			}
+
+			return noiseMap;
+		}
+
+
 	public float unitSize = 5;
 	public int width;
 	public int height;
@@ -29,7 +101,7 @@ public class MapGenerator : MonoBehaviour
 	List<Region> survivingLandRegions;
 	List<Region> survivingWaterRegions;
 	//------------------------
-	List<Region> buildingRegions=new List<Region>();
+	List<Region> buildingRegions = new List<Region>();
 	GeneticAlgorithm ga;
 	StimulatedAnnealing sa;
 	void Start()
@@ -48,9 +120,9 @@ public class MapGenerator : MonoBehaviour
 	{
 		if (Input.GetKeyDown(KeyCode.T))
 		{
-		
-			for(int i=0;i<survivingWaterRegions.Count;i++)
-			{ 
+
+			for (int i = 0; i < survivingWaterRegions.Count; i++)
+			{
 				Destroy(survivingWaterRegions[i].regionObject);
 			}
 			for (int i = 0; i < survivingLandRegions.Count; i++)
@@ -63,7 +135,7 @@ public class MapGenerator : MonoBehaviour
 		}
 		if (Input.GetKeyDown(KeyCode.P))
 		{
-			if (buildingRegions.Count>0)
+			if (buildingRegions.Count > 0)
 			{
 				foreach (Region region in buildingRegions)
 				{
@@ -73,12 +145,12 @@ public class MapGenerator : MonoBehaviour
 			buildingRegions.Clear();
 
 
- 			ga = new GeneticAlgorithm(map);
- 			ga.Start();
- 			buildingRegions = ga.ShowResult();
-// 			sa = new StimulatedAnnealing(map);
-// 			sa.Start();
-// 			buildingRegions = sa.ShowResult();
+			ga = new GeneticAlgorithm(map);
+			ga.Start();
+			buildingRegions = ga.ShowResult();
+			// 			sa = new StimulatedAnnealing(map);
+			// 			sa.Start();
+			// 			buildingRegions = sa.ShowResult();
 			CreateRegionMesh(buildingRegions, Color.green);
 		}
 	}
@@ -86,6 +158,7 @@ public class MapGenerator : MonoBehaviour
 	{
 		return new Vector3(-width * unitSize / 2.0f + unitSize * tile.tileX + unitSize / 2.0f, 0, -height * unitSize / 2.0f + unitSize * tile.tileY + unitSize / 2.0f);
 	}
+
 	void GenerateMap()
 	{
 		//隨機填入0(water),1(land)產生地圖
@@ -102,21 +175,21 @@ public class MapGenerator : MonoBehaviour
 		//創建mesh與計算outline
 		survivingLandRegions = new List<Region>();
 		survivingLandRegions = GetAllRegion((int)TileType.Land);
-		CreateRegionMesh(survivingLandRegions,Color.white);
+		CreateRegionMesh(survivingLandRegions, Color.white);
 		survivingWaterRegions = new List<Region>();
 		survivingWaterRegions = GetAllRegion((int)TileType.Water);
 		CreateRegionMesh(survivingWaterRegions, Color.blue);
 
-		ShowRegionOutline(survivingLandRegions.ToArray(),Color.green);
+		ShowRegionOutline(survivingLandRegions.ToArray(), Color.green);
 
 		//ShowRegionOutline(survivingWaterRegions.ToArray(), Color.red);
 
 	}
 	void CreateRegionMesh(List<Region> regions, Color color)
 	{
-		for(int i=0;i<regions.Count;i++)
+		for (int i = 0; i < regions.Count; i++)
 		{
-			regions[i].CreateRegionMesh(this.gameObject.transform,unitSize,color);
+			regions[i].CreateRegionMesh(this.gameObject.transform, unitSize, color);
 		}
 	}
 	void ShowRegionOutline(Region[] regions, Color color)
@@ -658,13 +731,13 @@ public class Region : IComparable<Region>
 }
 public class Coord
 {
-	public int tileX ;
-	public int tileY ;
-	public Coord() 
-	{ 
-	
+	public int tileX;
+	public int tileY;
+	public Coord()
+	{
+
 	}
-	public Coord(Coord  _coord)
+	public Coord(Coord _coord)
 	{
 		tileX = _coord.tileX;
 		tileY = _coord.tileY;
