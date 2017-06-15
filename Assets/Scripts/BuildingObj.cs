@@ -50,16 +50,10 @@ public class BuildingObj : MonoBehaviour {
 	public float buildingHeight;                //建築(樓層)高度
 	public EntraneIndexList entraneIndexList = new EntraneIndexList();
 
-	public void BuildingMove(Vector3 offset) 
-	{
-		building.transform.position += offset;
-		platformCenter += offset;
-		bodyCenter += offset;
-		roofTopCenter += offset;
-
-		platformController.MoveValueUpdate(offset);
-		bodyController.MoveValueUpdate(offset);
-	}
+	
+    /**
+     * 初始化
+     */
 	public void InitFunction(GameObject building, Vector3 position, float platLength, float platWidth, float platHeight, float eaveColumnHeight, float goldColumnHeight, float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList, bool isDownFoloor, int roofType,bool isStair)
 	{
 		this.building=building;
@@ -81,7 +75,7 @@ public class BuildingObj : MonoBehaviour {
 		roofController = building.AddComponent<RoofController>();
 
 		//入口位置
-		entraneIndexList.SetEntranceIndex(0,1, 2);
+		entraneIndexList.SetEntranceIndex(0,1);
 
         if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
         {
@@ -112,7 +106,161 @@ public class BuildingObj : MonoBehaviour {
 		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight/2.0f;
 
 	}
-	public void ResetPlatformFunction(float platLength, float platWidth, float platHeight,bool isStair) 
+
+    public void ResetRoofFunction()
+    {
+        if (roof != null)
+        {
+           // yield return Destroy(roof);
+            Destroy(roof);
+            roof = null;
+            print("!!!!!!!!!!!!!!!DestroyDestroy~~~~~~~~~~~~~~~~");
+        } 
+        roof = new GameObject("roof");
+        roof.transform.parent = this.building.transform;
+
+
+        //roofController.CreateRoof(this.bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), null, false);
+        roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), null, platformController.platWidth, bodyController. eaveColumnHeight,roofController. mainRidgeHeightOffset, roofController. allJijaHeight, false, (int)MainController.Instance.roofType);
+
+        buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
+    }
+
+    /**
+     * 重製屋身
+     */
+    public void ResetBodyFunction()
+    {
+        if (body != null)
+        {
+            Destroy(body);
+            body = new GameObject("body");
+            body.transform.parent = this.building.transform;
+
+            //bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, ColumnHeight, ColumnHeight);
+            bodyController.ResetWithSimpleInfo(this, this.platformController.platHeight);
+            buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
+        }
+    }
+    public void AdjustBodyWidth(float width)
+    {
+        if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
+        {
+            float orgiWidth = (bodyController.origBotPosList[0] - bodyController.origBotPosList[1]).magnitude;
+            float WidthOffset = (width - orgiWidth)/2 ;
+            bodyController.UpdateOrigBottonPos(WidthOffset, 0);
+        }
+    }
+    public void AdjustBodyLength(float length)
+    {
+        if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
+        {
+            float orgiLength = (bodyController.origBotPosList[0] - bodyController.origBotPosList[3]).magnitude;
+            float LengthOffset = (length - orgiLength )/2;
+            bodyController.UpdateOrigBottonPos(0, LengthOffset);
+        }
+    }
+    /**
+     * 重設金柱
+     * 1.isCreate : 是否重建金柱 2.isReCalculate : 是否重算金柱位置
+     */
+    public void ResetGoldColumn(bool isCreate,bool isReCalculate)
+    {
+        bodyController.isGoldColumn = isCreate;
+        //** 重算金柱位置
+        if (isReCalculate)
+        {
+            bodyController.goldColumnPosList = bodyController.CalculateGoldColumnPos(bodyController.origBotPosList, entraneIndexList.List, bodyCenter);
+        }
+        //** 重建金柱
+        if (isCreate)
+        {
+            bodyController.goldColumnList = bodyController.CreateRingColumn(this.body, bodyController.goldColumnPosList,
+                                                                            bodyController.goldColumnRadius, bodyController.goldColumnRadius,
+                                                                            bodyController.goldColumnHeight, bodyController.goldColumnRadius * 1.2f,
+                                                                            bodyController.columnFundationHeight, "GoldColumn");
+
+        }
+        else
+        {
+            DeleteGoldColumn();
+        }
+    }
+    /**
+     * 刪除金柱
+     */
+    public void DeleteGoldColumn()
+    {
+        for (int iIndex = 0; iIndex < bodyController.goldColumnList.Count; iIndex++)
+        {
+            Destroy(bodyController.goldColumnList[iIndex].columnObj);
+        }
+        bodyController.goldColumnList.Clear();
+    }
+    /**
+     * 重設窗戶
+     */
+    public void ResetWindowAndDoorNum()
+    {
+        for (int iIndex = 0; iIndex < bodyController.windowObjList.Count; iIndex++)
+        {
+            Destroy(bodyController.windowObjList[iIndex]);
+        }
+        for (int iIndex = 0; iIndex < bodyController.doorObjList.Count; iIndex++)
+        {
+            Destroy(bodyController.doorObjList[iIndex]);
+        }
+        bodyController.windowObjList.Clear();
+        bodyController.doorObjList.Clear();
+        bodyController.CreateRingWall(ModelController.Instance.goldColumnModelStruct, bodyController.GetColumnStructPosList(bodyController.goldColumnList),
+                                        bodyController.goldColumnRadius, bodyController.unitNumberInBay, bodyController.doorNumber);
+    }
+    /**
+     * 重設門楣
+     */
+    public void ResetFrieze(bool isCreate)
+    {
+        bodyController.isFrieze = isCreate;
+        if (isCreate)
+        {
+            bodyController.CreateRingFrieze(ModelController.Instance.eaveColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.eaveColumnList), 
+                                            bodyController.eaveColumnRadius, 0.7f * bodyController.eaveColumnHeight);
+        }
+        else
+        {
+            for (int iIndex = 0; iIndex < bodyController.friezeObjList.Count; iIndex++)
+            {
+                Destroy(bodyController.friezeObjList[iIndex]);
+            }
+            bodyController.friezeObjList.Clear();
+        }
+    }
+    /**
+     * 重設欄杆
+     */
+    public void ResetBalustrade(bool isCreate)
+    {
+        bodyController.isBalustrade = isCreate;
+        if (isCreate)
+        {
+            bodyController.CreateRingBalustrade(ModelController.Instance.eaveColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.eaveColumnList),
+                                                bodyController.eaveColumnRadius, 0.1f * bodyController.eaveColumnHeight);
+        }
+        else
+        {
+            for (int iIndex = 0; iIndex < bodyController.balusObjList.Count; iIndex++)
+            {
+                Destroy(bodyController.balusObjList[iIndex]);
+            }
+            bodyController.balusObjList.Clear();
+        }
+    }
+
+    /**
+     * 重製基座
+     * 輸入:
+     */
+    public void ResetPlatformFunction(float platLength, float platWidth, float platHeight,bool isStair) 
 	{
 		if (platform != null) Destroy(platform);
 		platform = new GameObject("platform");
@@ -121,4 +269,50 @@ public class BuildingObj : MonoBehaviour {
 		platformController.InitFunction(this, platformCenter, platWidth, platLength, platHeight, isStair);
 		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
 	}
+    /**
+     * 重製樓梯(長寬)
+     */
+    public void ResetStair(float StairLength, float StairWidth)
+    {
+        PlatFormStruct stairInfo = platformController.platFormStruct;
+        this.platformController.stairLength = StairLength;
+        this.platformController.stairWidth = StairWidth;
+        for (int iIndex = 0; iIndex < stairInfo.stairList.Count; iIndex++)
+        {
+            Destroy(stairInfo.stairList[iIndex]);
+        }
+        stairInfo.stairList = this.platformController.CreateRingStair(this.platform, stairInfo.borderColumnList, stairInfo.stairPosList, stairInfo.facadeDir, this.platformController.stairHeight, StairLength,StairWidth);
+    }
+    /**
+     * 移動整棟樓層與修改原有資訊
+     */
+    public void BuildingMove(Vector3 offset)
+    {
+        building.transform.position += offset;
+        platformCenter += offset;
+        bodyCenter += offset;
+        roofTopCenter += offset;
+
+        platformController.MoveValueUpdate(offset);
+        bodyController.MoveValueUpdate(offset);
+    }
+    /**
+     * 移動屋身與修改原有資訊
+     */
+    public void MoveBuildingBody(Vector3 offset)
+    {
+        print("offset : "+offset);
+        this.body.transform.position += offset;       
+        bodyCenter += offset;
+        bodyController.MoveValueUpdate(offset);
+    }
+    /**
+     * 移動屋頂與修改原有資訊
+     */
+    public void MoveBuildingRoof(Vector3 offset)
+    {
+        this.roof.transform.position += offset;
+        roofTopCenter += offset;
+        //bodyController.MoveValueUpdate(offset);
+    }
 }

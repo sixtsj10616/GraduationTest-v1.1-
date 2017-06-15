@@ -23,13 +23,13 @@ public class PlatformController : MonoBehaviour
 	public float platHeight;
 
 	//Stair*****************************************************************************
-	public float stairWidth=5;
+	public float stairWidth = 5;
 	public float stairHeight;
 	public float stairLength = 5;
 	//**********************************************************************************
 	public bool isCurvePlatform = false;
 	public bool isStair = false;
-	public bool isBorder = true;
+	public bool isBorder = false;
 	//**********************************************************************************
 	public int borderColumnNumber = 8;//必須是偶數
 	//**********************************************************************************
@@ -57,14 +57,6 @@ public class PlatformController : MonoBehaviour
 	/**
 	 * 組合亭初始化基座
 	 */
-	void ShowPos(Vector3 pos, GameObject parent, Color color, float localScale = 0.2f)
-	{
-		GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		obj.transform.position = pos;
-		obj.transform.parent = parent.transform;
-		obj.transform.localScale = Vector3.one * localScale;
-		obj.GetComponent<MeshRenderer>().material.color = color;
-	}
 	public void InitFunctionForCombinTing(BuildingObj parentObj, Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight)
 	{
 
@@ -124,8 +116,14 @@ public class PlatformController : MonoBehaviour
 				{
 					Destroy(platFormStruct.borderColumnList[i]);
 				}
+                for (int iIndex = 0; iIndex < platFormStruct.borderWallList.Count; iIndex++)
+                {
+                    Destroy(platFormStruct.borderWallList[iIndex]);
+                }
 				platFormStruct.borderColumnList.Clear();
-			}
+                platFormStruct.borderWallList.Clear();
+
+            }
 		}
 	}
 	//創建或刪除樓梯
@@ -205,9 +203,9 @@ public class PlatformController : MonoBehaviour
 			platFormStruct.topPointPosList.Add(controlPointPosList[(controlPointPosList.Count - 1) - ((int)(MainController.Instance.sides - 1)) + i]);
 		}
 
-		ShowPos(platFormStruct.bottomPointPosList[0], platformBody, Color.black, 1.0f);
-		ShowPos(platFormStruct.bottomPointPosList[1], platformBody, Color.red, 1.0f);
-		ShowPos(platFormStruct.bottomPointPosList[2], platformBody, Color.yellow, 1.0f);
+		MainController.ShowPos(platFormStruct.bottomPointPosList[0], platformBody, Color.black, 1.0f);
+        MainController.ShowPos(platFormStruct.bottomPointPosList[1], platformBody, Color.red, 1.0f);
+        MainController.ShowPos(platFormStruct.bottomPointPosList[2], platformBody, Color.yellow, 1.0f);
 
 		//計算facadeDir與stair位置
 		platFormStruct.facadeDir.Clear();
@@ -313,6 +311,7 @@ public class PlatformController : MonoBehaviour
 	}
 	/**
 	 * 建築一圈皆製作樓梯
+     * 邏輯有點怪..有欄杆時的邏輯
 	 */
 	private List<GameObject> CreateRingStair(GameObject parent, List<Vector3> posList, List<Vector3> dirList, float stairWidth, float stairHeight, float stairLength)
 	{
@@ -324,18 +323,46 @@ public class PlatformController : MonoBehaviour
 		}
 		return stairList;
 	}
-	private List<GameObject> CreateRingStair(GameObject parent, List<GameObject> borderColumnList,List<Vector3> posList, List<Vector3> dirList,float stairHeight, float stairLength)
+	public List<GameObject> CreateRingStair(GameObject parent, List<GameObject> borderColumnList,List<Vector3> posList, List<Vector3> dirList,float stairHeight, float stairLength)
 	{
 		List<GameObject> stairList = new List<GameObject>();
 		for (int i = 0; i < (int)MainController.Instance.sides; i++)
 		{
 			if (!parentObj.entraneIndexList.Contains(i)) { continue; }
-			float stairWidth=Vector3.Distance(borderColumnList[i*(borderColumnNumber-1)].transform.position,borderColumnList[i*(borderColumnNumber-1)+1].transform.position);
+            if (borderColumnList.Count > 0)
+            {
+                stairWidth = Vector3.Distance(borderColumnList[i * (borderColumnNumber - 1)].transform.position, borderColumnList[i * (borderColumnNumber - 1) + 1].transform.position);
+            }
+            else
+            {
+
+            }
 			stairList.Add(CreateStair(parent, posList[i] + platFormStruct.facadeDir[i] * stairLength / 2.0f, dirList[i], stairWidth, stairHeight, stairLength));
 		}
 		return stairList;
 	}
-	private List<GameObject> CreateRingBorderColumn(BorderModelStruct borderModelStruct, List<Vector3> posList, Vector3 platformCenter)
+    public List<GameObject> CreateRingStair(GameObject parent, List<GameObject> borderColumnList, List<Vector3> posList, List<Vector3> dirList, float stairHeight, float stairLength ,float stairWidth)
+    {
+        List<GameObject> stairList = new List<GameObject>();
+        for (int i = 0; i < (int)MainController.Instance.sides; i++)
+        {
+            if (!parentObj.entraneIndexList.Contains(i)) { continue; }
+            if (borderColumnList.Count > 0)
+            {
+                stairWidth = Vector3.Distance(borderColumnList[i * (borderColumnNumber - 1)].transform.position, borderColumnList[i * (borderColumnNumber - 1) + 1].transform.position);
+            }
+            else
+            {
+
+            }
+            stairList.Add(CreateStair(parent, posList[i] + platFormStruct.facadeDir[i] * stairLength / 2.0f, dirList[i], stairWidth, stairHeight, stairLength));
+        }
+        return stairList;
+    }
+    /**
+     * 製作基座欄杆
+     */
+    private List<GameObject> CreateRingBorderColumn(BorderModelStruct borderModelStruct, List<Vector3> posList, Vector3 platformCenter)
 	{
 		float borderColumnWidth = borderModelStruct.fenceModelStruct.bound.size.x;//欄杆柱子長度
 		float borderColumnHeight = borderModelStruct.fenceModelStruct.bound.size.y;//欄杆柱子長度
@@ -357,7 +384,7 @@ public class PlatformController : MonoBehaviour
 				GameObject clone = Instantiate(borderModelStruct.fenceModelStruct.model, pos, borderModelStruct.fenceModelStruct.model.transform.rotation) as GameObject;
 				clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(borderModelStruct.fenceModelStruct.rotation);
 
-				clone.transform.parent = parentObj.body.transform;
+				clone.transform.parent = parentObj.platform.transform;
 
 				borderColumnList.Add(clone);
 
@@ -395,7 +422,7 @@ public class PlatformController : MonoBehaviour
 				clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(borderModelStruct.fenceWallModelStruct.rotation);
 				clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x * (width) / borderWallWidth, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z));
 				//clone.transform.GetChild(0).localScale = Vector3.Scale(clone.transform.GetChild(0).localScale, clone.transform.rotation * clone.transform.GetChild(0).transform.rotation * (new Vector3((width) / borderWallWidth, 1, 1)));
-				clone.transform.parent = parentObj.body.transform;
+				clone.transform.parent = parentObj.platform.transform;
 				borderWallList.Add(clone);
 			}
 		}
