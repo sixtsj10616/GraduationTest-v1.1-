@@ -16,7 +16,7 @@ public class MeshGenerator:MonoBehaviour
 	List<List<int>> outlines = new List<List<int>>();
 	HashSet<int> checkedVertices = new HashSet<int>();
 
-	public void GenerateMesh(int[,] map, float squareSize, MeshFilter cave)
+	public void GenerateMesh(int[,] map, float squareSize, MeshFilter cave,AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null)
 	{
 		this.cave=cave;
 
@@ -24,7 +24,7 @@ public class MeshGenerator:MonoBehaviour
 		outlines.Clear();
 		checkedVertices.Clear();
 
-		squareGrid = new SquareGrid(map, squareSize);
+		squareGrid = new SquareGrid(map, squareSize, heightCurve, heightMultiplier, noiseMap , fallofMap);
 
 		vertices = new List<Vector3>();
 		triangles = new List<int>();
@@ -44,12 +44,11 @@ public class MeshGenerator:MonoBehaviour
 		mesh.triangles = triangles.ToArray();
 		mesh.RecalculateNormals();
 
-		int tileAmount = 10;
 		Vector2[] uvs = new Vector2[vertices.Count];
 		for (int i = 0; i < vertices.Count; i++)
 		{
-			float percentX = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].x) * tileAmount;
-			float percentY = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].z) * tileAmount;
+			float percentX = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].x) ;
+			float percentY = Mathf.InverseLerp(-map.GetLength(1) / 2 * squareSize, map.GetLength(1) / 2 * squareSize, vertices[i].z);
 			uvs[i] = new Vector2(percentX, percentY);
 		}
 		mesh.uv = uvs;
@@ -335,7 +334,7 @@ public class MeshGenerator:MonoBehaviour
 	{
 		public Square[,] squares;
 
-		public SquareGrid(int[,] map, float squareSize)
+		public SquareGrid(int[,] map, float squareSize,AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null)
 		{
 			int nodeCountX = map.GetLength(0);
 			int nodeCountY = map.GetLength(1);
@@ -348,7 +347,8 @@ public class MeshGenerator:MonoBehaviour
 			{
 				for (int y = 0; y < nodeCountY; y++)
 				{
-					Vector3 pos = new Vector3(-mapWidth / 2 + x * squareSize + squareSize / 2, 0, -mapHeight / 2 + y * squareSize + squareSize / 2);
+					float heightValue = (heightCurve!=null)? heightCurve.Evaluate((float)noiseMap[x, y]) *(float) heightMultiplier:0;
+					Vector3 pos = new Vector3(-mapWidth / 2 + x * squareSize + squareSize / 2, heightValue, -mapHeight / 2 + y * squareSize + squareSize / 2);
 					controlNodes[x, y] = new ControlNode(pos, map[x, y] == 1, squareSize);
 				}
 			}
