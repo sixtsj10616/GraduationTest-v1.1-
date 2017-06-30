@@ -15,8 +15,7 @@ public class MeshGenerator:MonoBehaviour
 	Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>>();
 	List<List<int>> outlines = new List<List<int>>();
 	HashSet<int> checkedVertices = new HashSet<int>();
-
-	public void GenerateMesh(int[,] map, float squareSize, MeshFilter cave)
+	public void GenerateMesh(int[,] map, float squareSize, MeshFilter cave, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null,float[,] _noiseOffsetMap = null)
 	{
 		this.cave=cave;
 
@@ -24,7 +23,7 @@ public class MeshGenerator:MonoBehaviour
 		outlines.Clear();
 		checkedVertices.Clear();
 
-		squareGrid = new SquareGrid(map, squareSize);
+		squareGrid = new SquareGrid(map, squareSize, heightCurve, heightMultiplier, noiseMap , fallofMap,_noiseOffsetMap);
 
 		vertices = new List<Vector3>();
 		triangles = new List<int>();
@@ -44,12 +43,11 @@ public class MeshGenerator:MonoBehaviour
 		mesh.triangles = triangles.ToArray();
 		mesh.RecalculateNormals();
 
-		int tileAmount = 10;
 		Vector2[] uvs = new Vector2[vertices.Count];
 		for (int i = 0; i < vertices.Count; i++)
 		{
-			float percentX = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].x) * tileAmount;
-			float percentY = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].z) * tileAmount;
+			float percentX = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, map.GetLength(0) / 2 * squareSize, vertices[i].x) ;
+			float percentY = Mathf.InverseLerp(-map.GetLength(1) / 2 * squareSize, map.GetLength(1) / 2 * squareSize, vertices[i].z);
 			uvs[i] = new Vector2(percentX, percentY);
 		}
 		mesh.uv = uvs;
@@ -335,7 +333,7 @@ public class MeshGenerator:MonoBehaviour
 	{
 		public Square[,] squares;
 
-		public SquareGrid(int[,] map, float squareSize)
+		public SquareGrid(int[,] map, float squareSize, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null,float[,] _noiseOffsetMap=null)
 		{
 			int nodeCountX = map.GetLength(0);
 			int nodeCountY = map.GetLength(1);
@@ -348,8 +346,10 @@ public class MeshGenerator:MonoBehaviour
 			{
 				for (int y = 0; y < nodeCountY; y++)
 				{
-					Vector3 pos = new Vector3(-mapWidth / 2 + x * squareSize + squareSize / 2, 0, -mapHeight / 2 + y * squareSize + squareSize / 2);
-					controlNodes[x, y] = new ControlNode(pos, map[x, y] == 1, squareSize);
+					float heightValue = (heightCurve != null && noiseMap != null) ? (heightCurve.Evaluate((float)noiseMap[x, y])+((_noiseOffsetMap!=null)?_noiseOffsetMap[x,y]: 0)) * (float)heightMultiplier : 0;
+
+					Vector3 pos = new Vector3(-mapWidth / 2 + x * squareSize + squareSize / 2, heightValue, -mapHeight / 2 + y * squareSize + squareSize / 2);
+					controlNodes[x, y] = new ControlNode(pos, map[x, y] == 1, squareSize,new int[x,y]);
 				}
 			}
 
@@ -412,13 +412,15 @@ public class MeshGenerator:MonoBehaviour
 
 		public bool active;
 		public Node above, right;
+		public int[,] index;
 
-		public ControlNode(Vector3 _pos, bool _active, float squareSize)
+		public ControlNode(Vector3 _pos, bool _active, float _squareSize, int[,] _index)
 			: base(_pos)
 		{
 			active = _active;
-			above = new Node(position + Vector3.forward * squareSize / 2f);
-			right = new Node(position + Vector3.right * squareSize / 2f);
+			above = new Node(position + Vector3.forward * _squareSize / 2f);
+			right = new Node(position + Vector3.right * _squareSize / 2f);
+			index=_index;
 		}
 
 	}

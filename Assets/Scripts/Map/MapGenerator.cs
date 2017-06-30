@@ -2,106 +2,58 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
-
 public class MapGenerator : MonoBehaviour
 {
-
-
-		public float[,] GenerateNoiseMap(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
-		{
-			float[,] noiseMap = new float[mapWidth, mapHeight];
-
-			System.Random prng = new System.Random(seed);
-			Vector2[] octaveOffsets = new Vector2[octaves];
-			for (int i = 0; i < octaves; i++)
-			{
-				float offsetX = prng.Next(-100000, 100000) + offset.x;
-				float offsetY = prng.Next(-100000, 100000) + offset.y;
-				octaveOffsets[i] = new Vector2(offsetX, offsetY);
-			}
-
-			if (scale <= 0)
-			{
-				scale = 0.0001f;
-			}
-
-			float maxNoiseHeight = float.MinValue;
-			float minNoiseHeight = float.MaxValue;
-
-			float halfWidth = mapWidth / 2f;
-			float halfHeight = mapHeight / 2f;
-
-
-			for (int y = 0; y < mapHeight; y++)
-			{
-				for (int x = 0; x < mapWidth; x++)
-				{
-
-					float amplitude = 1;
-					float frequency = 1;
-					float noiseHeight = 0;
-
-					for (int i = 0; i < octaves; i++)
-					{
-						float sampleX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x;
-						float sampleY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y;
-
-						float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
-						noiseHeight += perlinValue * amplitude;
-
-						amplitude *= persistance;
-						frequency *= lacunarity;
-					}
-
-					if (noiseHeight > maxNoiseHeight)
-					{
-						maxNoiseHeight = noiseHeight;
-					}
-					else if (noiseHeight < minNoiseHeight)
-					{
-						minNoiseHeight = noiseHeight;
-					}
-					noiseMap[x, y] = noiseHeight;
-				}
-			}
-
-			for (int y = 0; y < mapHeight; y++)
-			{
-				for (int x = 0; x < mapWidth; x++)
-				{
-					noiseMap[x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseMap[x, y]);
-				}
-			}
-
-			return noiseMap;
-		}
-
-
-	public float unitSize = 5;
+	public int unitSize = 5;
 	public int width;
 	public int height;
-
+	//Seed
 	public string seed;
 	public bool useRandomSeed;
-
+	//Map
 	[Range(0, 100)]
 	public int landFillPercent = 50;
 	public int waterRegionThresholdSize = 10;
 	public int landThresholdSize = 10;
-
+	public bool autoUpdate=false;
 	int smoothTime = 3;
-	float smoothRatio = 0.5f;
 	int passageSize = 5;
 
-	int[,] map;
+	[Range(0, 100)]
+	public int waterExpandPercent=50;
+	//NoiseMap
+	public Noise.NormalizeMode normalizeMode;
+	public int octaves;
+	[Range(0, 1)]
+	public float persistance;
+	public float lacunarity;
+	public float noiseScale;
+	public Vector2 offset;
+	public float meshHeightMultiplier;
+	public AnimationCurve meshHeightCurve;
+
+	public TerrainsType[] terrains;
+	//Map
+	public int[,] map{ get; set; }
+	//FalloffMap
+	public float[,] falloffMap{ get; set; }
+	//NoiseMap
+	public float[,] noiseMap{ get; set; }
+	public float[,] noiseOffsetMap { get; set; }
+	//ColorMap
+	public Color[] colorMap{ get; set; }
+	public Texture2D textureMap{ get; set; }
 
 	HashSet<int> checkedVertices = new HashSet<int>();
+	//map
+	public MeshGenerator mapMeshGen=null;
+	private MeshFilter meshFilter=null;
 	//------------------------
 	public enum TileType { Water = 0, Land = 1 }
-	List<Region> survivingLandRegions;
-	List<Region> survivingWaterRegions;
-	//------------------------
-	List<Region> buildingRegions = new List<Region>();
+	public List<Region> survivingLandRegions = new List<Region>();
+	public List<Region> survivingWaterRegions = new List<Region>();
+	//GA algorithm------------------------
+	public List<Region> buildingRegions = new List<Region>();
 	GeneticAlgorithm ga;
 	StimulatedAnnealing sa;
 	void Start()
@@ -116,83 +68,190 @@ public class MapGenerator : MonoBehaviour
 		obj.transform.localScale = Vector3.one * localScale;
 		obj.GetComponent<MeshRenderer>().material.color = color;
 	}
-	void Update()
+	public void ResetNoiseOffsetMap(float[,] _noiseOffsetMap)
 	{
-		if (Input.GetKeyDown(KeyCode.T))
+		noiseOffsetMap=_noiseOffsetMap;
+	}
+	public void ResetNoiseOffsetMap(int[,] _map)
+	{
+		for(int x=0;x<width;x++)
 		{
-
-			for (int i = 0; i < survivingWaterRegions.Count; i++)
+			for(int y=0;y<height;y++)
 			{
-				Destroy(survivingWaterRegions[i].regionObject);
-			}
-			for (int i = 0; i < survivingLandRegions.Count; i++)
-			{
-				Destroy(survivingLandRegions[i].regionObject);
-			}
-			survivingLandRegions.Clear();
-			survivingWaterRegions.Clear();
-			GenerateMap();
-		}
-		if (Input.GetKeyDown(KeyCode.P))
-		{
-			if (buildingRegions.Count > 0)
-			{
-				foreach (Region region in buildingRegions)
+				if (_map[x, y] == (int)TileType.Water)
 				{
-					Destroy(region.regionObject);
+					noiseOffsetMap[x,y]=0;
 				}
 			}
-			buildingRegions.Clear();
-
-
-			ga = new GeneticAlgorithm(map);
-			ga.Start();
-			buildingRegions = ga.ShowResult();
-			// 			sa = new StimulatedAnnealing(map);
-			// 			sa.Start();
-			// 			buildingRegions = sa.ShowResult();
-			CreateRegionMesh(buildingRegions, Color.green);
 		}
+	}
+	public void ResetMap(int[,] _map)
+	{
+		map = _map;
+	}
+	public void ResetRegion(int updateType=0)//0:皆空值為重新計算地圖，1:map空為建造山，2:noiseOffsetMap空為建造水
+	{
+		for (int i = 0; i < survivingWaterRegions.Count; i++)
+		{
+			if (survivingWaterRegions[i].regionObject != null) Destroy(survivingWaterRegions[i].regionObject);
+		}
+		for (int i = 0; i < survivingLandRegions.Count; i++)
+		{
+			if (survivingLandRegions[i].regionObject!=null) Destroy(survivingLandRegions[i].regionObject);
+		}
+		survivingLandRegions.Clear();
+		survivingWaterRegions.Clear();
+		GenerateMap(updateType);
+	}
+	public void SetGA()
+	{
+		if (buildingRegions.Count > 0)
+		{
+			foreach (Region region in buildingRegions)
+			{
+				Destroy(region.regionObject);
+			}
+		}
+		buildingRegions.Clear();
+
+
+		ga = new GeneticAlgorithm(map);
+		ga.Start();
+		buildingRegions = ga.ShowResult();
+		// 			sa = new StimulatedAnnealing(map);
+		// 			sa.Start();
+		// 			buildingRegions = sa.ShowResult();
+		CreateRegionMesh(buildingRegions, Color.green, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap));
 	}
 	Vector3 CoordToWorldPoint(Coord tile)
 	{
 		return new Vector3(-width * unitSize / 2.0f + unitSize * tile.tileX + unitSize / 2.0f, 0, -height * unitSize / 2.0f + unitSize * tile.tileY + unitSize / 2.0f);
 	}
-
-	void GenerateMap()
+	void GenerateMap(int updateType=0)
 	{
-		//隨機填入0(water),1(land)產生地圖
-		map = new int[width, height];
-		RandomFillMap();
-		//檢查周圍
-		for (int i = 0; i < smoothTime; i++)
+		switch (updateType)//皆空值為重新計算地圖
 		{
-			SmoothMap();
-		}
+			case 0:
+			Debug.Log("CreateNewMap");
+			map = new int[width, height];
+			noiseOffsetMap = new float[width, height];
+			//隨機填入0(water),1(land)產生地圖
+			RandomFillMap();
+			//檢查周圍
+			for (int i = 0; i < smoothTime; i++)
+			{
+				SmoothMap();
+			}
 
-		ProcessMap();
-
-		//創建mesh與計算outline
+			//ProcessMap();
+			//
+			//產生falloffMap
+			falloffMap = FalloffGenerator.GenerateFalloffMap(map);
+			//產生noiseMap
+			noiseMap = Noise.GenerateNoiseMap(width, height, seed.GetHashCode(), noiseScale, octaves, persistance, lacunarity, offset, normalizeMode, (falloffMap));
+			colorMap = ColorMapGenerator(noiseMap, map, width, height, noiseOffsetMap);
+			textureMap = TextureGenerator.TextureFromColourMap(colorMap, width, height);
+			CreateMapMesh(textureMap, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap), noiseOffsetMap);
+			/*	//創建mesh與計算outline
 		survivingLandRegions = new List<Region>();
 		survivingLandRegions = GetAllRegion((int)TileType.Land);
-		CreateRegionMesh(survivingLandRegions, Color.white);
+		CreateRegionMesh(survivingLandRegions, textureMap, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap));
 		survivingWaterRegions = new List<Region>();
 		survivingWaterRegions = GetAllRegion((int)TileType.Water);
-		CreateRegionMesh(survivingWaterRegions, Color.blue);
+		Color waterColor;
+		UnityEngine.ColorUtility.TryParseHtmlString("#05336000",out waterColor);
+		CreateRegionMesh(survivingWaterRegions, waterColor, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap));
+		ShowRegionOutline(survivingLandRegions.ToArray(), Color.green);*/
+			ShowRegionOutline(survivingLandRegions.ToArray(), Color.green);
+			//ShowRegionOutline(survivingWaterRegions.ToArray(), Color.red);
+		break;
+		case 1://map空為建造山
+		
+			Debug.Log("CreateMountain");
+			//產生falloffMap
+			falloffMap = FalloffGenerator.GenerateFalloffMap(map);
+			//產生noiseMap
+			noiseMap = Noise.GenerateNoiseMap(width, height, seed.GetHashCode(), noiseScale, octaves, persistance, lacunarity, offset, normalizeMode, (falloffMap));
+			colorMap = ColorMapGenerator(noiseMap, map, width, height, noiseOffsetMap);
+			textureMap = TextureGenerator.TextureFromColourMap(colorMap, width, height);
 
-		ShowRegionOutline(survivingLandRegions.ToArray(), Color.green);
+			CreateMapMesh(textureMap, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap), noiseOffsetMap);
+		break;
+		case 2://noiseOffsetMap空為建造水
+		
+			Debug.Log("CreateWater");
+			//
+			//產生falloffMap
+			falloffMap = FalloffGenerator.GenerateFalloffMap(map);
+			//產生noiseMap
+			noiseMap = Noise.GenerateNoiseMap(width, height, seed.GetHashCode(), noiseScale, octaves, persistance, lacunarity, offset, normalizeMode, (falloffMap));
+			colorMap = ColorMapGenerator(noiseMap, map, width, height, noiseOffsetMap);
+			textureMap = TextureGenerator.TextureFromColourMap(colorMap, width, height);
 
-		//ShowRegionOutline(survivingWaterRegions.ToArray(), Color.red);
+			CreateMapMesh(textureMap, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap), noiseOffsetMap);
+		break;
+		}
 
 	}
-	void CreateRegionMesh(List<Region> regions, Color color)
+	void CreateMapMesh(Texture2D texture, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null, float[,] _noiseOffsetMap = null) 
+	{
+		int[,] array = new int[map.GetLength(0), map.GetLength(1)];
+
+		for (int i = 0; i < map.GetLength(0); i++)
+		{
+			for (int j = 0; j < map.GetLength(1); j++)
+			{
+				array[i, j] = 1;
+			}
+		}
+		if(meshFilter==null)
+		{ 
+			GameObject mapObject = new GameObject();
+			mapMeshGen = mapObject.AddComponent<MeshGenerator>();
+			meshFilter = mapObject.AddComponent<MeshFilter>();
+			MeshRenderer meshRenderer = mapObject.AddComponent<MeshRenderer>();
+			mapObject.transform.parent = this.transform;
+
+			mapMeshGen.GenerateMesh(array, unitSize, meshFilter, heightCurve, heightMultiplier, noiseMap, fallofMap, _noiseOffsetMap);
+			meshRenderer.material.mainTexture = textureMap;
+			mapObject.AddComponent<MeshCollider>();
+			mapObject.GetComponent<MeshCollider>().sharedMesh = meshFilter.mesh;
+		}
+		else 
+		{
+			mapMeshGen.GenerateMesh(array, unitSize, meshFilter, heightCurve, heightMultiplier, noiseMap, fallofMap, _noiseOffsetMap);
+			mapMeshGen.gameObject.GetComponent<MeshRenderer>().material.mainTexture = textureMap;
+			mapMeshGen.gameObject.GetComponent<MeshCollider>().sharedMesh = meshFilter.mesh;
+		}
+		survivingLandRegions = new List<Region>();
+		survivingLandRegions = GetAllRegion((int)TileType.Land);
+		for (int i = 0; i < survivingLandRegions.Count; i++)
+		{
+			survivingLandRegions[i].CalculateRegionOutline(unitSize, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap));
+		}
+		survivingWaterRegions = new List<Region>();
+		survivingWaterRegions = GetAllRegion((int)TileType.Water);
+		for (int i = 0; i < survivingWaterRegions.Count; i++)
+		{
+			survivingWaterRegions[i].CalculateRegionOutline(unitSize, meshHeightCurve, meshHeightMultiplier, (noiseMap), (falloffMap));
+		}
+	}
+	void CreateRegionMesh(List<Region> regions, Texture2D texture, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null)
 	{
 		for (int i = 0; i < regions.Count; i++)
 		{
-			regions[i].CreateRegionMesh(this.gameObject.transform, unitSize, color);
+			regions[i].CreateRegionMesh(this.gameObject.transform, unitSize, texture, heightCurve, heightMultiplier, noiseMap, fallofMap);
 		}
 	}
-	void ShowRegionOutline(Region[] regions, Color color)
+	void CreateRegionMesh(List<Region> regions, Color color, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null)
+	{
+		for (int i = 0; i < regions.Count; i++)
+		{
+			regions[i].CreateRegionMesh(this.gameObject.transform, unitSize, color, heightCurve, heightMultiplier, noiseMap, fallofMap);
+		}
+	}
+
+	public void ShowRegionOutline(Region[] regions, Color color,float duration=1)
 	{
 		for (int i = 0; i < regions.Length; i++)
 		{
@@ -200,13 +259,14 @@ public class MapGenerator : MonoBehaviour
 			{
 				for (int k = 0; k < regions[i].outlinePosList[j].Count - 1; k++)
 				{
-					Debug.DrawLine(regions[i].outlinePosList[j][k], regions[i].outlinePosList[j][k + 1], color, 1);
+					Debug.DrawLine(regions[i].outlinePosList[j][k], regions[i].outlinePosList[j][k + 1], color, duration);
 				}
 			}
 		}
 	}
-	void ProcessMap()
+	void ExpandSizeOfWater()
 	{
+	
 		//Water
 		List<List<Coord>> waterRegions = GetRegions((int)TileType.Water);
 
@@ -216,11 +276,15 @@ public class MapGenerator : MonoBehaviour
 			{
 				foreach (Coord tile in waterRegion)
 				{
-					map[tile.tileX, tile.tileY] = (int)TileType.Land;
+					map[tile.tileX, tile.tileY] = (int)TileType.Water;
 				}
 			}
 
 		}
+
+	}
+	void ProcessMap()
+	{
 		//Land
 		List<List<Coord>> landRegions = GetRegions((int)TileType.Land);
 		List<Region> survivingLandRegions = new List<Region>();
@@ -248,7 +312,52 @@ public class MapGenerator : MonoBehaviour
 
 			ConnectClosestRegions(survivingLandRegions, (int)TileType.Land);
 		}
+		//Water
+		List<List<Coord>> waterRegions = GetRegions((int)TileType.Water);
 
+		foreach (List<Coord> waterRegion in waterRegions)
+		{
+			if (waterRegion.Count < waterRegionThresholdSize)
+			{
+				foreach (Coord tile in waterRegion)
+				{
+					map[tile.tileX, tile.tileY] = (int)TileType.Land;
+				}
+			}
+
+		}
+
+		waterRegions = GetRegions((int)TileType.Water);
+		landRegions = GetRegions((int)TileType.Land);
+
+	}
+	Color[] ColorMapGenerator(float[,] noiseMap, int[,] map, int width, int height, float[,] noiseOffsetMap) 
+	{
+		Color[] colourMap = new Color[width * height];
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				float currentHeight = noiseMap[x, y] + noiseOffsetMap[x,y];
+				if (map[x, y] == 0) colourMap[y * height + x] = terrains[0].colour;
+				else 
+				{ 
+				colourMap[y * height + x] = terrains[1].colour;
+				for (int n = 1; n < terrains.Length; n++)
+				{
+					if (currentHeight >= terrains[n].height)
+					{
+						colourMap[y * height + x] = terrains[n].colour;
+					}
+					else
+					{
+						break;
+					}
+				}
+				}
+			}
+		}
+		return colourMap;
 	}
 	List<Region> GetAllRegion(int regionType)
 	{
@@ -500,10 +609,9 @@ public class MapGenerator : MonoBehaviour
 	{
 		return x >= 0 && x < width && y >= 0 && y < height;
 	}
-
-
 	void RandomFillMap()
 	{
+		//Debug.Log(map.GetLength(0) * map.GetLength(1));
 		if (useRandomSeed)
 		{
 			seed = Time.time.ToString();
@@ -511,9 +619,9 @@ public class MapGenerator : MonoBehaviour
 
 		System.Random pseudoRandom = new System.Random(seed.GetHashCode());
 
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < map.GetLength(0); x++)
 		{
-			for (int y = 0; y < height; y++)
+			for (int y = 0; y < map.GetLength(1); y++)
 			{
 				if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
 				{
@@ -521,8 +629,9 @@ public class MapGenerator : MonoBehaviour
 				}
 				else
 				{
-					map[x, y] = (pseudoRandom.Next(0, 100) < landFillPercent) ? (int)TileType.Land : (int)TileType.Water;
+					map[x, y] = (pseudoRandom.Next(0, 100) <= landFillPercent) ? (int)TileType.Land : (int)TileType.Water;					
 				}
+				//Debug.Log(map[x, y]);
 			}
 		}
 	}
@@ -535,9 +644,9 @@ public class MapGenerator : MonoBehaviour
 			{
 				int neighbourLandTiles = GetSurroundingLandCount(x, y);
 
-				if (neighbourLandTiles > smoothRatio * 8)
+				if (neighbourLandTiles > 4)
 					map[x, y] = (int)TileType.Land;
-				else if (neighbourLandTiles < smoothRatio * 8)
+				else if (neighbourLandTiles < 4)
 					map[x, y] = (int)TileType.Water;
 
 			}
@@ -571,6 +680,7 @@ public class MapGenerator : MonoBehaviour
 }
 public class Region : IComparable<Region>
 {
+	public bool isActive=false;
 	public List<Coord> tiles;
 	public List<Coord> edgeTiles;
 	public List<Region> connectedRegions;
@@ -578,13 +688,17 @@ public class Region : IComparable<Region>
 	public bool isAccessibleFromMainRegion;
 	public bool isMainRegion;
 	public int regionType;
-	public MeshFilter meshFilter;
-	public MeshGenerator meshGen;
 	public List<List<Vector3>> outlinePosList;
+
+	public GameObject regionObject = null;
+	MeshFilter meshFilter=null;
+	MeshGenerator meshGen = null;
+
+
+
+
 	int[,] map;
-	//List<int> outlines;
-	//HashSet<int> checkedVertices;
-	public GameObject regionObject;
+
 	public Region()
 	{
 	}
@@ -693,7 +807,29 @@ public class Region : IComparable<Region>
 		}
 		return regionMap;
 	}
-	public void CreateRegionMesh(Transform parent, float squareSize, Color color)
+	public void CalculateRegionOutline(float squareSize, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null)
+	{
+		GameObject newObject = new GameObject();
+		MeshGenerator newMeshGen = newObject.AddComponent<MeshGenerator>();
+		MeshFilter newMeshFilter = newObject.AddComponent<MeshFilter>();
+		newMeshGen.GenerateMesh(CaculatedRegionMap(), squareSize, newMeshFilter, heightCurve, heightMultiplier, noiseMap, fallofMap);
+		outlinePosList = newMeshGen.CalculateMeshOutlinePos();
+		UnityEngine.Object.Destroy(newObject);
+	}
+	public void CreateRegionMesh(Transform parent, float squareSize, Texture2D texture, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null)
+	{
+		regionObject = new GameObject();
+		meshGen = regionObject.AddComponent<MeshGenerator>();
+		meshFilter = regionObject.AddComponent<MeshFilter>();
+		MeshRenderer meshRenderer = regionObject.AddComponent<MeshRenderer>();
+		regionObject.transform.parent = parent.transform;
+		meshGen.GenerateMesh(CaculatedRegionMap(), squareSize, meshFilter, heightCurve, heightMultiplier, noiseMap, fallofMap);
+		meshRenderer.material.mainTexture = texture;
+		outlinePosList = meshGen.CalculateMeshOutlinePos();
+		regionObject.AddComponent<MeshCollider>();
+		regionObject.GetComponent<MeshCollider>().sharedMesh = meshFilter.mesh;
+	}
+	public void CreateRegionMesh(Transform parent, float squareSize, Color color, AnimationCurve heightCurve = null, float heightMultiplier = 0, float[,] noiseMap = null, float[,] fallofMap = null)
 	{
 		regionObject = new GameObject();
 		meshGen = regionObject.AddComponent<MeshGenerator>();
@@ -701,8 +837,10 @@ public class Region : IComparable<Region>
 		MeshRenderer meshRenderer = regionObject.AddComponent<MeshRenderer>();
 		meshRenderer.material.color = color;
 		regionObject.transform.parent = parent.transform;
-		meshGen.GenerateMesh(CaculatedRegionMap(), squareSize, meshFilter);
+		meshGen.GenerateMesh(CaculatedRegionMap(), squareSize, meshFilter, heightCurve, heightMultiplier, noiseMap, fallofMap);
 		outlinePosList = meshGen.CalculateMeshOutlinePos();
+		regionObject.AddComponent<MeshCollider>();
+		regionObject.GetComponent<MeshCollider>().sharedMesh = meshFilter.mesh;
 
 	}
 	public static void ConnectRegions(Region rA, Region rB)
@@ -747,4 +885,11 @@ public class Coord
 		tileX = _x;
 		tileY = _y;
 	}
+}
+[System.Serializable]
+public struct TerrainsType
+{
+	public string name;
+	public float height;
+	public Color colour;
 }
