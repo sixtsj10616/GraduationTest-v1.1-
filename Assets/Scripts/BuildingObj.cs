@@ -114,7 +114,6 @@ public class BuildingObj : MonoBehaviour {
            // yield return Destroy(roof);
             Destroy(roof);
             roof = null;
-            print("!!!!!!!!!!!!!!!DestroyDestroy~~~~~~~~~~~~~~~~");
         } 
         roof = new GameObject("roof");
         roof.transform.parent = this.building.transform;

@@ -24,7 +24,11 @@ public class CatLine
 		Vector3 pos = 0.5f * ((2f * p1) + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t * t + (-p0 + 3f * p1 - 3f * p2 + p3) * t * t * t);
 		return pos;
 	}
-	public List<Vector3> CalculateAnchorPosByInnerPointList(List<Vector3> list, int startIndex,int endIndex,float anchorDis)
+    /**
+     * 算錨點(通常用來算放置瓦片的位置)
+     * list : 點列表，anchorDis : 瓦片長度
+     */
+    public List<Vector3> CalculateAnchorPosByInnerPointList(List<Vector3> list, int startIndex,int endIndex,float anchorDis)
 	{
 		if(list.Count==0)return list;
 
@@ -82,6 +86,9 @@ public class CatLine
         }
         return newList;
     }
+    /**
+     * 
+     */
     public void CalculateInnerPointByList(List<Vector3> list, float anchorDis) 
 	{
 		if (list.Count < 2) return;
@@ -134,7 +141,7 @@ public class CatLine
 				float segmentation = 1 / (float)(numberOfPoints);
 				float t = 0;
 			
-				for (int i = 0; i < numberOfPoints-1; i++)
+				for (int i = 0; i < numberOfPoints; i++)
 				{
 					t += segmentation;
 
@@ -143,8 +150,9 @@ public class CatLine
 				}
 				
 			}
+            
 			float dis = 0;
-			for (int i = 0; i < innerPointList.Count - 1; i++)
+			for (int i = 0; i < innerPointList.Count; i++)
 			{
 				if (anchorDis == 0)
 				{
@@ -161,6 +169,7 @@ public class CatLine
 				}
 
 			}
+            
 		}
 	
 	}

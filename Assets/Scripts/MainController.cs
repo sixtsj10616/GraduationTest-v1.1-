@@ -58,10 +58,10 @@ public class MainController : Singleton<MainController>
     public enum FormFactorSideType { ThreeSide = 3, FourSide = 4, FiveSide = 5, SixSide = 6, EightSide = 8 };
     public FormFactorSideType sides = FormFactorSideType.FourSide;
 
-	public enum RoofType { Zan_Jian_Ding = 0, Wu_Dian_Ding = 1, Lu_Ding = 2, Juan_Peng = 3, Shya_Shan_Ding = 4 , Zan_Jian_Ding2 = 5};//Zan_Jian_Ding攢尖頂, Wu_Dian_Ding廡殿頂,Lu_Ding盝頂,Juan_Peng卷棚
+	public enum RoofType { Zan_Jian_Ding = 0, Wu_Dian_Ding = 1, Lu_Ding = 2, Juan_Peng = 3, Shya_Shan_Ding = 4 , Zan_Jian_Ding2 = 5, Zan_Jian_Ding3 = 6, Zan_Jian_Ding4 = 7 };//Zan_Jian_Ding攢尖頂, Wu_Dian_Ding廡殿頂,Lu_Ding盝頂,Juan_Peng卷棚
     public enum BuildingType {  CombinTing = 0, Normal = 1 };
     public BuildingType buildingType = BuildingType.Normal;
-    public RoofType roofType = RoofType.Zan_Jian_Ding2;
+    public RoofType roofType = RoofType.Zan_Jian_Ding4;
     //**********************************************************************************
 	public float initPlatformWidth_DownStair = 50;
 	public float initPlatformLength_DownStair = 40;
@@ -73,7 +73,7 @@ public class MainController : Singleton<MainController>
 	public float initGoldColumnHeight = 11;
 
 	public float initAllJijaHeight_TopStair = 13f;
-	public float initMainRidgeHeightOffset_TopStair = -6;
+	public float initMainRidgeHeightOffset_TopStair = 0;
 	public float initAllJijaHeight_DownStair;
 	public float initMainRidgeHeightOffset_DownStair;
 
@@ -457,6 +457,16 @@ public class MainController : Singleton<MainController>
     {
 
     }
+    /**
+     * UI
+     */
+    public void OnRoofTypeBtnClick(RoofType roofType)
+    {
+        BuildingObj nowBuilding = Buildings[selectFloor];
+        nowBuilding.roofController.roofType = roofType;
+        nowBuilding.ResetRoofFunction();
+    }
+
     /**
 	 * 顯示觀察用的點
 	 */

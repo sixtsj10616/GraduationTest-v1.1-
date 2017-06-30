@@ -16,4 +16,18 @@ public class Define : MonoBehaviour {
 
     //***           屋頂          ***//
     public const float initJijaHeight = 13;
+
+
+    //***           主脊          ***//
+    public const string TopPoint = "TopPoint";
+    public const string SecPoint = "SecPoint";
+    public const string ThirdPoint = "ThirdPoint";
+    public const string LastPoint = "LastPoint";
+    public const float mainRidgeTileHeight = 0.3f;
+    public const float Do_Kun_Height = 1.5f;
+
+    //***           線段          ***//
+    public const int Large = 1000;
+    public const int Medium = 500;
+    public const int Low = 250;
 }
