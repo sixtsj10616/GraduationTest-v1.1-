@@ -58,7 +58,7 @@ public class MainController : Singleton<MainController>
     public enum FormFactorSideType { ThreeSide = 3, FourSide = 4, FiveSide = 5, SixSide = 6, EightSide = 8 };
     public FormFactorSideType sides = FormFactorSideType.FourSide;
 
-	public enum RoofType { Zan_Jian_Ding = 0, Wu_Dian_Ding = 1, Lu_Ding = 2, Juan_Peng = 3, Shya_Shan_Ding = 4 , Zan_Jian_Ding2 = 5, Zan_Jian_Ding3 = 6, Zan_Jian_Ding4 = 7 };//Zan_Jian_Ding攢尖頂, Wu_Dian_Ding廡殿頂,Lu_Ding盝頂,Juan_Peng卷棚
+	public enum RoofType { Zan_Jian_Ding = 0, Wu_Dian_Ding = 1, Lu_Ding = 2, Juan_Peng = 3, Shya_Shan_Ding = 4, Zan_Jian_Ding2 = 5, Zan_Jian_Ding3 = 6, Zan_Jian_Ding4 = 7, Dome = 8 };//Zan_Jian_Ding攢尖頂, Wu_Dian_Ding廡殿頂,Lu_Ding盝頂,Juan_Peng卷棚,Dome圓頂
     public enum BuildingType {  CombinTing = 0, Normal = 1 };
     public BuildingType buildingType = BuildingType.Normal;
     public RoofType roofType = RoofType.Zan_Jian_Ding4;
@@ -144,7 +144,7 @@ public class MainController : Singleton<MainController>
                 Destroy(LTing.GetComponent<BuildingObj>().body);
                 Destroy(RTing.GetComponent<BuildingObj>().body);
                 //** 建立欄杆
-                combineTingCtrl.CreateRingFrieze(ModelController.Instance, 1.2f, 0.1f * LTing.GetComponent<BodyController>().eaveColumnHeight, combinTing);
+				combineTingCtrl.CreateRingBalustrade(ModelController.Instance, 1.2f, 0.1f * LTing.GetComponent<BodyController>().eaveColumnHeight, combinTing);
 
                 //***開始屋頂 (檢查主脊，屋面，meshCombine)
                 combineTingCtrl.checkMainRidge(LTing.GetComponent<BuildingObj>(), 1, LTingCenter, RTingCenter);
@@ -462,6 +462,7 @@ public class MainController : Singleton<MainController>
      */
     public void OnRoofTypeBtnClick(RoofType roofType)
     {
+	print("!!!!"+roofType.ToString());
         BuildingObj nowBuilding = Buildings[selectFloor];
         nowBuilding.roofController.roofType = roofType;
         nowBuilding.ResetRoofFunction();

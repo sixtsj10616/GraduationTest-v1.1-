@@ -27,7 +27,7 @@ public class MainMenuController : Singleton<MainMenuController>
     public Button StateBtn;
 
     List<RoofTypeInfo> typeInfoList;
-    int nowRoofTypeIndex = 0;
+    public int nowRoofTypeIndex = 0;
     // Use this for initialization
     void Start()
     {

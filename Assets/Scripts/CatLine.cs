@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 public class CatLine
 {
-	public enum CatLineType { ObjectList = 0, PositionList = 1 };
 	private int numberOfPoints = 50;
-	public List<GameObject> controlPointList = new List<GameObject>();
 	public List<Vector3> controlPointPosList = new List<Vector3>();
 	public List<Vector3> innerPointList = new List<Vector3>();
 	public List<Vector3> anchorInnerPointlist = new List<Vector3>();
@@ -14,12 +12,17 @@ public class CatLine
 	{
 		numberOfPoints = number;
 	}
-	public void SetCatmullRom(float anchorDis = 0, int catLineType = (int)CatLineType.ObjectList)
+	public void SetCatmullRom(float anchorDis = 0)
 	{
-		DisplayCatmullromSpline(anchorDis, catLineType);
+		DisplayCatmullromSpline(anchorDis);
 	}
 
 	Vector3 ReturnCatmullRomPos(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+	{
+		Vector3 pos = 0.5f * ((2f * p1) + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t * t + (-p0 + 3f * p1 - 3f * p2 + p3) * t * t * t);
+		return pos;
+	}
+	Vector3 ReturnCatmullRomPos(float t)
 	{
 		Vector3 pos = 0.5f * ((2f * p1) + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t * t + (-p0 + 3f * p1 - 3f * p2 + p3) * t * t * t);
 		return pos;
@@ -36,7 +39,7 @@ public class CatLine
 		List<Vector3> newList = new List<Vector3>();
 		newList.Add(list[startIndex]);
 		int dir = ((endIndex - startIndex) > 0 ? 1 : -1);
-		for (int i = startIndex; ((endIndex - startIndex) > 0 ? (i < (endIndex)) : (i > (endIndex))); i += dir)
+		for (int i = startIndex + dir; ((endIndex - startIndex) > 0 ? (i < (endIndex)) : (i > (endIndex))); i += dir)
 		{
 			dis += Vector3.Distance(list[i], list[i +dir]);
 			if (dis >= anchorDis)
@@ -45,17 +48,6 @@ public class CatLine
 				dis = 0;
 			}
 		}
-/*
-		newList.Add(list[list.Count - 1]);//反著加入
-		for(int i=list.Count-1;i>1;i--)
-		{
-			dis += Vector3.Distance(list[i], list[i-1]);
-			if (dis >= anchorDis)
-			{
-				newList.Add(list[i]);
-				dis = 0;
-			}	
-		}*/
 		return newList;
 	}
     public List<Vector3> CalculateAnchorPosByInnerPointListPoolingVer(List<Vector3> list, int startIndex, int endIndex, float anchorDis)
@@ -66,7 +58,7 @@ public class CatLine
         List<Vector3> newList = new List<Vector3>();
         newList.Add(list[startIndex]);
         int dir = ((endIndex - startIndex) > 0 ? 1 : -1);
-        for (int i = startIndex; ((endIndex - startIndex) > 0 ? (i < (endIndex)) : (i > (endIndex))); i += dir)
+		for (int i = startIndex + dir; ((endIndex - startIndex) > 0 ? (i < (endIndex)) : (i > (endIndex))); i += dir)
         {
             dis += Vector3.Distance(list[i], list[i + dir]);
             if (dis >= anchorDis)
@@ -89,6 +81,13 @@ public class CatLine
     /**
      * 
      */
+	void ShowPos(Vector3 pos, Color color, float localScale = 0.2f)
+	{
+		GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		obj.transform.position = pos;
+		obj.transform.localScale = Vector3.one * localScale;
+		obj.GetComponent<MeshRenderer>().material.color = color;
+	}
     public void CalculateInnerPointByList(List<Vector3> list, float anchorDis) 
 	{
 		if (list.Count < 2) return;
@@ -99,98 +98,41 @@ public class CatLine
 			p2 = list[1];
 			p3 = list[1];
 
-
-			float segmentation = 1 / (float)numberOfPoints;
-			float t = 0;
-			float dis = 0;
-			for (int i = 0; i < numberOfPoints-1; i++)
+			for (int i = 0; i < numberOfPoints; i++)
 			{
-				t += segmentation;
 
-				Vector3 newPos = ReturnCatmullRomPos(t, p0, p1, p2, p3);
+				Vector3 newPos = ReturnCatmullRomPos((1.0f / (numberOfPoints)) * i, p0, p1, p2, p3);
 				innerPointList.Add(newPos);
-				
 			}
-			for (int i = 0; i < innerPointList.Count - 1; i++)
-			{
-				if (anchorDis == 0)
-				{
-					anchorInnerPointlist.Add(innerPointList[i]);
-				}
-				else
-				{
-					if (dis >= anchorDis)
-					{
-						anchorInnerPointlist.Add(innerPointList[i]);
-						dis = 0;
-					}
-					dis += Vector3.Distance(innerPointList[i], innerPointList[i + 1]);
-				}
-
-			}
+			anchorInnerPointlist = CalculateAnchorPosByInnerPointList(innerPointList, 0, innerPointList.Count - 1, anchorDis);
 		}
 		else
 		{
-			for (int index = 0; index < list.Count - 1; index++)
-			{
-
+		
+			for (int index = 0; index < list.Count-1; index++)
+			{	
 				p0 = list[Mathf.Max(index - 1, 0)];
 				p1 = list[index];
 				p2 = list[Mathf.Min(index + 1, list.Count - 1)];
 				p3 = list[Mathf.Min(index + 2, list.Count - 1)];
-				float segmentation = 1 / (float)(numberOfPoints);
-				float t = 0;
-			
+
 				for (int i = 0; i < numberOfPoints; i++)
 				{
-					t += segmentation;
 
-					Vector3 newPos = ReturnCatmullRomPos(t, p0, p1, p2, p3);
-					innerPointList.Add(newPos);		
-				}
-				
-			}
-            
-			float dis = 0;
-			for (int i = 0; i < innerPointList.Count; i++)
-			{
-				if (anchorDis == 0)
-				{
-					anchorInnerPointlist.Add(innerPointList[i]);
-				}
-				else
-				{
-					if (dis >= anchorDis)
-					{
-						anchorInnerPointlist.Add(innerPointList[i]);
-						dis = 0;
-					}
-					dis += Vector3.Distance(innerPointList[i], innerPointList[i + 1]);
+					Vector3 newPos = ReturnCatmullRomPos((1.0f / (numberOfPoints)) * i, p0, p1, p2, p3);
+					innerPointList.Add(newPos);
 				}
 
 			}
-            
+			anchorInnerPointlist = CalculateAnchorPosByInnerPointList(innerPointList, 0, innerPointList.Count - 1, anchorDis);
 		}
 	
 	}
-	void DisplayCatmullromSpline(float anchorDis, int catLineType)
+	void DisplayCatmullromSpline(float anchorDis)
 	{
 		innerPointList.Clear();
 		anchorInnerPointlist.Clear();
-		switch (catLineType)
-		{
-			case (int)CatLineType.ObjectList:
-				List<Vector3> positionList = new List<Vector3>();
-				for(int i=0;i<controlPointList.Count;i++)
-				{
-					positionList.Add(controlPointList[i].transform.position);
-				}
-				CalculateInnerPointByList(positionList, anchorDis);
-				break;
-			case (int)CatLineType.PositionList:
-				CalculateInnerPointByList(controlPointPosList, anchorDis);
-				break;
-		}
 
+		CalculateInnerPointByList(controlPointPosList, anchorDis);
 	}
 }

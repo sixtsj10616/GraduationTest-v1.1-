@@ -127,29 +127,32 @@ public class CombineTing : MonoBehaviour
     /**
      * 建立柵欄 (從BodyController搬來的，發現那個還是不好用)
      */
-    public void CreateRingFrieze(ModelController modelController, float columnRadius, float heightOffset, GameObject parent)
+	public void CreateRingBalustrade(ModelController modelController, float columnRadius, float heightOffset, GameObject parent)
     {
+		float balustradeWidth = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.x;//欄杆長度
+		float balustradeHeight = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.y;//欄杆長度
+		float balustradeLengh = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.z;//欄杆深度
 
-        for (int i = 0; i < ColumnList.Count; i++)
-        {
-            float width = 1.2f;
-            float dis = Vector3.Distance(ColumnList[i], ColumnList[(i + 1) % ColumnList.Count]) - columnRadius * 2;
-            float number = Mathf.FloorToInt(dis / width);
-            Vector3 dir = ColumnList[(i + 1) % ColumnList.Count] - ColumnList[i];
-            float disDiff = (dis - width * number) / number;
-            width = dis / number;
-            float rotateAngle = (Vector3.Dot(Vector3.right, dir) > 0 ? Vector3.Angle(dir, Vector3.forward) : 180 - Vector3.Angle(dir, Vector3.forward));
-            for (int j = 0; j < number; j++)
-            {
-                Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + ColumnList[i] + heightOffset * Vector3.up;
-                GameObject clone = Instantiate(modelController.eaveColumnModelStruct.friezeModelStruct.model, pos, modelController.eaveColumnModelStruct.friezeModelStruct.model.transform.rotation) as GameObject;
-                clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.friezeModelStruct.rotation);
+		for (int i = 0; i < ColumnList.Count; i++)
+		{
+			float width = balustradeWidth;
+				float dis = Vector3.Distance(ColumnList[i], ColumnList[(i + 1) % ColumnList.Count]) - columnRadius * 2;
+				int number = Mathf.Max(Mathf.FloorToInt(dis / width), 1);
+				Vector3 dir = ColumnList[(i + 1) % ColumnList.Count] - ColumnList[i];
+				float disDiff = (dis - width * number) / number;
+				width = dis / number;
 
-                clone.transform.GetChild(0).localScale = new Vector3(modelController.eaveColumnModelStruct.friezeModelStruct.scale.x, modelController.eaveColumnModelStruct.friezeModelStruct.scale.y, (modelController.eaveColumnModelStruct.friezeModelStruct.scale.z) * (width + disDiff) / width);
-
-                clone.transform.parent = parent.transform;
-            }
-        }
+				float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+				for (int j = 0; j < number; j++)
+				{
+					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + ColumnList[i] + heightOffset * Vector3.up;
+					GameObject clone = Instantiate( modelController.eaveColumnModelStruct.balustradeModelStruct.model, pos,  modelController.eaveColumnModelStruct.balustradeModelStruct.model.transform.rotation) as GameObject;
+					clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler( modelController.eaveColumnModelStruct.balustradeModelStruct.rotation);
+					clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z) * (width) / balustradeWidth);
+					//clone.transform.GetChild(0).localScale = Vector3.Scale(clone.transform.GetChild(0).localScale, Quaternion.Euler(clone.transform.GetChild(0).transform.rotation.ToEulerAngles()) * (new Vector3((width) / balustradeWidth, 1, 1)));
+					clone.transform.parent = parent.transform;
+				}
+		}
     }
     /**
      * 檢查主脊

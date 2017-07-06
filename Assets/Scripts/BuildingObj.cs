@@ -120,7 +120,7 @@ public class BuildingObj : MonoBehaviour {
 
 
         //roofController.CreateRoof(this.bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), null, false);
-        roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), null, platformController.platWidth, bodyController. eaveColumnHeight,roofController. mainRidgeHeightOffset, roofController. allJijaHeight, false, (int)MainController.Instance.roofType);
+		roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), null, platformController.platWidth, bodyController.eaveColumnHeight, roofController.mainRidgeHeightOffset, roofController.allJijaHeight, false, (int)roofController.roofType);
 
         buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
     }

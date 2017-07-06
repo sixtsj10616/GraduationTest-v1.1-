@@ -999,7 +999,7 @@ public class MeshCenter : Singleton<MeshCenter>
 		CatLine curve = new CatLine();
 		curve.controlPointPosList = globalPosList;
 		curve.SetLineNumberOfPoints(segmentation);
-		curve.SetCatmullRom(0.1f, 1);
+		curve.SetCatmullRom(0.1f);
 		// PosList
 		Vector3[] pList = new Vector3[(nbSides + 1) * curve.anchorInnerPointlist.Count];
 		int vert = 0;
