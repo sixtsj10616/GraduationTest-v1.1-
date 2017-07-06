@@ -67,7 +67,8 @@ public class FreeCamera : MonoBehaviour
             {
                 dragPositionOffset += transform.up * -Input.GetAxis("Mouse Y");
                 dragPositionOffset += transform.right * -Input.GetAxis("Mouse X");
-           
+               // dragPositionOffset.y = 0;
+
                 dragPositionOffset = dragPositionOffset.normalized * DragSpeed * DistanceModifier;
             }
 
