@@ -40,12 +40,17 @@ public class MainMenuController : Singleton<MainMenuController>
     {
 
     }
-
+    /**
+     * 點擊目前屋頂型態按鈕
+     */
     public void ClickRoofTypeBtn()
     {
         typeMenu.SetActive(!typeMenu.activeInHierarchy);
     }
-
+    /**
+     * 設定屋頂型態
+     * 點擊選單中屋頂型態按鈕時呼叫
+     */
     public void SelectRoofType(int index)
     {
         if (nowRoofTypeIndex != index)
@@ -55,18 +60,22 @@ public class MainMenuController : Singleton<MainMenuController>
             nowRoofTypeIndex = index;
         }
         typeMenu.SetActive(!typeMenu.activeInHierarchy);
-
     }
-
+    /**
+     * 初始化數據，名稱，索引，按鈕被景色，屋頂型態
+     * 目前只會用到名稱與屋頂型態
+     */
     void initTypeMenuData()
     {
         typeInfoList = new List<RoofTypeInfo>();
-        typeInfoList.Add(new RoofTypeInfo("攢尖", 0, Color.blue,MainController.RoofType.Zan_Jian_Ding4));
+        typeInfoList.Add(new RoofTypeInfo("攢尖", 0, Color.blue,MainController.RoofType.Zan_Jian_Ding3));
         typeInfoList.Add(new RoofTypeInfo("廡殿", 1, Color.yellow, MainController.RoofType.Wu_Dian_Ding));
         typeInfoList.Add(new RoofTypeInfo("露頂", 2, Color.red, MainController.RoofType.Lu_Ding));
         typeInfoList.Add(new RoofTypeInfo("歇山", 3, Color.white, MainController.RoofType.Shya_Shan_Ding));
     }
-
+    /**
+     * 屋頂選單初始化，沒用到
+     */
     public void initTypeMenu()
     {
         typeMenu.transform.FindChild("ScrollBlock").FindChild("Content");

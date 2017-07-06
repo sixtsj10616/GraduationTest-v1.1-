@@ -65,9 +65,9 @@ public class FreeCamera : MonoBehaviour
             // Disabled if we're moving with wasd because it looks and feels awkward
             if (Input.GetMouseButton(2) && !keyMovement)
             {
-                dragPositionOffset += transform.forward * -Input.GetAxis("Mouse Y");
+                dragPositionOffset += transform.up * -Input.GetAxis("Mouse Y");
                 dragPositionOffset += transform.right * -Input.GetAxis("Mouse X");
-                dragPositionOffset.y = 0;
+               // dragPositionOffset.y = 0;
                 dragPositionOffset = dragPositionOffset.normalized * DragSpeed * DistanceModifier;
             }
 
