@@ -135,7 +135,7 @@ public class RoofBuilder : Singleton<RoofBuilder>
     {
         switch (roofType)
         {
-            case MainController.RoofType.Zan_Jian_Ding3:
+            case MainController.RoofType.Zan_Jian_Ding:
 
                 break;
         }

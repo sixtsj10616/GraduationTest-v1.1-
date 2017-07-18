@@ -24,7 +24,7 @@ public class Define : MonoBehaviour {
     public const string ThirdPoint = "ThirdPoint";
     public const string LastPoint = "LastPoint";
     public const float mainRidgeTileHeight = 0.3f;
-    public const float Do_Kun_Height = 1.5f;
+    public const float Do_Kun_Height = 0.5f;
 
     //***           線段          ***//
     public const int Large = 1000;

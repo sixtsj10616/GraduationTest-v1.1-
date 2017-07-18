@@ -2214,7 +2214,7 @@ Camera:
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 0
-  m_AllowMSAA: 1
+  m_AllowMSAA: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -2226,13 +2226,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 243159415}
-  m_LocalRotation: {x: 0.2829697, y: -0, z: -0, w: 0.9591289}
-  m_LocalPosition: {x: 0, y: 15.79, z: -35.4}
+  m_LocalRotation: {x: 0.4493131, y: -0, z: -0, w: 0.8933744}
+  m_LocalPosition: {x: 0, y: 13.7, z: -47.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 53.399002, y: 0, z: 0}
 --- !u!114 &243159421
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5743,6 +5743,41 @@ Prefab:
       propertyPath: fenceWallModelScale.x
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114951320679433630, guid: b66aed5e97f49e949bf8aa84c8739879,
+        type: 2}
+      propertyPath: roundTileModelScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114951320679433630, guid: b66aed5e97f49e949bf8aa84c8739879,
+        type: 2}
+      propertyPath: roundTileModelScale.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114951320679433630, guid: b66aed5e97f49e949bf8aa84c8739879,
+        type: 2}
+      propertyPath: roundTileModelScale.z
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114951320679433630, guid: b66aed5e97f49e949bf8aa84c8739879,
+        type: 2}
+      propertyPath: eaveTileModelScale.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114951320679433630, guid: b66aed5e97f49e949bf8aa84c8739879,
+        type: 2}
+      propertyPath: eaveTileModelScale.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114951320679433630, guid: b66aed5e97f49e949bf8aa84c8739879,
+        type: 2}
+      propertyPath: eaveTileModelScale.z
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 114951320679433630, guid: b66aed5e97f49e949bf8aa84c8739879,
+        type: 2}
+      propertyPath: flatTileModelScale.y
+      value: 1.2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: b66aed5e97f49e949bf8aa84c8739879, type: 2}
   m_IsPrefabParent: 0
@@ -6007,7 +6042,7 @@ MeshFilter:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 735442732}
-  m_Mesh: {fileID: 941944427}
+  m_Mesh: {fileID: 0}
 --- !u!114 &735442734
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8010,7 +8045,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0.028}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -13040,9 +13075,9 @@ MonoBehaviour:
   selectFloor: 0
   sides: 4
   buildingType: 1
-  roofType: 8
-  initPlatformWidth_DownStair: 50
-  initPlatformLength_DownStair: 40
+  roofType: 1
+  initPlatformWidth_DownStair: 40
+  initPlatformLength_DownStair: 50
   initPlatformHeight_DownStair: 5
   initPlatformHeight_TopStair: 1
   initEaveColumnHeight: 11
@@ -13052,7 +13087,7 @@ MonoBehaviour:
   initAllJijaHeight_DownStair: 0
   initMainRidgeHeightOffset_DownStair: 0
   buildingCenter: {x: 0, y: 0, z: 0}
-  floorScaleRatio: 0.9
+  floorScaleRatio: 1
   buildingCount: 0
 --- !u!4 &1569701939
 Transform:
