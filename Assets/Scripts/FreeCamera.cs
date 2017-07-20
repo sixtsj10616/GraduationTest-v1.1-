@@ -3,18 +3,18 @@ using System.Collections;
 
 public class FreeCamera : MonoBehaviour
 {
-    public float MovementSpeed = 30f;
-    public float RotationKeySpeed = 50f;
+    public float MovementSpeed = .1f;
+    public float RotationKeySpeed = .3f;
     public bool EnableMovement = true;
-    public float ZoomSpeed = 5f;
-    public float DragSpeed = 10f;
-    public float RotationSensitivity = 10f;
+    public float ZoomSpeed = 1f;
+    public float DragSpeed = .1f;
+    public float RotationSensitivity = 5f;
     public float MinimumLookAngle = -20f;
     public float MaximumLookAngle = 75f;
-    public float CameraSnap = 10f;
-    public float RotationSnap = 15f;
+    public float CameraSnap = 20f;
+    public float RotationSnap = 20f;
     public float MinCameraHeight = 2f;
-    public float MaxCameraHeight = 100f;
+    public float MaxCameraHeight = 300f;
     public float DistanceModifier;
     public float MaximumZoomAngle = 50f;
     Vector3 newRotation;
@@ -68,6 +68,7 @@ public class FreeCamera : MonoBehaviour
                 dragPositionOffset += transform.up * -Input.GetAxis("Mouse Y");
                 dragPositionOffset += transform.right * -Input.GetAxis("Mouse X");
                // dragPositionOffset.y = 0;
+
                 dragPositionOffset = dragPositionOffset.normalized * DragSpeed * DistanceModifier;
             }
 

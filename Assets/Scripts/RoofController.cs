@@ -2,147 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 
-class CurveFitting
-{
-	int degree = 2;
-
-	List<float> a;
-	public CurveFitting(List<float> x, List<float> y)
-	{
-		int i, j, k;
-		int size = Mathf.Min(x.Count, y.Count);
-
-		List<float> X = new List<float>();
-		for (i = 0; i < 2 * degree + 1; i++)
-		{
-			X.Add(0);
-			for (j = 0; j < size; j++)
-				X[i] = X[i] + Mathf.Pow(x[j], i);        //consecutive positions of the array will store N,sigma(xi),sigma(xi^2),sigma(xi^3)....sigma(xi^2n)
-		}
-
-		List<List<float>> B = new List<List<float>>();//B is the Normal matrix(augmented) that will store the equations, 'a' is for value of the final coefficients
-		for (i = 0; i < degree + 1; i++)
-		{
-			List<float> c = new List<float>();
-			for (j = 0; j < degree + 2; j++)
-			{
-				c.Add(0);
-			}
-			B.Add(c);
-		}
-
-		a = new List<float>();
-		for (i = 0; i < degree + 1; i++)
-		{
-			a.Add(0);
-		}
-		for (i = 0; i <= degree; i++)
-			for (j = 0; j <= degree; j++)
-				B[i][j] = X[i + j];
-
-		List<float> Y = new List<float>();
-		for (i = 0; i < degree + 1; i++)
-		{
-			Y.Add(0);
-			for (j = 0; j < size; j++)
-				Y[i] = Y[i] + Mathf.Pow(x[j], i) * y[j];        //consecutive positions will store sigma(yi),sigma(xi*yi),sigma(xi^2*yi)...sigma(xi^n*yi)
-		}
-		for (i = 0; i <= degree; i++)
-			B[i][degree + 1] = Y[i];                //load the values of Y as the last column of B(Normal Matrix but augmented)
-		degree = degree + 1;
-
-		for (i = 0; i < degree; i++)                    //From now Gaussian Elimination starts(can be ignored) to solve the set of linear equations (Pivotisation)
-			for (k = i + 1; k < degree; k++)
-				if (B[i][i] < B[k][i])
-					for (j = 0; j <= degree; j++)
-					{
-						float temp = B[i][j];
-						B[i][j] = B[k][j];
-						B[k][j] = temp;
-					}
-
-		for (i = 0; i < degree - 1; i++)            //loop to perform the gauss elimination
-			for (k = i + 1; k < degree; k++)
-			{
-				float t = B[k][i] / B[i][i];
-				for (j = 0; j <= degree; j++)
-					B[k][j] = B[k][j] - t * B[i][j];    //make the elements below the pivot elements equal to zero or elimnate the variables
-			}
-		for (i = degree - 1; i >= 0; i--)                //back-substitution
-		{                        //x is an array whose values correspond to the values of x,y,z..
-			a[i] = B[i][degree];                //make the variable to be calculated equal to the rhs of the last equation
-			for (j = 0; j < degree; j++)
-				if (j != i)            //then subtract all the lhs values except the coefficient of the variable whose value                                   is being calculated
-					a[i] = a[i] - B[i][j] * a[j];
-			a[i] = a[i] / B[i][i];            //now finally divide the rhs by the coefficient of the variable to be calculated
-		}
-	}
-	public float getY(float x)
-	{
-		float result = 0;
-		for (int i = 0; i < degree; i++)
-		{
-			result += a[i] * Mathf.Pow(x, i);
-		}
-		return result;
-	}
-
-};
-class LeastSquare
-{
-	float a, b;
-
-	public LeastSquare(List<float> x, List<float> y)
-	{
-		float t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-		for (int i = 0; i < x.Count; ++i)
-		{
-			t1 += x[i] * x[i];
-			t2 += x[i];
-			t3 += x[i] * y[i];
-			t4 += y[i];
-		}
-		a = (t3 * x.Count - t2 * t4) / (t1 * x.Count - t2 * t2);
-		b = (t1 * t4 - t2 * t3) / (t1 * x.Count - t2 * t2);
-	}
-
-	public float getY(float x)
-	{
-		return a * x + b;
-	}
-
-};
-class LeastSquareExponential
-{
-	float a, b;
-
-	public LeastSquareExponential(List<float> x, List<float> y)
-	{
-		float t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-		int size = Mathf.Min(x.Count, y.Count);
-
-		for (int i = 0; i < size; i++)
-		{
-			y[i] = Mathf.Log(y[i]);
-		}
-		for (int i = 0; i < size; ++i)
-		{
-			t1 = t1 + x[i];
-			t2 = t2 + x[i] * x[i];
-			t3 = t3 + y[i];
-			t4 = t4 + x[i] * y[i];
-		}
-		a = ((t2 * t3 - t1 * t4) / (size * t2 - t1 * t1));
-		b = ((size * t4 - t1 * t3) / (size * t2 - t1 * t1));
-		a = Mathf.Exp(a);
-	}
-	public float getY(float x)
-	{
-		//y = ae^(bx)
-		return a * Mathf.Exp(b * x);
-	}
-
-};
 public class RoofSurfaceRidgeStruct : RidgeStruct//屋面脊
 {
 	public List<GameObject> flatTileModelList;              //** 平瓦實體位置
@@ -161,12 +20,12 @@ public class RoofSurfaceRidgeStruct : RidgeStruct//屋面脊
 public class RidgeStruct //脊
 {
 	public GameObject body;
-	public Dictionary<string, GameObject> controlPointDictionaryList;
+	public Dictionary<string, Vector3> controlPointDictionaryList;
 	public CatLine ridgeCatLine;
 	public List<Vector3> tilePosList;
 	public RidgeStruct()
 	{
-		controlPointDictionaryList = new Dictionary<string, GameObject>();
+		controlPointDictionaryList = new Dictionary<string, Vector3>();
 		tilePosList = new List<Vector3>();
 		ridgeCatLine = new CatLine();
 	}
@@ -189,18 +48,16 @@ public class RoofController : MonoBehaviour
 {
 	private BuildingObj parentObj;
 	//RoofType************************************************************************************
-	//public enum RoofType { Zan_Jian_Ding = 0, Wu_Dian_Ding = 1, Lu_Ding = 2, Juan_Peng = 3, Shya_Shan_Ding = 4, Zan_Jian_Ding2 = 5 ,Zan_Jian_Ding3 = 6, Zan_Jian_Ding4 = 7 };//Zan_Jian_Ding攢尖頂, Wu_Dian_Ding廡殿頂,Lu_Ding盝頂,Juan_Peng卷棚
-	public MainController.RoofType roofType = MainController.RoofType.Zan_Jian_Ding3;
+	public MainController.RoofType roofType = MainController.RoofType.Dome;
 	public List<RidgeStruct> MainRidgeList = new List<RidgeStruct>();               //** 主脊列表
 	public List<RoofSurfaceStruct> SurfaceList = new List<RoofSurfaceStruct>();     //** 屋面列表
-
-    private enum EaveControlPointType { StartControlPoint, MidRControlPoint, MidControlPoint, MidLControlPoint, EndControlPoint };//屋簷
+	public List<RidgeStruct> EaveList = new List<RidgeStruct>();     //** 屋簷列表
+	private enum EaveControlPointType { RightControlPoint, MidRControlPoint, MidControlPoint, MidLControlPoint, LeftControlPoint };//屋簷
 	private enum MainRidgeControlPointType { TopControlPoint, MidControlPoint, DownControlPoint ,EaveCtrlPoint};//主脊
     private enum MidRoofSurfaceControlPointType { MidRoofSurfaceTopPoint, MidRoofSurfaceMidPoint, MidRoofSurfaceDownPoint , EaveCtrlPoint };//屋面
     public float allJijaHeight;                     //總舉架高度(總屋頂高度)
 	private float eave2eaveColumnOffset;            //主脊方向檐柱至檐出長度
 	private float eave2FlyEaveOffset;
-	private float beamsHeight;                      //總梁柱高度
 
 	private float Wu_Dian_DingMainRidgeWidth;       //廡殿頂主脊長度
 	private float Lu_DingMainRidgeOffset;           //盝頂垂脊長度
@@ -214,7 +71,7 @@ public class RoofController : MonoBehaviour
 	public float mainRidgeHeightOffset;             //主脊曲線上翹程度
 	public float roofSurfaceHeightOffset = -1.0f;   //屋面曲線上翹程度
 	public float eaveCurveHeightOffset = -3f;       //屋簷高度
-	public float roofSurfaceTileWidth = 0.7f;       //屋面瓦片長度
+	public float roofSurfaceTileWidth = 1.0f;       //屋面瓦片長度
 	public float roofSurfaceTileHeight = 0.95f;     //屋面瓦片高度
 	public float mainRidgeTileHeight = 0.3f;        //主脊瓦片高度
 
@@ -222,7 +79,6 @@ public class RoofController : MonoBehaviour
 	public float flyRafterHeight = 0.3f;
 	//公式變數*************************************************************************************
 	float anchorDis = 0f;//曲線innerPoint換算anchorPoint間距
-	public bool isDownFloor;
 
 	//******************************************************************************************
 
@@ -233,17 +89,15 @@ public class RoofController : MonoBehaviour
 	 * platformWidth : 基底寬 ， columnHeight : 柱高 ， mainRidgeHeightOffset : 主脊高
 	 * allJijaHeight : 舉架高 (用來定義roofTopCenter) ， isDownFloor : 有沒有下一層樓 ， roofType : 屋頂類別
 	 */
-	public void InitFunction(BuildingObj parentObj, List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList, float platformWidth, float columnHeight, float mainRidgeHeightOffset, float allJijaHeight, bool isDownFloor, int roofType)
+	public void InitFunction(BuildingObj parentObj, List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList, float platformWidth, float columnHeight, float mainRidgeHeightOffset, float allJijaHeight, int roofType)
 	{
 		//初始值******************************************************************************
 		this.parentObj = parentObj;
 		this.allJijaHeight = allJijaHeight;
 		this.mainRidgeHeightOffset = mainRidgeHeightOffset;
-		this.isDownFloor = isDownFloor;
 		SetRoofType(roofType);
 		eave2eaveColumnOffset = columnHeight * 0.4f;
 		eave2FlyEaveOffset = columnHeight * 0.6f;
-		beamsHeight = columnHeight * 0.2f;
 
 		parentObj.roofTopCenter = parentObj.bodyCenter + new Vector3(0, columnHeight / 2.0f + this.allJijaHeight, 0);
 		ShowPos(parentObj.bodyCenter, parentObj.roof, Color.green, 1.0f);
@@ -258,7 +112,7 @@ public class RoofController : MonoBehaviour
 		Shya_Shan_DingSanhuaHeight = allJijaHeight * 0.6f;
 		Shya_Shan_DingSanhuaWidth = platformWidth * 0.2f;
 		//******************************************************************************
-		CreateRoof(columnTopPosList, topFloorBorderList, isDownFloor);
+		CreateRoof(columnTopPosList, topFloorBorderList);
 	}
 
 	public void SetRoofType(int roofType)
@@ -321,126 +175,15 @@ public class RoofController : MonoBehaviour
 		return newRoofSurfaceStruct;
 	}
 	/**
-	* 建立主脊瓦片 
-	*/
-	RidgeStruct CreateMainRidgeTile(MainRidgeModelStruct mainRidgeModelStructGameObject, RidgeStruct mainRidgeStruct, RoofSurfaceStruct roofSurfaceStruct, RidgeStruct eaveRidgeStruct, GameObject parent)//主脊瓦片
-	{
-		float mainRidgeTailHeightOffset = 0.0f;
-
-		RidgeStruct baseList = CreateRidgeSturct("MainRidgeTileStruct", parent);
-
-		Vector3 planeNormal = Vector3.Cross(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position - mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position, Vector3.up).normalized;
-
-		baseList.ridgeCatLine.controlPointList = mainRidgeStruct.ridgeCatLine.controlPointList;
-		baseList.ridgeCatLine.SetLineNumberOfPoints(10000);
-		baseList.ridgeCatLine.SetCatmullRom(0);
-
-		baseList.tilePosList = baseList.ridgeCatLine.CalculateAnchorPosByInnerPointList(baseList.ridgeCatLine.anchorInnerPointlist, baseList.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, mainRidgeTileHeight);
-
-		if (baseList.tilePosList.Count < 1) return baseList;
-		//Debug.Log("baseList.tilePosList.Count>=1");
-		Vector3 quaternionVector = Vector3.zero;
-		for (int p = 0; p < baseList.tilePosList.Count; p++)
-		{
-
-			if (baseList.tilePosList.Count > 1)
-			{
-				if (p == 0)
-				{
-					quaternionVector = (baseList.tilePosList[0] - baseList.tilePosList[1]);
-				}
-				else
-				{
-					if ((p < baseList.tilePosList.Count - 1))
-						quaternionVector = (baseList.tilePosList[p - 1] - baseList.tilePosList[p + 1]);
-				}
-
-			}
-			else//如果baseList.tilePosList只有一個修正
-			{
-				if (baseList.ridgeCatLine.anchorInnerPointlist.Count > 0) quaternionVector = baseList.ridgeCatLine.anchorInnerPointlist[baseList.ridgeCatLine.anchorInnerPointlist.Count - 1] - baseList.ridgeCatLine.anchorInnerPointlist[0];
-			}
-			Quaternion rotationVector = Quaternion.LookRotation(quaternionVector.normalized);
-
-			Vector3 upVector = (Vector3.Cross(quaternionVector, planeNormal)).normalized;
-			//Vector3 offset = Vector3.zero;
-			//Debug.Log("p " + p + " rotation " + rotationVector * Quaternion.Euler(mainRidgeModelStructGameObject.mainRidgeTileModelStruct.rotation));
-			GameObject mainModel = Instantiate(mainRidgeModelStructGameObject.mainRidgeTileModelStruct.model, baseList.tilePosList[p] + mainRidgeTailHeightOffset * upVector, mainRidgeModelStructGameObject.mainRidgeTileModelStruct.model.transform.rotation) as GameObject;
-			//GameObject mainModel = Instantiate(Resources.Load("Models/main_ridge_new")) as GameObject;
-			//mainModel.transform.position = baseList.tilePosList[p] + mainRidgeTailHeightOffset * upVector;
-			mainModel.transform.rotation = rotationVector * Quaternion.Euler(mainRidgeModelStructGameObject.mainRidgeTileModelStruct.rotation);
-			mainModel.transform.GetChild(0).localScale = mainRidgeModelStructGameObject.mainRidgeTileModelStruct.scale;
-			mainModel.transform.parent = baseList.body.transform;
-		}
-		MeshCenter.Instance.MeshCombineInGameObjectList(baseList.body, Resources.Load("Models/Materials/MainRidgeMat") as Material);
-		return baseList;
-
-	}
-
-	/**
-	* 建立主脊瓦片 ( 移除 RoofSurfaceStruct 與 eaveRidgeStruct 參數)
-	*/
-	public RidgeStruct CreateMainRidgeTile(MainRidgeModelStruct mainRidgeModelStructGameObject, RidgeStruct mainRidgeStruct, GameObject parent)//主脊瓦片
-	{
-		float mainRidgeTailHeightOffset = 0.0f;
-		RidgeStruct baseList = CreateRidgeSturct("MainRidgeTileStruct", parentObj.roof);
-
-		Vector3 planeNormal = Vector3.Cross(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position - mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position, Vector3.up).normalized;
-
-		baseList.ridgeCatLine.controlPointList = mainRidgeStruct.ridgeCatLine.controlPointList;
-		baseList.ridgeCatLine.SetLineNumberOfPoints(10000);
-		baseList.ridgeCatLine.SetCatmullRom(0);
-
-		baseList.tilePosList = baseList.ridgeCatLine.CalculateAnchorPosByInnerPointList(baseList.ridgeCatLine.anchorInnerPointlist, baseList.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, mainRidgeTileHeight);
-
-		if (baseList.tilePosList.Count < 1) return baseList;
-		Vector3 quaternionVector = Vector3.zero;
-		for (int p = 0; p < baseList.tilePosList.Count; p++)
-		{
-
-			if (baseList.tilePosList.Count > 1)
-			{
-				if (p == 0)
-				{
-					quaternionVector = (baseList.tilePosList[0] - baseList.tilePosList[1]);
-				}
-				else
-				{
-					if ((p < baseList.tilePosList.Count - 1))
-						quaternionVector = (baseList.tilePosList[p - 1] - baseList.tilePosList[p + 1]);
-				}
-
-			}
-			else//如果baseList.tilePosList只有一個修正
-			{
-				if (baseList.ridgeCatLine.anchorInnerPointlist.Count > 0) quaternionVector = baseList.ridgeCatLine.anchorInnerPointlist[baseList.ridgeCatLine.anchorInnerPointlist.Count - 1] - baseList.ridgeCatLine.anchorInnerPointlist[0];
-			}
-			Quaternion rotationVector = Quaternion.LookRotation(quaternionVector.normalized);
-
-			Vector3 upVector = (Vector3.Cross(quaternionVector, planeNormal)).normalized;
-			//Vector3 offset = Vector3.zero;
-			//Debug.Log("p " + p + " rotation " + rotationVector * Quaternion.Euler(mainRidgeModelStructGameObject.mainRidgeTileModelStruct.rotation));
-			GameObject mainModel = Instantiate(mainRidgeModelStructGameObject.mainRidgeTileModelStruct.model, baseList.tilePosList[p] + mainRidgeTailHeightOffset * upVector, mainRidgeModelStructGameObject.mainRidgeTileModelStruct.model.transform.rotation) as GameObject;
-			//GameObject mainModel = Instantiate(Resources.Load("Models/main_ridge_new")) as GameObject;
-			//mainModel.transform.position = baseList.tilePosList[p] + mainRidgeTailHeightOffset * upVector;
-			mainModel.transform.rotation = rotationVector * Quaternion.Euler(mainRidgeModelStructGameObject.mainRidgeTileModelStruct.rotation);
-			mainModel.transform.GetChild(0).localScale = mainRidgeModelStructGameObject.mainRidgeTileModelStruct.scale;
-			mainModel.transform.parent = parent.transform;
-		}
-		return baseList;
-
-	}
-
-	/**
 	* 建立主脊瓦片 ( 移除 RoofSurfaceStruct 、 eaveRidgeStruct 參數 與 parent)
 	*/
 	public RidgeStruct CreateMainRidgeTile(MainRidgeModelStruct mainRidgeModelStructGameObject, RidgeStruct mainRidgeStruct)//主脊瓦片
 	{
 		RidgeStruct baseList = CreateRidgeSturct("MainRidgeTileStruct", parentObj.roof);
 
-		Vector3 planeNormal = Vector3.Cross(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position - mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position, Vector3.up).normalized;
+		Vector3 planeNormal = Vector3.Cross(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()] - mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()], Vector3.up).normalized;
 
-		baseList.ridgeCatLine.controlPointList = mainRidgeStruct.ridgeCatLine.controlPointList;
+		baseList.ridgeCatLine.controlPointPosList = mainRidgeStruct.ridgeCatLine.controlPointPosList;
 		baseList.ridgeCatLine.SetLineNumberOfPoints(10000);
 		baseList.ridgeCatLine.SetCatmullRom(0);
 
@@ -498,7 +241,7 @@ public class RoofController : MonoBehaviour
 	 *      
 	 */
 
-	RoofSurfaceRidgeStruct CreateRoofSurfaceTile(RoofSurfaceModelStruct roofSurfaceModelStructGameObject, GameObject parent, RoofSurfaceRidgeStruct baseList, RoofSurfaceRidgeStruct refList, RoofSurfaceRidgeStruct midRidgeStruct, RidgeStruct eaveStructList, int dir, RidgeStruct mainRidgeStruct, Vector3 roofSurfaceTileRidgeUpPointPos)
+	RoofSurfaceRidgeStruct CreateRoofSurfaceTile(RoofSurfaceModelStruct roofSurfaceModelStructGameObject, GameObject parent, RoofSurfaceRidgeStruct baseList, RoofSurfaceRidgeStruct refList, Vector3 roofSurfaceRidgeXZ_Dir,Vector3 eaveDir, int dir)
 	{
 		//回傳tile的List
 		RoofSurfaceRidgeStruct roofSurfaceRidgeStruct = baseList;
@@ -518,12 +261,11 @@ public class RoofController : MonoBehaviour
 		//*** v1 : 屋面中間脊在XZ平片上生長方向向量 (屋面中間脊控制線的上點 - 下點xz座標)
 		//*** v2 : 零向量
 		//*** v3 : 屋簷的生長方向向量 (屋簷終點 - 起點) * 生長方向(1:正，-1:負)
-		Vector3 v1 = new Vector3(midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].transform.position.x - midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].transform.position.x, 0, midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].transform.position.z - midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].transform.position.z);
-		Vector3 v3 = (eaveStructList.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStructList.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position);
+		//Vector3 v1 = new Vector3(midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].x - midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].x, 0, midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].z - midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].z);
+		//Vector3 v3 = (eaveStructList.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()] - eaveStructList.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()]);
+		Vector3 v1 = roofSurfaceRidgeXZ_Dir;
+		Vector3 v3 = -eaveDir;
 		Vector3 v2 = Vector3.zero;
-		//修正
-		Plane constraintPlaneA = new Plane();
-		Plane constraintPlaneB = new Plane();
 
 		int p = 0;
 		int angleChange = 1;
@@ -607,14 +349,6 @@ public class RoofController : MonoBehaviour
 			rotationVector = Quaternion.AngleAxis(-xAngle, quaternionVector.normalized) * Quaternion.LookRotation(quaternionVector.normalized);
 
 			//*** 找出屋面中間脊與正上方的垂直向量，由此向量與中間脊上點做一個平面A，平面B由(當前瓦片位置-上個瓦片位置)形成的向量和此屋面脊上點形成
-			//Vector3 constraintPlaneNormalB = Vector3.Cross(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position - mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position, (Vector3.Cross(midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString()].transform.position - midRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].transform.position, v2))).normalized;
-			Vector3 constraintPlaneNormalA = Vector3.Cross(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position - mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position,
-												Vector3.up).normalized;
-			//ShowPos(roofSurfaceTileRidgeUpPointPos, baseList.body, Color.black,0.8f);
-			constraintPlaneA.SetNormalAndPosition(constraintPlaneNormalA, mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position);
-			constraintPlaneB.SetNormalAndPosition((baseList.tilePosList[p] - baseList.tilePosList[Mathf.Max(p - 1, 0)]).normalized, roofSurfaceTileRidgeUpPointPos);
-
-			//if (Vector3.Dot((baseList.tilePosList[p] - roofSurfaceTileRidgeUpPointPos), v1) == Vector3.Dot((baseList.tilePosList[Mathf.Max(p - 1, 0)] - roofSurfaceTileRidgeUpPointPos),v1))
 			{
 				//RoundTile&EaveTile
 				if (p == 0)
@@ -871,7 +605,7 @@ public class RoofController : MonoBehaviour
 			}
 			else
 			{
-				if (dis < threshold)
+				if (dis <= threshold)
 				{
 					if ((dis < pointMinDis2Plane))
 					{
@@ -965,21 +699,18 @@ public class RoofController : MonoBehaviour
 	RidgeStruct CreateMainRidgeStruct(Vector3 topControlPointPos, Vector3 botControlPointPos, float CurveRate = 1.0f)
 	{
 		RidgeStruct newRidgeStruct = CreateRidgeSturct("MainRidge", parentObj.roof);
-		GameObject topControlPoint = CreateControlPoint(newRidgeStruct.body, topControlPointPos, MainRidgeControlPointType.TopControlPoint.ToString());
-		GameObject downControlPoint = CreateControlPoint(newRidgeStruct.body, botControlPointPos, MainRidgeControlPointType.DownControlPoint.ToString());
 
-		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.TopControlPoint.ToString(), topControlPoint);
-		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.DownControlPoint.ToString(), downControlPoint);
+		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.TopControlPoint.ToString(), topControlPointPos);
+		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.DownControlPoint.ToString(), botControlPointPos);
 
 		float ratio = 0.5f;
 		//Vector3 midControlPointPos = (topControlPointPos * (1 - ratio) + botControlPointPos * ratio) ;
 		Vector3 midControlPointPos = (topControlPointPos * (1 - ratio) + botControlPointPos * ratio) + mainRidgeHeightOffset * Vector3.up * CurveRate;
-		GameObject midControlPoint = CreateControlPoint(newRidgeStruct.body, midControlPointPos, MainRidgeControlPointType.MidControlPoint.ToString());
-		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.MidControlPoint.ToString(), midControlPoint);
+		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.MidControlPoint.ToString(), midControlPointPos);
 
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(topControlPoint);
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(midControlPoint);
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(downControlPoint);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(topControlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midControlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(botControlPointPos);
 		// 參考用
 		//ShowPos(topControlPointPos, newRidgeStruct.body, Color.red, 1f);
 		//ShowPos(midControlPointPos, newRidgeStruct.body, Color.yellow, 1f);
@@ -1002,20 +733,16 @@ public class RoofController : MonoBehaviour
     RidgeStruct CreateMainRidgeStruct4Point(List<Vector3> ctrlPtList)
     {
         RidgeStruct newRidgeStruct = CreateRidgeSturct("MainRidge", parentObj.roof);
-        GameObject topControlPoint = CreateControlPoint(newRidgeStruct.body, ctrlPtList[0], MainRidgeControlPointType.TopControlPoint.ToString());
-        GameObject midControlPoint = CreateControlPoint(newRidgeStruct.body, ctrlPtList[1], MainRidgeControlPointType.MidControlPoint.ToString());
-        GameObject downControlPoint = CreateControlPoint(newRidgeStruct.body, ctrlPtList[2], MainRidgeControlPointType.DownControlPoint.ToString());
-        GameObject eaveControlPoint = CreateControlPoint(newRidgeStruct.body, ctrlPtList[3], MainRidgeControlPointType.EaveCtrlPoint.ToString());
 
-        newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.TopControlPoint.ToString(), topControlPoint);
-        newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.MidControlPoint.ToString(), midControlPoint);
-        newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.DownControlPoint.ToString(), downControlPoint);
-        newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.EaveCtrlPoint.ToString(), eaveControlPoint);
+		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.TopControlPoint.ToString(), ctrlPtList[0]);
+		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.MidControlPoint.ToString(), ctrlPtList[1]);
+		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.DownControlPoint.ToString(), ctrlPtList[2]);
+		newRidgeStruct.controlPointDictionaryList.Add(MainRidgeControlPointType.EaveCtrlPoint.ToString(), ctrlPtList[3]);
 
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(topControlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(midControlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(downControlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(eaveControlPoint);
+        newRidgeStruct.ridgeCatLine.controlPointPosList.Add(ctrlPtList[0]);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(ctrlPtList[1]);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(ctrlPtList[2]);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(ctrlPtList[3]);
         newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Large);
         newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
         
@@ -1028,6 +755,32 @@ public class RoofController : MonoBehaviour
 	 * 流程 : 以右側主脊方向為屋簷生長方向，建立頭尾與中間控制點後，再建立中間至尾端的中間控制點(為了控制屋簷由平坦到上翹的部分)
 	 *        ，依序加入至曲線控制點後設定畫線點數，
 	 */
+	RidgeStruct CreateEaveStruct(RidgeStruct mainRidgeStruct)
+	{
+
+		RidgeStruct newRidgeStruct = CreateRidgeSturct("Eave", parentObj.roof);
+
+
+		Vector3 controlPointPos = mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()];
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), controlPointPos);
+
+		float radius = Vector3.Distance(new Vector3(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].x, 0, mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].z), new Vector3(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].x, 0, mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].z));
+
+		int nbSides=1000;
+		float _2pi = Mathf.PI * 2f;
+		for (int i = 0; i < nbSides; i++)
+		{
+			float rad = (float)i / nbSides * _2pi;
+			Vector3 pos = (new Vector3(Mathf.Cos(rad) * radius, 0, Mathf.Sin(rad) * radius) + new Vector3(mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].x, mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].y, mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].z));
+
+			newRidgeStruct.ridgeCatLine.controlPointPosList.Add(pos);
+			//ShowPos(pos, newRidgeStruct.body,Color.red);
+		}
+		newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Low);
+		newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
+
+		return newRidgeStruct;
+	}
     RidgeStruct CreateEaveStruct(RidgeStruct RightMainRidgeStruct, RidgeStruct LeftMainRidgeStruct)
 	{
 
@@ -1035,34 +788,29 @@ public class RoofController : MonoBehaviour
 
 
 		//StartControlPoint
-		Vector3 startControlPointPos = RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position;
-		GameObject startControlPoint = CreateControlPoint(newRidgeStruct.body, startControlPointPos, EaveControlPointType.StartControlPoint.ToString());
-		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.StartControlPoint.ToString(), startControlPoint);
+		Vector3 rightControlPointPos = RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()];
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.RightControlPoint.ToString(), rightControlPointPos);
 		//EndControlPoint
-		Vector3 endControlPointPos = LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position;
-		GameObject endControlPoint = CreateControlPoint(newRidgeStruct.body, endControlPointPos, EaveControlPointType.EndControlPoint.ToString());
-		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.EndControlPoint.ToString(), endControlPoint);
+		Vector3 leftControlPointPos = LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()];
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.LeftControlPoint.ToString(), leftControlPointPos);
 		//MidControlPoint
-		Vector3 midControlPointPos = (startControlPointPos + endControlPointPos) / 2.0f + eaveCurveHeightOffset * Vector3.up;
-		GameObject midControlPoint = CreateControlPoint(newRidgeStruct.body, midControlPointPos, EaveControlPointType.MidControlPoint.ToString());
-		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), midControlPoint);
+		Vector3 midControlPointPos = (rightControlPointPos + leftControlPointPos) / 2.0f + eaveCurveHeightOffset * Vector3.up;
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), midControlPointPos);
 		//MidRightControlPoint
-		Vector3 midRControlPointPos = startControlPointPos - (startControlPointPos - endControlPointPos).normalized * eave2FlyEaveOffset + eaveCurveHeightOffset * Vector3.up;
-		GameObject midRControlPoint = CreateControlPoint(newRidgeStruct.body, midRControlPointPos, EaveControlPointType.MidRControlPoint.ToString());
-		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidRControlPoint.ToString(), midRControlPoint);
+		Vector3 midRControlPointPos = rightControlPointPos - (rightControlPointPos - leftControlPointPos).normalized * eave2FlyEaveOffset + eaveCurveHeightOffset * Vector3.up;
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidRControlPoint.ToString(), midRControlPointPos);
 		//MidLeftControlPoint
-		Vector3 midLControlPointPos = endControlPointPos + (startControlPointPos - endControlPointPos).normalized * eave2FlyEaveOffset + eaveCurveHeightOffset * Vector3.up;
-		GameObject midLControlPoint = CreateControlPoint(newRidgeStruct.body, midLControlPointPos, EaveControlPointType.MidLControlPoint.ToString());
-		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidLControlPoint.ToString(), midLControlPoint);
+		Vector3 midLControlPointPos = leftControlPointPos + (rightControlPointPos - leftControlPointPos).normalized * eave2FlyEaveOffset + eaveCurveHeightOffset * Vector3.up;
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidLControlPoint.ToString(), midLControlPointPos);
 
 
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(startControlPoint);
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(midRControlPoint);
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(midControlPoint);
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(midLControlPoint);
-		newRidgeStruct.ridgeCatLine.controlPointList.Add(endControlPoint);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(rightControlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRControlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midControlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midLControlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(leftControlPointPos);
 
-		newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(100);
+		newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Low);
 		newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
         //修正................不明白為啥需要修正?有請Tony哥
         int midRControlPointIndex = 0;
@@ -1077,78 +825,33 @@ public class RoofController : MonoBehaviour
 
 		return newRidgeStruct;
 	}
-    RidgeStruct tmpCreateEaveStruct4Point(RidgeStruct LeftMainRidgeStruct, RidgeStruct RightMainRidgeStruct)
-    {
-        RidgeStruct newRidgeStruct = CreateRidgeSturct("Eave", parentObj.roof);
-
-        Vector3 startCtrlPointPos = LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position;
-        Vector3 endCtrlPointPos = RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position;
-        Vector3 eaveDir = (endCtrlPointPos - startCtrlPointPos).normalized;
-        float eaveDist = (endCtrlPointPos - startCtrlPointPos).magnitude;
-        Vector3 midCtrlPointPos = (startCtrlPointPos + endCtrlPointPos) / 2 + eaveCurveHeightOffset * Vector3.up;
-        Vector3 midRCtrlPointPos = midCtrlPointPos + 0.35f * eaveDir * eaveDist;
-        Vector3 midLCtrlPointPos = midCtrlPointPos - 0.35f * eaveDir * eaveDist;
-      
-
-        GameObject startCtrlPoint = CreateControlPoint(newRidgeStruct.body, startCtrlPointPos, EaveControlPointType.StartControlPoint.ToString());
-        GameObject endCtrlPoint = CreateControlPoint(newRidgeStruct.body, endCtrlPointPos, EaveControlPointType.EndControlPoint.ToString());
-        //GameObject midCtrlPoint = CreateControlPoint(newRidgeStruct.body, midCtrlPointPos, EaveControlPointType.MidControlPoint.ToString());
-        GameObject midRCtrlPoint = CreateControlPoint(newRidgeStruct.body, midRCtrlPointPos, EaveControlPointType.MidRControlPoint.ToString());
-        GameObject midLCtrlPoint = CreateControlPoint(newRidgeStruct.body, midLCtrlPointPos, EaveControlPointType.MidLControlPoint.ToString());
-
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.StartControlPoint.ToString(), startCtrlPoint);
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.EndControlPoint.ToString(), endCtrlPoint);
-        //newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), midCtrlPoint);   
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidRControlPoint.ToString(), midRCtrlPoint);
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidLControlPoint.ToString(), midLCtrlPoint);
-
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(startCtrlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(midLCtrlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(midRCtrlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(endCtrlPoint);
-
-        newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Medium);
-        newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
-
-        for (int iIndex = 0; iIndex < newRidgeStruct.ridgeCatLine.innerPointList.Count; iIndex++)
-        {
-            MainController.ShowPos(newRidgeStruct.ridgeCatLine.innerPointList[iIndex], parentObj.roof, Color.green, 0.5f);
-        }
-
-        return newRidgeStruct;
-    }
     RidgeStruct CreateEaveStruct4Point(RidgeStruct RightMainRidgeStruct, RidgeStruct LeftMainRidgeStruct)
     {
 
         RidgeStruct newRidgeStruct = CreateRidgeSturct("Eave", parentObj.roof);
 
-        Vector3 startCtrlPointPos = RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position;
-        Vector3 endCtrlPointPos = LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position;
-        Vector3 eaveDir = (startCtrlPointPos - endCtrlPointPos).normalized;
-        float eaveDist = (startCtrlPointPos - endCtrlPointPos).magnitude;
-        Vector3 midCtrlPointPos = (startCtrlPointPos + endCtrlPointPos) / 2 + eaveCurveHeightOffset * Vector3.up;
+		Vector3 rightCtrlPointPos = RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()];
+		Vector3 leftCtrlPointPos = LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()];
+		Vector3 eaveDir = (rightCtrlPointPos - leftCtrlPointPos).normalized;
+		float eaveDist = (rightCtrlPointPos - leftCtrlPointPos).magnitude;
+		Vector3 midCtrlPointPos = (rightCtrlPointPos + leftCtrlPointPos) / 2 + eaveCurveHeightOffset * Vector3.up;
         Vector3 midRCtrlPointPos = midCtrlPointPos + 0.35f * eaveDir * eaveDist;
         Vector3 midLCtrlPointPos = midCtrlPointPos - 0.35f * eaveDir * eaveDist;
         //Vector3 midRCtrlPointPos = midCtrlPointPos + eaveDir * eave2FlyEaveOffset;
         //Vector3 midLCtrlPointPos = midCtrlPointPos - eaveDir * eave2FlyEaveOffset;
 
-        GameObject startCtrlPoint = CreateControlPoint(newRidgeStruct.body, startCtrlPointPos, EaveControlPointType.StartControlPoint.ToString());
-        GameObject endCtrlPoint = CreateControlPoint(newRidgeStruct.body, endCtrlPointPos, EaveControlPointType.EndControlPoint.ToString());
-        //GameObject midCtrlPoint = CreateControlPoint(newRidgeStruct.body, midCtrlPointPos, EaveControlPointType.MidControlPoint.ToString());
-        GameObject midRCtrlPoint = CreateControlPoint(newRidgeStruct.body, midRCtrlPointPos, EaveControlPointType.MidRControlPoint.ToString());
-        GameObject midLCtrlPoint = CreateControlPoint(newRidgeStruct.body, midLCtrlPointPos, EaveControlPointType.MidLControlPoint.ToString());
 
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.StartControlPoint.ToString(), startCtrlPoint);
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.EndControlPoint.ToString(), endCtrlPoint);
-        //newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), midCtrlPoint);   
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidRControlPoint.ToString(), midRCtrlPoint);
-        newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidLControlPoint.ToString(), midLCtrlPoint);
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.RightControlPoint.ToString(), rightCtrlPointPos);
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.LeftControlPoint.ToString(), leftCtrlPointPos);
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), midCtrlPointPos);   
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidRControlPoint.ToString(), midRCtrlPointPos);
+		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidLControlPoint.ToString(), midLCtrlPointPos);
 
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(startCtrlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(midRCtrlPoint);
-        //newRidgeStruct.ridgeCatLine.controlPointList.Add(midCtrlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(midLCtrlPoint);
-        newRidgeStruct.ridgeCatLine.controlPointList.Add(endCtrlPoint);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(rightCtrlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRCtrlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midCtrlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midLCtrlPointPos);
+		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(leftCtrlPointPos);
 
         newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Medium);
         newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
@@ -1181,8 +884,8 @@ public class RoofController : MonoBehaviour
 
 		/***************************************找兩個mainRidge中間垂直的roofSurfaceTileRidge***********************************************************/
 		//FindMidRoofSurfaceMidPoint : 左右主脊的中間控制點 - 上方控制點找出方向向量，找出兩向量夾角
-		Vector2 v1 = new Vector2(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.x - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.x, LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.z - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.z);
-		Vector2 v2 = new Vector2(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.x - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.x, RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.z - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.z);
+		Vector2 v1 = new Vector2(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].x - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].x, LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].z - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].z);
+		Vector2 v2 = new Vector2(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].x - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].x, RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].z - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].z);
 
 		float angle = Vector2.Angle(v1, v2);
 
@@ -1190,41 +893,27 @@ public class RoofController : MonoBehaviour
 		//*** 找出屋頂表面中間控制線上中下點 ***//
 		//************************************//
 		//midRoofSurfaceTopPoint
-		Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position) / 2.0f;
-		GameObject midRoofSurfaceTopPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceTopPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString());
-		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), midRoofSurfaceTopPoint);
+		Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()] + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]) / 2.0f;
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), midRoofSurfaceTopPointPos);
 		//midRoofSurfaceDownPoint
-		Vector3 midRoofSurfaceDownPointPos = eaveStruct.controlPointDictionaryList[EaveControlPointType.MidControlPoint.ToString()].transform.position;
-		GameObject midRoofSurfaceDownPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceDownPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString());
-		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), midRoofSurfaceDownPoint);
+		Vector3 midRoofSurfaceDownPointPos = eaveStruct.controlPointDictionaryList[EaveControlPointType.MidControlPoint.ToString()];
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), midRoofSurfaceDownPointPos);
 		//midRoofSurfaceMidPoint : 左右兩主脊的中點位置相加除2 + (-2 * 垂直左右主脊的單位向量 ) (04/19 - 修改垂直左右主脊的單位向量公式)
 		//Vector3 midRoofSurfaceMidPointPos = (Quaternion.Euler(0, angle / 2.0f, 0) * (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position)) + (roofSurfaceHeightOffset * Vector3.up) - (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position) / 2.0f;
 
-		Vector3 midRoofSurfaceMidPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position +
-											LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position + eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()].transform.position + eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()].transform.position + midRoofSurfaceTopPointPos + midRoofSurfaceDownPointPos) / 6.0f +
-											(roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-											RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position),
-											(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-											LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position)).normalized);
+		Vector3 midRoofSurfaceMidPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()] +
+											LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()] + eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()] + eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()] + midRoofSurfaceTopPointPos + midRoofSurfaceDownPointPos) / 6.0f +
+											(roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] -
+											RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]),
+											(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]-
+											LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()])).normalized);
 
-		//  		Vector3 midRoofSurfaceMidPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position +
-		// 												LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position + midRoofSurfaceTopPointPos + midRoofSurfaceDownPointPos) / 4.0f +
-		//  												(roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-		//  												RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position),
-		//  												(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-		// 												LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position)).normalized);
-		//Vector3 midRoofSurfaceMidPointPos = midRoofSurfaceTopPointPos * 0.5f + midRoofSurfaceDownPointPos * (1-0.5f)+ roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-		//  												RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position),
-		//  												(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-		//  												LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position)).normalized;
-		// 		midRoofSurfaceMidPointPos.y = RightMainRidgeStruct.ridgeCatLine.anchorInnerPointlist[(int)(RightMainRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count * (1 - 0.5f))].y;
-		GameObject midRoofSurfaceMidPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceMidPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString());
-		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), midRoofSurfaceMidPoint);
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), midRoofSurfaceMidPointPos);
 
 		//MidRoofSurfaceTileRidge
-		newMidRidgeStruct.ridgeCatLine.controlPointList.Add(midRoofSurfaceTopPoint);
-		newMidRidgeStruct.ridgeCatLine.controlPointList.Add(midRoofSurfaceMidPoint);
-		newMidRidgeStruct.ridgeCatLine.controlPointList.Add(midRoofSurfaceDownPoint);
+		newMidRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRoofSurfaceTopPointPos);
+		newMidRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRoofSurfaceMidPointPos);
+		newMidRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRoofSurfaceDownPointPos);
 		newMidRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(1000);
 		newMidRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
 		//ShowPos(midRoofSurfaceMidPointPos, newMidRidgeStruct.body, new Color(1, 0, 1), 1f);
@@ -1232,7 +921,10 @@ public class RoofController : MonoBehaviour
 		/***************************************用AnchorLength取MidRoofSurfaceTileRidge上的瓦片************************************************************/
 		//*** 屋頂表面中間產瓦片 ***//
 		newMidRidgeStruct.tilePosList = newMidRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist, newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
-		newMidRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, newMidRidgeStruct, eaveStruct, 0, RightMainRidgeStruct, midRoofSurfaceTopPointPos);
+
+		Vector3 roofSurfaceRidgeXZ_Dir = new Vector3(newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].x - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].x, 0, newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].z - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].z);
+		Vector3 eaveDir = (eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()]);
+		newMidRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, 0);
 
 		//MeshCenter.Instance.MeshCombineInGameObjectList(newMidRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
 
@@ -1259,11 +951,11 @@ public class RoofController : MonoBehaviour
 		Plane verticalCutPlane = new Plane();
 		Plane verticalMirrorPlane = new Plane();
 		Plane surfacePlane = new Plane();
-		Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position)).normalized;
+		Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()])).normalized;
 		verticalMirrorPlane.SetNormalAndPosition(verticalCutPlaneNormal, midRoofSurfaceDownPointPos);
 
 		//(右邊主瘠的上下控制點找出方向向量) 外積 (屋簷中點與右邊主脊上控制點找出方向向量)
-		Vector3 surfacePlaneNormal = Vector3.Cross(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position, midRoofSurfaceDownPointPos - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position).normalized;
+		Vector3 surfacePlaneNormal = Vector3.Cross(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()], midRoofSurfaceDownPointPos - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]).normalized;
 		surfacePlane.SetNormalAndPosition(surfacePlaneNormal, midRoofSurfaceMidPointPos);
 		//紀錄前一次Index用於迴圈加速
 		int roofSurfaceMidPointStartingIndex_R = 0;
@@ -1275,23 +967,23 @@ public class RoofController : MonoBehaviour
 
 		// Tony哥的由屋頂中間控制線至屋簷的半圓取線
 		CatLine roofSurfaceMidPointLine = new CatLine();
-		roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()].transform.position);
+		roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()]);
 		roofSurfaceMidPointLine.controlPointPosList.Add(midRoofSurfaceMidPointPos);
-		roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()].transform.position);
+		roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()]);
 		roofSurfaceMidPointLine.SetLineNumberOfPoints(1000);
-		roofSurfaceMidPointLine.SetCatmullRom(anchorDis, 1);
+		roofSurfaceMidPointLine.SetCatmullRom(anchorDis);
 
 		//中間主脊控制線中點至右邊主脊下方端點之連線
 		CatLine roofSurfaceMidPointLineA = new CatLine();
-		roofSurfaceMidPointLineA.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
+		roofSurfaceMidPointLineA.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
 		roofSurfaceMidPointLineA.controlPointPosList.Add(midRoofSurfaceMidPointPos);
-		roofSurfaceMidPointLineA.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
+		roofSurfaceMidPointLineA.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
 		roofSurfaceMidPointLineA.SetLineNumberOfPoints(1000);
-		roofSurfaceMidPointLineA.SetCatmullRom(anchorDis, 1);
+		roofSurfaceMidPointLineA.SetCatmullRom(anchorDis);
 
 		ShowPos(midRoofSurfaceMidPointPos, newMidRidgeStruct.body, Color.green, 1.0f);
-		ShowPos(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()].transform.position, newMidRidgeStruct.body, Color.green, 1.0f);
-		ShowPos(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()].transform.position, newMidRidgeStruct.body, Color.green, 1.0f);
+		ShowPos(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()], newMidRidgeStruct.body, Color.green, 1.0f);
+		ShowPos(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()], newMidRidgeStruct.body, Color.green, 1.0f);
 		// 		 	for (int f = 0; f < roofSurfaceMidPointLineA.anchorInnerPointlist.Count; f++)
 		// 		 	{
 		// 		 		ShowPos(roofSurfaceMidPointLineA.anchorInnerPointlist[f], newMidRidgeStruct.body, Color.green, 0.1f);
@@ -1304,7 +996,7 @@ public class RoofController : MonoBehaviour
 
 			//兩個錨點間方向向量對屋簷主脊上的投影(這樣不就是=兩個錨點間方向向量?)
 			Vector3 planeOffsetVector = Vector3.Project((eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[n] - eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[0]),
-				(eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position));
+				(eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()]));
 			//Right
 			RoofSurfaceRidgeStruct newRightRidgeStruct = CreateRoofSurfaceRidgeSturct("RightRoofSurfaceTileRidge", newRoofSurfaceStruct.body);
 			RoofSurfaceRidgeStruct newLeftRidgeStruct = CreateRoofSurfaceRidgeSturct("LeftRoofSurfaceTileRidge", newRoofSurfaceStruct.body);
@@ -1360,13 +1052,13 @@ public class RoofController : MonoBehaviour
 			newRightRidgeStruct.ridgeCatLine.controlPointPosList.Add(roofSurfaceTileRidgeMidPointPos);
 			newRightRidgeStruct.ridgeCatLine.controlPointPosList.Add(roofSurfaceTileRidgeDownPointPos);
 			newRightRidgeStruct.ridgeCatLine.SetLineNumberOfPoints((int)(1000 * (1 - ratioA)));
-			newRightRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+			newRightRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
 
 			newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(roofSurfaceTileRidgeUpPointPos)) * -verticalCutPlaneNormal + roofSurfaceTileRidgeUpPointPos);
 			newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(roofSurfaceTileRidgeMidPointPos)) * -verticalCutPlaneNormal + roofSurfaceTileRidgeMidPointPos);
 			newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(roofSurfaceTileRidgeDownPointPos)) * -verticalCutPlaneNormal + roofSurfaceTileRidgeDownPointPos);
 			newLeftRidgeStruct.ridgeCatLine.SetLineNumberOfPoints((int)(1000 * (1 - ratioA)));
-			newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+			newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
 
 			/***************************************用AnchorLength取roofSurfaceTileRidge上的瓦片************************************************************/
 			/*
@@ -1397,8 +1089,8 @@ public class RoofController : MonoBehaviour
 			// newRightRidgeStruct.tilePosList = CreateRoofSurfaceTile(roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, roofSurfaceTileRidgeUpPointPos);
 			//newLeftRidgeStruct.tilePosList = CreateRoofSurfaceTile(roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(roofSurfaceTileRidgeUpPointPos, (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
 
-			newRightRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, roofSurfaceTileRidgeUpPointPos);
-			newLeftRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(roofSurfaceTileRidgeUpPointPos, (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
+			newRightRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, 1);
+			newLeftRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, -1);
 
 
 			// 			Debug.Log("size" + size);
@@ -1426,39 +1118,40 @@ public class RoofController : MonoBehaviour
 
 		return newRoofSurfaceStruct;
 	}
-    private RoofSurfaceStruct CreateRoofSurfaceAA(RidgeStruct RightMainRidgeStruct, RidgeStruct LeftMainRidgeStruct, RidgeStruct eaveStruct)
+    private RoofSurfaceStruct CreateRoofSurfaceAA(RidgeStruct RightMainRidgeStruct, RidgeStruct LeftMainRidgeStruct, RidgeStruct eaveStruct,bool isDownStair=false)
     {
         RoofSurfaceStruct newRoofSurfaceStruct = CreateRoofSurfaceSturct("RoofSurface", parentObj.roof);
         RoofSurfaceRidgeStruct newMidRidgeStruct = CreateRoofSurfaceRidgeSturct("MidRoofSurfaceTileRidge", newRoofSurfaceStruct.body);
 
-        Vector3 eaveDir = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position).normalized;
-        Vector3 roofSurfHeightOffset = (roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-                                            RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position),
-                                            (LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-                                            LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position)).normalized);
-        Vector3 SurfaceMidPt = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position) / 2 + roofSurfHeightOffset;
-        Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position) / 2.0f;
-        float SurfaceMidDis = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position).magnitude;
+        Vector3 eaveDir = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()] - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()]).normalized;
+        Vector3 roofSurfHeightOffset = (roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] -
+                                            RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]),
+                                            (LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] -
+                                            LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()])).normalized);
+        Vector3 SurfaceMidPt = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()] + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()]) / 2 + roofSurfHeightOffset;
+        Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()] + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]) / 2.0f;
+
+        float SurfaceMidDis = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()] - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()]).magnitude;
         CatLine roofSurfaceMidPointLine = new CatLine();
         CatLine roofSurfDownPointLine = new CatLine();
         Plane verticalCutPlane = new Plane();
         Plane verticalMirrorPlane = new Plane();
-        Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position)).normalized;
+        Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()])).normalized;
         verticalMirrorPlane.SetNormalAndPosition(verticalCutPlaneNormal, SurfaceMidPt);
 
         //** 屋面中間控制線
-        roofSurfaceMidPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
+        roofSurfaceMidPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
         roofSurfaceMidPointLine.controlPointPosList.Add(SurfaceMidPt + 0.25f * SurfaceMidDis * eaveDir);
         roofSurfaceMidPointLine.controlPointPosList.Add(SurfaceMidPt - 0.25f * SurfaceMidDis * eaveDir);
-        roofSurfaceMidPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
+        roofSurfaceMidPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
 
-        roofSurfaceMidPointLine.SetLineNumberOfPoints(1000);
-        roofSurfaceMidPointLine.SetCatmullRom(anchorDis, 1);
+        roofSurfaceMidPointLine.SetLineNumberOfPoints(Define.Large);
+        roofSurfaceMidPointLine.SetCatmullRom(anchorDis);
         //** 屋面下方線
-        roofSurfDownPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
-        roofSurfDownPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
-        roofSurfDownPointLine.SetLineNumberOfPoints(1000);
-        roofSurfDownPointLine.SetCatmullRom(anchorDis, 1);
+        roofSurfDownPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
+        roofSurfDownPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
+		roofSurfDownPointLine.SetLineNumberOfPoints(Define.Large);
+        roofSurfDownPointLine.SetCatmullRom(anchorDis);
 
         //** 製作屋頂表面中間脊 
         List<CatLine> ctrlLineList = new List<CatLine>();       //** 存放四條控制線用 (須由上而下依序擺放:主脊、中間弧線、簷柱上方、屋簷 )
@@ -1468,36 +1161,34 @@ public class RoofController : MonoBehaviour
         ctrlLineList.Add(eaveStruct.ridgeCatLine);
         newMidRidgeStruct = CreateSurfaceRidges(newRoofSurfaceStruct.body, "MidRoofSurfaceTileRidge", verticalMirrorPlane, ctrlLineList);
 
-        GameObject midRoofSurfaceTopPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceTopPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString());
-        GameObject midRoofSurfaceMidPoint = CreateControlPoint(newMidRidgeStruct.body, newMidRidgeStruct.ridgeCatLine.controlPointPosList[1], MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString());
-        GameObject midRoofSurfaceDownPoint = CreateControlPoint(newMidRidgeStruct.body, newMidRidgeStruct.ridgeCatLine.controlPointPosList[2], MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString());
-        GameObject midRoofSurfaceEavePoint = CreateControlPoint(newMidRidgeStruct.body, newMidRidgeStruct.ridgeCatLine.controlPointPosList[3], MidRoofSurfaceControlPointType.EaveCtrlPoint.ToString());
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), midRoofSurfaceTopPoint);
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), midRoofSurfaceMidPoint);
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), midRoofSurfaceDownPoint);
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.EaveCtrlPoint.ToString(), midRoofSurfaceEavePoint);
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), newMidRidgeStruct.ridgeCatLine.controlPointPosList[0]);
+		MainController.ShowPos(newMidRidgeStruct.ridgeCatLine.controlPointPosList[0], parentObj.roof, Color.blue, 0.5f);
 
-        //for (int iIndex = 0; iIndex < roofSurfaceMidPointLine.innerPointList.Count; iIndex++)
-        //{
-        //    MainController.ShowPos(roofSurfaceMidPointLine.innerPointList[iIndex], parentObj.roof, Color.gray, 0.5f);
-        //}
-        //for (int iIndex = 0; iIndex < roofSurfDownPointLine.innerPointList.Count; iIndex++)
-        //{
-        //    MainController.ShowPos(roofSurfDownPointLine.innerPointList[iIndex], parentObj.roof, Color.red, 0.5f);
-        //}
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), newMidRidgeStruct.ridgeCatLine.controlPointPosList[1]);
+		MainController.ShowPos(newMidRidgeStruct.ridgeCatLine.controlPointPosList[1], parentObj.roof, Color.red, 0.5f);
+
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), newMidRidgeStruct.ridgeCatLine.controlPointPosList[2]);
+		MainController.ShowPos(newMidRidgeStruct.ridgeCatLine.controlPointPosList[2], parentObj.roof, Color.yellow, 0.5f);
+
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.EaveCtrlPoint.ToString(), newMidRidgeStruct.ridgeCatLine.controlPointPosList[3]);
+		MainController.ShowPos(newMidRidgeStruct.ridgeCatLine.controlPointPosList[3], parentObj.roof, Color.black, 0.5f);
+
+
+		for (int iIndex = 0; iIndex < newMidRidgeStruct.ridgeCatLine.controlPointPosList.Count; iIndex++)
+		{
+			//MainController.ShowPos(newMidRidgeStruct.ridgeCatLine.controlPointPosList[iIndex], parentObj.roof, Color.red, 0.5f);
+		}
+		newMidRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Medium);
+		newMidRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
         //*** 屋頂表面中間產瓦片 ***//
         newMidRidgeStruct.tilePosList = newMidRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist, newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
-        newMidRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, newMidRidgeStruct, eaveStruct, 0, RightMainRidgeStruct, midRoofSurfaceTopPointPos);
-        MeshCenter.Instance.MeshCombineInGameObjectList(newMidRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
 
-       
- 
-        //紀錄前一次Index用於迴圈加速
-        int roofSurface2MainRidgeStartingIndex_R = 0;
-        int MidPointLineIndex = 0;
-        int DownPointLineIndex = 0;
-        int EavePointLineIndex = 0;
-        //*** 做一個右半邊屋簷的瘠並將parent設為屋頂表面，並依照瓦片寬度算出內部錨點
+		Vector3 roofSurfaceRidgeXZ_Dir = new Vector3(newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].x - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].x, 0, newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].z - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].z);
+
+		newMidRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, 0);
+       // MeshCenter.Instance.MeshCombineInGameObjectList(newMidRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
+
+        //*** 做一個右半邊屋簷的脊並將parent設為屋頂表面，並依照瓦片寬度算出內部錨點
         RidgeStruct eaveRightRidgeStruct = CreateRidgeSturct("EaveRightRidgeStruct", newRoofSurfaceStruct.body);
         int iHalfEventPointCount = eaveStruct.ridgeCatLine.anchorInnerPointlist.Count / 2 + 1;
         for (int k = 0; k < iHalfEventPointCount; k++)
@@ -1513,6 +1204,7 @@ public class RoofController : MonoBehaviour
 
         RoofSurfaceRidgeStruct lastRightRidgeStruct = newMidRidgeStruct;
         RoofSurfaceRidgeStruct lastLeftRidgeStruct = newMidRidgeStruct;
+		//紀錄前一次Index用於迴圈加速
         List<int> LastIndex = new List<int>{ 0,0,0,0 };
 
         //** 製作左右邊屋面脊
@@ -1524,7 +1216,7 @@ public class RoofController : MonoBehaviour
 
             //兩個錨點間方向向量對屋簷主脊上的投影(這樣不就是=兩個錨點間方向向量?)
             Vector3 planeOffsetVector = Vector3.Project((eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[n] - eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[0]),
-                (eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position));
+                (eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()]));
             Vector3 roofSurfaceTileRidgeUpPointPos = Vector3.zero;
             Vector3 roofSurfaceTileRidgeMidPointPos = Vector3.zero;
             Vector3 roofSurfaceTileRidgeDownPointPos = Vector3.zero;
@@ -1544,14 +1236,14 @@ public class RoofController : MonoBehaviour
                 newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(newRightRidgeStruct.ridgeCatLine.controlPointPosList[iIndex])) * -verticalCutPlaneNormal + newRightRidgeStruct.ridgeCatLine.controlPointPosList[iIndex]);
             }
             newLeftRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Medium);
-            newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+            newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
 
 
             //** 設定瓦片位置與貼上瓦片
             newRightRidgeStruct.tilePosList = newRightRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist, newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
             newLeftRidgeStruct.tilePosList = newLeftRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist, newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
-            newRightRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, newRightRidgeStruct.ridgeCatLine.controlPointPosList[0]);
-            newLeftRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(newRightRidgeStruct.ridgeCatLine.controlPointPosList[0], (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
+            newRightRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, 1);
+			newLeftRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, -1);
 
             lastRoofSurfaceTileRidgeUpPointPos = roofSurfaceTileRidgeUpPointPos;
             lastRoofSurfaceTileRidgeMidPointPos = roofSurfaceTileRidgeMidPointPos;
@@ -1569,6 +1261,61 @@ public class RoofController : MonoBehaviour
 
         return newRoofSurfaceStruct;
     }
+	private RoofSurfaceStruct CreateRoofSurfaceForDome(RidgeStruct mainRidgeStruct, RidgeStruct eaveStruct)
+	{
+		RoofSurfaceStruct newRoofSurfaceStruct = CreateRoofSurfaceSturct("RoofSurface", parentObj.roof);
+
+		//*** 做一個右半邊屋簷的瘠並將parent設為屋頂表面，並依照瓦片寬度算出內部錨點
+		RidgeStruct eaveRidgeStruct = CreateRidgeSturct("EaveRidgeStruct", newRoofSurfaceStruct.body);
+		
+		float radius=0;
+
+		for (int k = 0; k < eaveStruct.ridgeCatLine.anchorInnerPointlist.Count; k++)
+		{
+			radius += Vector3.Distance(eaveStruct.ridgeCatLine.anchorInnerPointlist[k], eaveStruct.ridgeCatLine.anchorInnerPointlist[(k + 1) % eaveStruct.ridgeCatLine.anchorInnerPointlist.Count]);
+			eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Add(eaveStruct.ridgeCatLine.anchorInnerPointlist[k]);
+		}
+		int num=(int)(radius/roofSurfaceTileWidth);
+		float unitRevise = radius / num;
+		eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist = eaveRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist, 0, eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, unitRevise);
+
+		for (int n = 0; n <= eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count; n++)
+		{
+			RoofSurfaceRidgeStruct newRidgeStruct = CreateRoofSurfaceRidgeSturct("RoofSurfaceTileRidge", newRoofSurfaceStruct.body);
+
+			//產生屋面
+			Vector3 roofSurfHeightOffset = (roofSurfaceHeightOffset * Vector3.Cross(
+												(eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist[(n + 1) % eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count] -
+												mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]), (eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist[n % eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count] -
+												mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()])).normalized);
+
+			Vector3 roofSurfaceTopPointPos = mainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()];
+			Vector3 roofSurfaceDownPointPos = eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist[n % eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count];
+			Vector3 roofSurfaceMidPointPos = (roofSurfaceTopPointPos + roofSurfaceDownPointPos) / 2.0f + roofSurfHeightOffset;
+			newRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), roofSurfaceTopPointPos);
+			newRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), roofSurfaceMidPointPos);
+			newRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), roofSurfaceDownPointPos);
+			//** 屋面中間控制線
+			newRidgeStruct.ridgeCatLine.controlPointPosList.Add(roofSurfaceTopPointPos);
+			newRidgeStruct.ridgeCatLine.controlPointPosList.Add(roofSurfaceMidPointPos);
+			newRidgeStruct.ridgeCatLine.controlPointPosList.Add(roofSurfaceDownPointPos);
+			ShowPos(roofSurfaceMidPointPos, newRidgeStruct.body, Color.green);
+			newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Large);
+			newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
+
+			//** 設定瓦片位置與貼上瓦片
+			newRidgeStruct.tilePosList = newRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newRidgeStruct.ridgeCatLine.anchorInnerPointlist, newRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
+
+			Vector3 eaveDir = (eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist[(n + 1) % eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count] - eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist[n % eaveRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count]).normalized;
+			Vector3 roofSurfaceRidgeXZ_Dir = new Vector3(newRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].x - newRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].x, 0, newRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].z - newRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].z);
+			if(n>0)newRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRidgeStruct.body, newRidgeStruct, newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList[newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList.Count - 1], roofSurfaceRidgeXZ_Dir, eaveDir,1);
+			newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList.Add(newRidgeStruct);
+
+		}
+		newRoofSurfaceStruct.rightRoofSurfaceTileRidgeList.RemoveAt(0);
+		return newRoofSurfaceStruct;
+	}
+
     /**
    * 建造歇山頂正面屋頂表面
    * 輸入: 右側主脊、左側主脊、屋簷
@@ -1584,8 +1331,8 @@ public class RoofController : MonoBehaviour
 
         /***************************************找兩個mainRidge中間垂直的roofSurfaceTileRidge***********************************************************/
         //FindMidRoofSurfaceMidPoint : 左右主脊的中間控制點 - 上方控制點找出方向向量，找出兩向量夾角
-        Vector2 v1 = new Vector2(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.x - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.x, LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.z - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.z);
-        Vector2 v2 = new Vector2(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.x - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.x, RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position.z - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position.z);
+        Vector2 v1 = new Vector2(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].x - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].x, LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].z - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].z);
+        Vector2 v2 = new Vector2(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].x - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].x, RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].z - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].z);
 
         float angle = Vector2.Angle(v1, v2);
 
@@ -1593,45 +1340,45 @@ public class RoofController : MonoBehaviour
         //*** 找出屋頂表面中間控制線上中下點 ***//
         //************************************//
         //midRoofSurfaceTopPoint
-        Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position) / 2.0f;
-        GameObject midRoofSurfaceTopPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceTopPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString());
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), midRoofSurfaceTopPoint);
+        Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()] + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]) / 2.0f;
+        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), midRoofSurfaceTopPointPos);
         //midRoofSurfaceDownPoint
-        Vector3 midRoofSurfaceDownPointPos = eaveStruct.controlPointDictionaryList[EaveControlPointType.MidControlPoint.ToString()].transform.position;
-        GameObject midRoofSurfaceDownPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceDownPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString());
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), midRoofSurfaceDownPoint);
+        Vector3 midRoofSurfaceDownPointPos = eaveStruct.controlPointDictionaryList[EaveControlPointType.MidControlPoint.ToString()];
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), midRoofSurfaceDownPointPos);
         //midRoofSurfaceMidPoint : 左右兩主脊的中點位置相加除2 + (-2 * 垂直左右主脊的單位向量 ) (04/19 - 修改垂直左右主脊的單位向量公式)
         //Vector3 midRoofSurfaceMidPointPos = (Quaternion.Euler(0, angle / 2.0f, 0) * (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position)) + (roofSurfaceHeightOffset * Vector3.up) - (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position) / 2.0f;
-        Vector3 midRoofSurfaceMidPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position +
-                                                LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position) / 2.0f +
-                                                (roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-                                                RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position),
-                                                (LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-                                                LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position)).normalized);
-        GameObject midRoofSurfaceMidPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceMidPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString());
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), midRoofSurfaceMidPoint);
+        Vector3 midRoofSurfaceMidPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()] +
+                                                LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()]) / 2.0f +
+                                                (roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] -
+                                                RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]),
+                                                (LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] -
+                                                LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()])).normalized);
+        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), midRoofSurfaceMidPointPos);
 
         //MidRoofSurfaceTileRidge
-        newMidRidgeStruct.ridgeCatLine.controlPointList.Add(midRoofSurfaceTopPoint);
-        newMidRidgeStruct.ridgeCatLine.controlPointList.Add(midRoofSurfaceMidPoint);
-        newMidRidgeStruct.ridgeCatLine.controlPointList.Add(midRoofSurfaceDownPoint);
-        newMidRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(1000);
+        newMidRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRoofSurfaceTopPointPos);
+        newMidRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRoofSurfaceMidPointPos);
+        newMidRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRoofSurfaceDownPointPos);
+		newMidRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Large);
         newMidRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
         //** 做懸山部分的延長線
         CatLine Topline_M = new CatLine();
         Topline_M.controlPointPosList.Add(parentObj.roofTopCenter);
         Topline_M.controlPointPosList.Add((parentObj.roofTopCenter + midRoofSurfaceTopPointPos) / 2);
         Topline_M.controlPointPosList.Add(midRoofSurfaceTopPointPos);
-        Topline_M.SetLineNumberOfPoints(1000);
-        Topline_M.SetCatmullRom(anchorDis, 1);
+		Topline_M.SetLineNumberOfPoints(Define.Large);
+        Topline_M.SetCatmullRom(anchorDis);
         newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist.InsertRange(0, Topline_M.anchorInnerPointlist);
 
         /***************************************用AnchorLength取MidRoofSurfaceTileRidge上的瓦片************************************************************/
         //*** 屋頂表面中間產瓦片 ***//
         newMidRidgeStruct.tilePosList = newMidRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist, newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
-        //計算上仰傾斜角度=0 (疑問..想請教這注解是說啥
-        CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, newMidRidgeStruct, eaveStruct, 0, RightMainRidgeStruct, midRoofSurfaceTopPointPos);
-        MeshCenter.Instance.MeshCombineInGameObjectList(newMidRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
+
+		Vector3 roofSurfaceRidgeXZ_Dir = new Vector3(newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].x - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].x, 0, newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].z - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].z);
+		Vector3 eaveDir = (eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()]);
+
+		CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, 0);
+       // MeshCenter.Instance.MeshCombineInGameObjectList(newMidRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
 
         /***************************************由Eave上的AnchorPoint切割平面 用於切出其他垂直的roofSurfaceTileRidge(右側)***********************************************************/
         //*** 做一個右半邊屋簷的瘠並將parent設為屋頂表面，並依照瓦片寬度算出內部錨點
@@ -1656,11 +1403,11 @@ public class RoofController : MonoBehaviour
         Plane verticalCutPlane = new Plane();
         Plane verticalMirrorPlane = new Plane();
         Plane surfacePlane = new Plane();
-        Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position)).normalized;
+        Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()])).normalized;
         verticalMirrorPlane.SetNormalAndPosition(verticalCutPlaneNormal, midRoofSurfaceDownPointPos);
 
         //(右邊主瘠的上下控制點找出方向向量) 外積 (屋簷中點與右邊主脊上控制點找出方向向量)
-        Vector3 surfacePlaneNormal = Vector3.Cross(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position, midRoofSurfaceDownPointPos - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position).normalized;
+        Vector3 surfacePlaneNormal = Vector3.Cross(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()], midRoofSurfaceDownPointPos - RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]).normalized;
         surfacePlane.SetNormalAndPosition(surfacePlaneNormal, midRoofSurfaceMidPointPos);
         //紀錄前一次Index用於迴圈加速
         int roofSurfaceMidPointStartingIndex_R = 0;
@@ -1673,20 +1420,20 @@ public class RoofController : MonoBehaviour
         // Tony哥的由屋頂中間控制線至屋簷的半圓取線
         CatLine roofSurfaceMidPointLine = new CatLine();
         //roofSurfaceMidPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
-        roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()].transform.position);
+        roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidLControlPoint.ToString()]);
         roofSurfaceMidPointLine.controlPointPosList.Add(midRoofSurfaceMidPointPos);
         //roofSurfaceMidPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
-        roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()].transform.position);
-        roofSurfaceMidPointLine.SetLineNumberOfPoints(1000);
-        roofSurfaceMidPointLine.SetCatmullRom(anchorDis, 1);
+        roofSurfaceMidPointLine.controlPointPosList.Add(eaveStruct.controlPointDictionaryList[EaveControlPointType.MidRControlPoint.ToString()]);
+		roofSurfaceMidPointLine.SetLineNumberOfPoints(Define.Large);
+        roofSurfaceMidPointLine.SetCatmullRom(anchorDis);
 
         //中間主脊控制線中點至右邊主脊下方端點之連線
         CatLine roofSurfaceMidPointLineA = new CatLine();
-        roofSurfaceMidPointLineA.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
+        roofSurfaceMidPointLineA.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
         roofSurfaceMidPointLineA.controlPointPosList.Add(midRoofSurfaceMidPointPos);
-        roofSurfaceMidPointLineA.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
-        roofSurfaceMidPointLineA.SetLineNumberOfPoints(1000);
-        roofSurfaceMidPointLineA.SetCatmullRom(anchorDis, 1);
+        roofSurfaceMidPointLineA.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
+		roofSurfaceMidPointLineA.SetLineNumberOfPoints(Define.Large);
+        roofSurfaceMidPointLineA.SetCatmullRom(anchorDis);
 
         //         for (int f = 0; f < roofSurfaceMidPointLine.anchorInnerPointlist.Count; f++)
         //         {
@@ -1700,7 +1447,7 @@ public class RoofController : MonoBehaviour
 
             //兩個錨點間方向向量對屋簷主脊上的投影(這樣不就是=兩個錨點間方向向量?)
             Vector3 planeOffsetVector = Vector3.Project((eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[n] - eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[0]),
-                (eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position));
+                (eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()]));
             //Right
             RoofSurfaceRidgeStruct newRightRidgeStruct = CreateRoofSurfaceRidgeSturct("RightRoofSurfaceTileRidge", newRoofSurfaceStruct.body);
             RoofSurfaceRidgeStruct newLeftRidgeStruct = CreateRoofSurfaceRidgeSturct("LeftRoofSurfaceTileRidge", newRoofSurfaceStruct.body);
@@ -1749,13 +1496,13 @@ public class RoofController : MonoBehaviour
             newRightRidgeStruct.ridgeCatLine.controlPointPosList.Add(roofSurfaceTileRidgeMidPointPos);
             newRightRidgeStruct.ridgeCatLine.controlPointPosList.Add(roofSurfaceTileRidgeDownPointPos);
             newRightRidgeStruct.ridgeCatLine.SetLineNumberOfPoints((int)(1000 * (1 - ratioA)));
-            newRightRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+            newRightRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
 
             newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(roofSurfaceTileRidgeUpPointPos)) * -verticalCutPlaneNormal + roofSurfaceTileRidgeUpPointPos);
             newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(roofSurfaceTileRidgeMidPointPos)) * -verticalCutPlaneNormal + roofSurfaceTileRidgeMidPointPos);
             newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(roofSurfaceTileRidgeDownPointPos)) * -verticalCutPlaneNormal + roofSurfaceTileRidgeDownPointPos);
-            newLeftRidgeStruct.ridgeCatLine.SetLineNumberOfPoints((int)(1000 * (1 - ratioA)));
-            newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+			newLeftRidgeStruct.ridgeCatLine.SetLineNumberOfPoints((int)(Define.Large * (1 - ratioA)));
+            newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
 
             if (roofSurface2MainRidgeStartingIndex_R == 0)
             {
@@ -1769,10 +1516,10 @@ public class RoofController : MonoBehaviour
                 Topline_L.controlPointPosList.Add(parentObj.roofTopCenter - planeOffsetVector);
                 Topline_L.controlPointPosList.Add((parentObj.roofTopCenter - planeOffsetVector + newLRidgeTopCtrlPt) / 2);
                 Topline_L.controlPointPosList.Add(newLRidgeTopCtrlPt);
-                Topline_R.SetLineNumberOfPoints(1000);
-                Topline_R.SetCatmullRom(anchorDis, 1);
-                Topline_L.SetLineNumberOfPoints(1000);
-                Topline_L.SetCatmullRom(anchorDis, 1);
+				Topline_R.SetLineNumberOfPoints(Define.Large);
+                Topline_R.SetCatmullRom(anchorDis);
+				Topline_L.SetLineNumberOfPoints(Define.Large);
+                Topline_L.SetCatmullRom(anchorDis);
                 newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.InsertRange(0, Topline_R.anchorInnerPointlist);
                 newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist.InsertRange(0, Topline_L.anchorInnerPointlist);
             }
@@ -1805,8 +1552,8 @@ public class RoofController : MonoBehaviour
             // newRightRidgeStruct.tilePosList = CreateRoofSurfaceTile(roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, roofSurfaceTileRidgeUpPointPos);
             //newLeftRidgeStruct.tilePosList = CreateRoofSurfaceTile(roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(roofSurfaceTileRidgeUpPointPos, (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
 
-            CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, roofSurfaceTileRidgeUpPointPos);
-            CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(roofSurfaceTileRidgeUpPointPos, (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
+            CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, roofSurfaceRidgeXZ_Dir, -eaveDir, 1);
+			CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, roofSurfaceRidgeXZ_Dir, -eaveDir, -1);
 
             // 			Debug.Log("size" + size);
             // 			Debug.Log(" newRightRidgeStruct.tilePosList.Count" + newRightRidgeStruct.tilePosList.Count);
@@ -1814,8 +1561,8 @@ public class RoofController : MonoBehaviour
             // 			newRightRidgeStruct.tilePosList.RemoveRange(size, newRightRidgeStruct.tilePosList.Count - size);
             // 			Debug.Log(" newRightRidgeStruct.tilePosList.Count" + newRightRidgeStruct.tilePosList.Count);
 
-            MeshCenter.Instance.MeshCombineInGameObjectList(newRightRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
-            MeshCenter.Instance.MeshCombineInGameObjectList(newLeftRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
+           // MeshCenter.Instance.MeshCombineInGameObjectList(newRightRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
+           // MeshCenter.Instance.MeshCombineInGameObjectList(newLeftRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
 
             lastRoofSurfaceTileRidgeUpPointPos = roofSurfaceTileRidgeUpPointPos;
             lastRoofSurfaceTileRidgeMidPointPos = roofSurfaceTileRidgeMidPointPos;
@@ -1836,34 +1583,34 @@ public class RoofController : MonoBehaviour
         RoofSurfaceStruct newRoofSurfaceStruct = CreateRoofSurfaceSturct("RoofSurface", parentObj.roof);
         RoofSurfaceRidgeStruct newMidRidgeStruct = CreateRoofSurfaceRidgeSturct("MidRoofSurfaceTileRidge", newRoofSurfaceStruct.body);
 
-        Vector3 eaveDir = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()].transform.position).normalized;
-        Vector3 roofSurfHeightOffset = (roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-                                            RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position),
-                                            (LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position -
-                                            LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position)).normalized);
-        Vector3 SurfaceMidPt = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position) / 2 + roofSurfHeightOffset;
-        Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()].transform.position) / 2.0f;
-        float SurfaceMidDis = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()].transform.position).magnitude;
+        Vector3 eaveDir = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()] - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()]).normalized;
+        Vector3 roofSurfHeightOffset = (roofSurfaceHeightOffset * Vector3.Cross((RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] -
+                                            RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]),
+                                            (LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()] -
+                                            LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()])).normalized);
+        Vector3 SurfaceMidPt = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()] + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()]) / 2 + roofSurfHeightOffset;
+        Vector3 midRoofSurfaceTopPointPos = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()] + LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.TopControlPoint.ToString()]) / 2.0f;
+        float SurfaceMidDis = (RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()] - LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.MidControlPoint.ToString()]).magnitude;
         CatLine roofSurfaceMidPointLine = new CatLine();
         CatLine roofSurfDownPointLine = new CatLine();
         Plane verticalCutPlane = new Plane();
         Plane verticalMirrorPlane = new Plane();
-        Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position)).normalized;
+        Vector3 verticalCutPlaneNormal = ((eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()])).normalized;
         verticalMirrorPlane.SetNormalAndPosition(verticalCutPlaneNormal, SurfaceMidPt);
 
         //** 屋面中間控制線
-        roofSurfaceMidPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
+        roofSurfaceMidPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
         roofSurfaceMidPointLine.controlPointPosList.Add(SurfaceMidPt + 0.25f * SurfaceMidDis * eaveDir);
         roofSurfaceMidPointLine.controlPointPosList.Add(SurfaceMidPt - 0.25f * SurfaceMidDis * eaveDir);
-        roofSurfaceMidPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
+        roofSurfaceMidPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
 
-        roofSurfaceMidPointLine.SetLineNumberOfPoints(1000);
-        roofSurfaceMidPointLine.SetCatmullRom(anchorDis, 1);
+		roofSurfaceMidPointLine.SetLineNumberOfPoints(Define.Large);
+        roofSurfaceMidPointLine.SetCatmullRom(anchorDis);
         //** 屋面下方線
-        roofSurfDownPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
-        roofSurfDownPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()].transform.position);
-        roofSurfDownPointLine.SetLineNumberOfPoints(1000);
-        roofSurfDownPointLine.SetCatmullRom(anchorDis, 1);
+        roofSurfDownPointLine.controlPointPosList.Add(RightMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
+        roofSurfDownPointLine.controlPointPosList.Add(LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.DownControlPoint.ToString()]);
+		roofSurfDownPointLine.SetLineNumberOfPoints(Define.Large);
+        roofSurfDownPointLine.SetCatmullRom(anchorDis);
 
         //** 製作屋頂表面中間脊 
         List<CatLine> ctrlLineList = new List<CatLine>();   //** 存放四條控制線用 (須由上而下依序擺放:主脊、中間弧線、簷柱上方、屋簷 )
@@ -1874,25 +1621,24 @@ public class RoofController : MonoBehaviour
         ctrlLineList.Add(eaveStruct.ridgeCatLine);
         newMidRidgeStruct = CreateSurfaceRidges(newRoofSurfaceStruct.body, "MidRoofSurfaceTileRidge", verticalMirrorPlane, ctrlLineList);
 
-        GameObject midRoofSurfaceTopPoint = CreateControlPoint(newMidRidgeStruct.body, midRoofSurfaceTopPointPos, MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString());
-        GameObject midRoofSurfaceMidPoint = CreateControlPoint(newMidRidgeStruct.body, newMidRidgeStruct.ridgeCatLine.controlPointPosList[1], MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString());
-        GameObject midRoofSurfaceDownPoint = CreateControlPoint(newMidRidgeStruct.body, newMidRidgeStruct.ridgeCatLine.controlPointPosList[2], MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString());
-        GameObject midRoofSurfaceEavePoint = CreateControlPoint(newMidRidgeStruct.body, newMidRidgeStruct.ridgeCatLine.controlPointPosList[3], MidRoofSurfaceControlPointType.EaveCtrlPoint.ToString());
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), midRoofSurfaceTopPoint);
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), midRoofSurfaceMidPoint);
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), midRoofSurfaceDownPoint);
-        newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.EaveCtrlPoint.ToString(), midRoofSurfaceEavePoint);
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString(), midRoofSurfaceTopPointPos);
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceMidPoint.ToString(), newMidRidgeStruct.ridgeCatLine.controlPointPosList[1]);
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString(), newMidRidgeStruct.ridgeCatLine.controlPointPosList[2]);
+		newMidRidgeStruct.controlPointDictionaryList.Add(MidRoofSurfaceControlPointType.EaveCtrlPoint.ToString(), newMidRidgeStruct.ridgeCatLine.controlPointPosList[3]);
 
         Topline_Mid.controlPointPosList.Add(parentObj.roofTopCenter);
         Topline_Mid.controlPointPosList.Add(newMidRidgeStruct.ridgeCatLine.controlPointPosList[0]);
         Topline_Mid.SetLineNumberOfPoints(Define.Medium);
-        Topline_Mid.SetCatmullRom(anchorDis, 1);
+        Topline_Mid.SetCatmullRom(anchorDis);
         newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist.InsertRange(0, Topline_Mid.anchorInnerPointlist);
 
         //*** 屋頂表面中間產瓦片 ***//
         newMidRidgeStruct.tilePosList = newMidRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist, newMidRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
-        newMidRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, newMidRidgeStruct, eaveStruct, 0, RightMainRidgeStruct, midRoofSurfaceTopPointPos);
-        MeshCenter.Instance.MeshCombineInGameObjectList(newMidRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
+
+		Vector3 roofSurfaceRidgeXZ_Dir = new Vector3(newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].x - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].x, 0, newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceTopPoint.ToString()].z - newMidRidgeStruct.controlPointDictionaryList[MidRoofSurfaceControlPointType.MidRoofSurfaceDownPoint.ToString()].z);
+
+		newMidRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newMidRidgeStruct.body, newMidRidgeStruct, newMidRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, 0);
+       // MeshCenter.Instance.MeshCombineInGameObjectList(newMidRidgeStruct.body, Resources.Load("Models/Materials/RoofMat") as Material);
 
 
         //*** 做一個右半邊屋簷的瘠並將parent設為屋頂表面，並依照瓦片寬度算出內部錨點
@@ -1917,7 +1663,7 @@ public class RoofController : MonoBehaviour
 
             //兩個錨點間方向向量對屋簷主脊上的投影(這樣不就是=兩個錨點間方向向量?)
             Vector3 planeOffsetVector = Vector3.Project((eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[n] - eaveRightRidgeStruct.ridgeCatLine.anchorInnerPointlist[0]),
-                (eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position));
+                (eaveStruct.controlPointDictionaryList[EaveControlPointType.RightControlPoint.ToString()] - eaveStruct.controlPointDictionaryList[EaveControlPointType.LeftControlPoint.ToString()]));
             Vector3 roofSurfaceTileRidgeUpPointPos = Vector3.zero;
             Vector3 roofSurfaceTileRidgeMidPointPos = Vector3.zero;
             Vector3 roofSurfaceTileRidgeDownPointPos = Vector3.zero;
@@ -1937,7 +1683,7 @@ public class RoofController : MonoBehaviour
                 newLeftRidgeStruct.ridgeCatLine.controlPointPosList.Add(Mathf.Abs(2 * verticalMirrorPlane.GetDistanceToPoint(newRightRidgeStruct.ridgeCatLine.controlPointPosList[iIndex])) * -verticalCutPlaneNormal + newRightRidgeStruct.ridgeCatLine.controlPointPosList[iIndex]);
             }
             newLeftRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Medium);
-            newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+            newLeftRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
 
 
             //*** 為了歇山
@@ -1956,10 +1702,10 @@ public class RoofController : MonoBehaviour
                     Topline_L.controlPointPosList.Add(parentObj.roofTopCenter - planeOffsetVector);
                     //Topline_L.controlPointPosList.Add((parentObj.roofTopCenter - planeOffsetVector + newLRidgeTopCtrlPt) / 2);
                     Topline_L.controlPointPosList.Add(newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist[0]);
-                    Topline_R.SetLineNumberOfPoints(1000);
-                    Topline_R.SetCatmullRom(anchorDis, 1);
-                    Topline_L.SetLineNumberOfPoints(1000);
-                    Topline_L.SetCatmullRom(anchorDis, 1);
+					Topline_R.SetLineNumberOfPoints(Define.Large);
+                    Topline_R.SetCatmullRom(anchorDis);
+					Topline_L.SetLineNumberOfPoints(Define.Large);
+                    Topline_L.SetCatmullRom(anchorDis);
                     newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.InsertRange(0, Topline_R.anchorInnerPointlist);
                     newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist.InsertRange(0, Topline_L.anchorInnerPointlist);
                 }
@@ -1969,8 +1715,8 @@ public class RoofController : MonoBehaviour
             //** 設定瓦片位置與貼上瓦片
             newRightRidgeStruct.tilePosList = newRightRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist, newRightRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
             newLeftRidgeStruct.tilePosList = newLeftRidgeStruct.ridgeCatLine.CalculateAnchorPosByInnerPointList(newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist, newLeftRidgeStruct.ridgeCatLine.anchorInnerPointlist.Count - 1, 0, roofSurfaceTileHeight);
-            newRightRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, newMidRidgeStruct, eaveStruct, 1, RightMainRidgeStruct, newRightRidgeStruct.ridgeCatLine.controlPointPosList[0]);
-            newLeftRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, newMidRidgeStruct, eaveStruct, -1, LeftMainRidgeStruct, Vector3.Reflect(newRightRidgeStruct.ridgeCatLine.controlPointPosList[0], (eaveStruct.controlPointDictionaryList[EaveControlPointType.EndControlPoint.ToString()].transform.position - eaveStruct.controlPointDictionaryList[EaveControlPointType.StartControlPoint.ToString()].transform.position).normalized));
+            newRightRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newRightRidgeStruct.body, newRightRidgeStruct, lastRightRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, 1);
+			newLeftRidgeStruct = CreateRoofSurfaceTile(ModelController.Instance.roofSurfaceModelStruct, newLeftRidgeStruct.body, newLeftRidgeStruct, lastLeftRidgeStruct, roofSurfaceRidgeXZ_Dir, eaveDir, -1);
 
             lastRoofSurfaceTileRidgeUpPointPos = roofSurfaceTileRidgeUpPointPos;
             lastRoofSurfaceTileRidgeMidPointPos = roofSurfaceTileRidgeMidPointPos;
@@ -1994,11 +1740,12 @@ public class RoofController : MonoBehaviour
      */
     private RoofSurfaceRidgeStruct CreateSurfaceRidges(GameObject parent,string name, Plane verticalMirrorPlane, List<CatLine> PtLineList)
     {
+		//** PtLineList存放四條控制線用 (0:主脊、1:中間弧線、2:簷柱上方、3:屋簷 )
         RoofSurfaceRidgeStruct newRidgeStruct = CreateRoofSurfaceRidgeSturct(name, parent);
 
         for (int iIndex = 0; iIndex < PtLineList.Count; iIndex++)
         {
-            int lineIndex = FindNearestPointInList2Plane(verticalMirrorPlane, PtLineList[iIndex].innerPointList, 0, PtLineList[iIndex].innerPointList.Count - 1);
+			int lineIndex = FindNearestPointInList2Plane(verticalMirrorPlane, PtLineList[iIndex].innerPointList, 0, PtLineList[iIndex].innerPointList.Count - 1,roofSurfaceTileWidth);
             if (iIndex == 0 && lineIndex == 0)
             {
 
@@ -2014,7 +1761,7 @@ public class RoofController : MonoBehaviour
             }
         }
         newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Medium);
-        newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+        newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
         return newRidgeStruct;
     }
     private RoofSurfaceRidgeStruct CreateSurfaceRidges(GameObject parent, string name, Plane verticalMirrorPlane, List<CatLine> PtLineList,ref List<int> IndexList)
@@ -2037,7 +1784,7 @@ public class RoofController : MonoBehaviour
             }
         }
         newRidgeStruct.ridgeCatLine.SetLineNumberOfPoints(Define.Medium);
-        newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis, 1);
+        newRidgeStruct.ridgeCatLine.SetCatmullRom(anchorDis);
         return newRidgeStruct;
     }
 
@@ -2063,26 +1810,14 @@ public class RoofController : MonoBehaviour
 	/**
 	* 依照輸入的主脊列表建立主脊瓦片
 	*/
-	void createMainRidgeTileFromList(MainRidgeModelStruct mainRidgeModelStructGameObject, List<RidgeStruct> MainRidgeList)
+	void CreateMainRidgeTileFromList(MainRidgeModelStruct mainRidgeModelStructGameObject, List<RidgeStruct> MainRidgeList)
 	{
-		switch (roofType)
+
+		for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
 		{
-			case MainController.RoofType.Shya_Shan_Ding:
-
-				for (int iIndex = 0; iIndex < 4; iIndex++)
-				{
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, MainRidgeList[iIndex * 2], MainRidgeList[iIndex * 2].body);              //* 垂脊瓦片
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, MainRidgeList[iIndex * 2 + 1], MainRidgeList[iIndex * 2 + 1].body);      //* 戧脊屋瓦
-				}
-
-				break;
-			default:
-				for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
-				{
-					MainRidgeList[iIndex] = CreateMainRidgeTile(mainRidgeModelStructGameObject, MainRidgeList[iIndex]);
-				}
-				break;
+			MainRidgeList[iIndex] = CreateMainRidgeTile(mainRidgeModelStructGameObject, MainRidgeList[iIndex]);
 		}
+
 	}
 
 	void CopyRoofFunction(GameObject parent, float angle, Vector3 rotationCenter, int times, Vector3 offsetVector, params GameObject[] cloneObject)
@@ -2100,84 +1835,50 @@ public class RoofController : MonoBehaviour
 
 	}
 
-	public void CreateRoof(List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList, bool isDownFloor)
+	public void CreateRoof(List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList)
 	{
-		RidgeStruct RightMainRidgeStruct;
-		RidgeStruct LeftMainRidgeStruct;
-		RidgeStruct RightMainRidgeStructA;
-		RidgeStruct LeftMainRidgeStructA;
-		RidgeStruct eaveStruct;
-		RidgeStruct eaveStructA;
-		RoofSurfaceStruct roofSurfaceStruct;
-		RoofSurfaceStruct roofSurfaceStructA;
 		Vector3 offsetVector;
 		Vector3 eave2eaveColumnOffsetVector;
+		List<Vector3> ctrlPointList;
 
 		int ColumnIndex_Zero = 0;
 		int ColumnIndex_One = 1;
 		int ColumnIndex_Two = 2;
 		int ColumnIndex_Three = 3;
 
+		MainRidgeList.Clear();
+		SurfaceList.Clear();
+		EaveList.Clear();
 		switch (roofType)
 		{
 			//攢尖頂
 			case MainController.RoofType.Zan_Jian_Ding:
 				#region  Zan_Jian_Ding
-
-				if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
+				//* 建立各主脊
+				for (int iIndex = 0; iIndex < columnTopPosList.Count; iIndex++)
 				{
-					//主脊-MainRidge輔助線 
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-					RightMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter, columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-					LeftMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter, columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
+					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + Define.Do_Kun_Height * Vector3.up;
 
-					//Eave輔助線
-					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
+					ctrlPointList = new List<Vector3>();
+					ctrlPointList.Add(parentObj.roofTopCenter);
+					ctrlPointList.Add((parentObj.roofTopCenter + columnTopPosList[iIndex]) / 2 + mainRidgeHeightOffset * Vector3.up);
+					ctrlPointList.Add(columnTopPosList[iIndex] + Define.Do_Kun_Height * Vector3.up);
+					ctrlPointList.Add(columnTopPosList[iIndex] + eave2eaveColumnOffsetVector);
 
-					//RoofSurface
-					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
-
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
-					//主脊-MainRidge輔助線 
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Two].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Two].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-					RightMainRidgeStructA = CreateMainRidgeStruct(parentObj.roofTopCenter, columnTopPosList[ColumnIndex_Two] + eave2eaveColumnOffsetVector);
-					LeftMainRidgeStructA = RightMainRidgeStruct;
-					//Eave輔助線
-					eaveStructA = CreateEaveStruct(RightMainRidgeStructA, LeftMainRidgeStructA);//檐出
-
-					//RoofSurface
-					roofSurfaceStructA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
-
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructA, eaveStructA, RightMainRidgeStructA.body);
-
-					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, roofSurfaceStructA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
-					Destroy(LeftMainRidgeStruct.body);
-
+					MainRidgeList.Add(CreateMainRidgeStruct4Point(ctrlPointList));
 				}
-				else
+				CreateMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
+				//* 建立各屋簷
+				for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
 				{
-					//主脊-MainRidge輔助線 
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-					RightMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter, columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-					LeftMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter, columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
-
-					//Eave輔助線
-					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
-
-					//RoofSurface
-					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
-
-
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
-
-					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 360.0f / (int)MainController.Instance.sides, parentObj.roofTopCenter, (int)MainController.Instance.sides, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, RightMainRidgeStruct.body);
-					Destroy(LeftMainRidgeStruct.body);
+					EaveList.Add(CreateEaveStruct4Point(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex]));
 				}
+				//* 建立個屋頂表面
+				for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
+				{
 
+					SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex], EaveList[iIndex]));
+				}
 				#endregion
 				break;
 			case MainController.RoofType.Wu_Dian_Ding:
@@ -2185,9 +1886,6 @@ public class RoofController : MonoBehaviour
 
 				if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
 				{
-                    List<RidgeStruct> Wu_Dian_eaveList = new List<RidgeStruct>();
-                    MainRidgeList.Clear();
-                    SurfaceList.Clear();
                     offsetVector = (columnTopPosList[ColumnIndex_One] - columnTopPosList[ColumnIndex_Zero]).normalized * Wu_Dian_DingMainRidgeWidth * 0.5f;
 					Vector3 rightRoofTopCenter = parentObj.roofTopCenter + offsetVector;
 					Vector3 leftRoofTopCenter = parentObj.roofTopCenter - offsetVector;
@@ -2196,9 +1894,9 @@ public class RoofController : MonoBehaviour
                     for (int iIndex = 0; iIndex < columnTopPosList.Count; iIndex++)
                     {
                         Vector3 RidgeTopPos = (iIndex == 1 || iIndex == 2) ? rightRoofTopCenter : leftRoofTopCenter;
-                        eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - RidgeTopPos.x, 0, columnTopPosList[iIndex].z - RidgeTopPos.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
+						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - RidgeTopPos.x, 0, columnTopPosList[iIndex].z - RidgeTopPos.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + Define.Do_Kun_Height * Vector3.up;
 
-                        List<Vector3> ctrlPointList = new List<Vector3>();
+                        ctrlPointList = new List<Vector3>();
                         ctrlPointList.Add(RidgeTopPos);
                         ctrlPointList.Add((RidgeTopPos + columnTopPosList[iIndex]) / 2 + mainRidgeHeightOffset * Vector3.up);
                         ctrlPointList.Add(columnTopPosList[iIndex] + Define.Do_Kun_Height * Vector3.up);
@@ -2206,143 +1904,79 @@ public class RoofController : MonoBehaviour
 
                         MainRidgeList.Add(CreateMainRidgeStruct4Point(ctrlPointList));
                     }
-                    createMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
+					CreateMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
 
                     //** 屋簷 與 屋面
                     for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
                     {
-                        Wu_Dian_eaveList.Add(CreateEaveStruct4Point(MainRidgeList[(iIndex+1) % MainRidgeList.Count], MainRidgeList[iIndex]));
-                        SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex], Wu_Dian_eaveList[iIndex]));
+                        EaveList.Add(CreateEaveStruct4Point(MainRidgeList[(iIndex+1) % MainRidgeList.Count], MainRidgeList[iIndex]));
+						SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex], EaveList[iIndex]));
                     }
 				}
 				#endregion
 				break;
-
 			case MainController.RoofType.Lu_Ding:
 				#region  Lu_Ding
-				if ((int)MainController.Instance.sides == (int)MainController.FormFactorSideType.FourSide)
-				{
-                    List<RidgeStruct> Lu_Ding_eaveList = new List<RidgeStruct>();
-                    MainRidgeList.Clear();
-                    SurfaceList.Clear();
                     //* 建立各主脊
                     for (int iIndex = 0; iIndex < columnTopPosList.Count; iIndex++)
                     {
                         offsetVector = (new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)).normalized * Lu_DingMainRidgeOffset * 0.5f;
-                        Vector3 RidgeTopPos = (isDownFloor)? topFloorBorderList[ColumnIndex_Two] : parentObj.roofTopCenter + offsetVector;
-                        eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
+						//最後一層
+						Vector3 RidgeTopPos = (topFloorBorderList==null) ? (parentObj.roofTopCenter + offsetVector) : topFloorBorderList[iIndex];
+						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + Define.Do_Kun_Height * Vector3.up;
 
-                        List<Vector3> ctrlPointList = new List<Vector3>();
-                        ctrlPointList.Add(RidgeTopPos);
-                        ctrlPointList.Add((RidgeTopPos + columnTopPosList[iIndex]) / 2 + mainRidgeHeightOffset * Vector3.up);
-                        ctrlPointList.Add(columnTopPosList[iIndex] + Define.Do_Kun_Height * Vector3.up);
-                        ctrlPointList.Add(columnTopPosList[iIndex] + eave2eaveColumnOffsetVector);
-
+						ctrlPointList = new List<Vector3>();
+						if (topFloorBorderList == null) 
+						{
+							ctrlPointList.Add(RidgeTopPos);
+							ctrlPointList.Add((RidgeTopPos + columnTopPosList[iIndex]) / 2 + mainRidgeHeightOffset * Vector3.up);
+							ctrlPointList.Add(columnTopPosList[iIndex] + Define.Do_Kun_Height * Vector3.up);
+							ctrlPointList.Add(columnTopPosList[iIndex] + eave2eaveColumnOffsetVector);
+						}
+						else 
+						{
+							Vector3 p0 = RidgeTopPos;
+							Vector3 p1 = p0;
+							Vector3 p2 = (p0 + Vector3.Normalize(new Vector3(p0.x - parentObj.roofTopCenter.x, 0, p0.z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset/2.0f) - MainController.Instance.initAllJijaHeight_DownStair * Vector3.up;
+							Vector3 p3 = (p2 + eave2eaveColumnOffsetVector / 2.0f);
+							p2 += mainRidgeHeightOffset * Vector3.up;
+							ctrlPointList.Add(p0);
+							ctrlPointList.Add(p1);
+							ctrlPointList.Add(p2);
+							ctrlPointList.Add(p3);
+						
+						}
+					
                         MainRidgeList.Add(CreateMainRidgeStruct4Point(ctrlPointList));
                     }
-                    createMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
+					CreateMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
 
                     for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
                     {
-                        Lu_Ding_eaveList.Add(CreateEaveStruct4Point(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex]));
-                        SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex], Lu_Ding_eaveList[iIndex]));
+                        EaveList.Add(CreateEaveStruct4Point(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex]));
+						SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[(iIndex + 1) % MainRidgeList.Count], MainRidgeList[iIndex], EaveList[iIndex]));
                     }
-
-                    /**
-                    //主脊-MainRidge輔助線 
-                    if (isDownFloor)
-					{
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						RightMainRidgeStruct = CreateMainRidgeStruct(topFloorBorderList[ColumnIndex_One], columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-						//RightMainRidgeStruct = CreateMainRidgeStruct(topFloorBorderList[ColumnIndex_One], columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						LeftMainRidgeStruct = CreateMainRidgeStruct(topFloorBorderList[ColumnIndex_Zero], columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
-						//主脊-MainRidge輔助線 
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Two].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Two].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						RightMainRidgeStructA = CreateMainRidgeStruct(topFloorBorderList[ColumnIndex_Two], columnTopPosList[ColumnIndex_Two] + eave2eaveColumnOffsetVector);
-					}
-					else
-					{
-						offsetVector = (new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)).normalized * Lu_DingMainRidgeOffset * 0.5f;
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						RightMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter + offsetVector, columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-
-						offsetVector = (new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)).normalized * Lu_DingMainRidgeOffset * 0.5f;
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						LeftMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter + offsetVector, columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
-						//主脊-MainRidge輔助線 
-						offsetVector = (new Vector3(columnTopPosList[ColumnIndex_Two].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Two].z - parentObj.roofTopCenter.z)).normalized * Lu_DingMainRidgeOffset * 0.5f;
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Two].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Two].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						RightMainRidgeStructA = CreateMainRidgeStruct(parentObj.roofTopCenter + offsetVector, columnTopPosList[ColumnIndex_Two] + eave2eaveColumnOffsetVector);
-
-					}
-
-					//Eave輔助線
-					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
-
-					//RoofSurface
-					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
-
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
-
-
-
-					LeftMainRidgeStructA = RightMainRidgeStruct;
-					//Eave輔助線
-					eaveStructA = CreateEaveStruct(RightMainRidgeStructA, LeftMainRidgeStructA);//檐出
-
-					//RoofSurface
-					roofSurfaceStructA = CreateRoofSurfaceA(RightMainRidgeStructA, LeftMainRidgeStructA, eaveStructA);//屋面
-
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStructA, roofSurfaceStructA, eaveStructA, RightMainRidgeStructA.body);
-					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, roofSurfaceStructA.body, RightMainRidgeStruct.body, RightMainRidgeStructA.body);
-					Destroy(LeftMainRidgeStruct.body);
-                    */
-				}
-				else //FormFactorSideType.ThreeSide
-				{
-					if (isDownFloor)
-					{
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						RightMainRidgeStruct = CreateMainRidgeStruct(topFloorBorderList[ColumnIndex_One], columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						LeftMainRidgeStruct = CreateMainRidgeStruct(topFloorBorderList[ColumnIndex_Zero], columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
-
-					}
-					else
-					{
-						offsetVector = (new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)).normalized * Lu_DingMainRidgeOffset * 0.5f;
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_One].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_One].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						RightMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter + offsetVector, columnTopPosList[ColumnIndex_One] + eave2eaveColumnOffsetVector);
-
-						offsetVector = (new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)).normalized * Lu_DingMainRidgeOffset * 0.5f;
-						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-						LeftMainRidgeStruct = CreateMainRidgeStruct(parentObj.roofTopCenter + offsetVector, columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
-					}
-
-
-					//Eave輔助線
-					eaveStruct = CreateEaveStruct(RightMainRidgeStruct, LeftMainRidgeStruct);//檐出
-
-					//RoofSurface
-					roofSurfaceStruct = CreateRoofSurfaceA(RightMainRidgeStruct, LeftMainRidgeStruct, eaveStruct);//屋面
-
-					CreateMainRidgeTile(ModelController.Instance.mainRidgeModelStruct, RightMainRidgeStruct, roofSurfaceStruct, eaveStruct, RightMainRidgeStruct.body);
-
-					//複製出其他屋面
-					CopyRoofFunction(parentObj.roof, 360.0f / (int)MainController.Instance.sides, parentObj.roofTopCenter, (int)MainController.Instance.sides, parentObj.roofTopCenter - parentObj.roofTopCenter, roofSurfaceStruct.body, RightMainRidgeStruct.body);
-					Destroy(LeftMainRidgeStruct.body);
-				}
 				#endregion
 				break;
-
 			case MainController.RoofType.Shya_Shan_Ding:
                 #region  Shya_Shan_Ding
-                MainRidgeList.Clear();
-                if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
+				/**
+				 *              *
+				 *             *   *
+				 *            *       *
+				 *           *           * 
+				 *          * ...topCenter  *
+				 *         * *             *  .......VerRidgeCtrlPtList(山花上半部主脊曲線)
+				 *   [0] *     *[2]       *
+				 *      *********        *    .......VerRidgeBotPosList(山花下方四個點)
+				 * [1]*           *[3]  *     .......CtrlPointList(山花下半部主脊曲線)
+				 *   *              *  *
+				 *  ******************        .......columnTopPosList(屋簷四個點)
+				 *  
+				 * MainRidgeList.Add(VerRidgeCtrlPtList);..........[偶數]
+				 * MainRidgeList.Add(CtrlPointList);...............[奇數]
+				 * */
+				if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
 				{
 
 					List<Vector3> VerRidgeBotPosList = new List<Vector3>();         //** 垂脊下方控制點點列表
@@ -2350,23 +1984,24 @@ public class RoofController : MonoBehaviour
                     
                     offsetVector = (columnTopPosList[ColumnIndex_Zero] - columnTopPosList[ColumnIndex_One]).normalized * Shya_Shan_DingMainRidgeWidth;
 
-					//***  v3VerticalOffsetVec : 垂直屋面的向量，eave2eaveColumnOffsetVector : 屋頂中心頂點到各個角柱的xz平面方向向量
+					//***  v3VerticalOffsetVec : 垂直屋面的向量
 					Vector3 v3VerticalOffsetVec = (columnTopPosList[ColumnIndex_Zero] - columnTopPosList[ColumnIndex_Three]).normalized;
 					Vector3 VerRidgeBotPos = parentObj.roofTopCenter - Vector3.up * Shya_Shan_DingSanhuaHeight;
 					VerRidgeBotPos = VerRidgeBotPos + v3VerticalOffsetVec * Shya_Shan_DingSanhuaWidth;
 
 					VerRidgeBotPosList.Add(VerRidgeBotPos + offsetVector);
 					VerRidgeBotPosList.Add(VerRidgeBotPos - offsetVector);
-					VerRidgeBotPosList.Add(Quaternion.AngleAxis(180, Vector3.up) * VerRidgeBotPosList[0]);
-					VerRidgeBotPosList.Add(Quaternion.AngleAxis(180, Vector3.up) * VerRidgeBotPosList[1]);
-
+					VerRidgeBotPos = VerRidgeBotPos - v3VerticalOffsetVec * Shya_Shan_DingSanhuaWidth*2;
+					VerRidgeBotPosList.Add(VerRidgeBotPos - offsetVector);
+					VerRidgeBotPosList.Add(VerRidgeBotPos + offsetVector);
+					
                     //** 建立主脊結構 (MainRidgeList中依序存放一側的垂脊(0,2,4,6)和戧脊(1,3,5,7))
                     for (int iIndex = 0; iIndex < 4; iIndex++)
                     {
                         List<Vector3> VerRidgeCtrlPtList = new List<Vector3>();     //* 垂脊控制點列表
                         List<Vector3> CtrlPointList = new List<Vector3>();          //* 戗脊控制點列表
                         Vector3 topCenter = (iIndex == 0 || iIndex == 3) ? parentObj.roofTopCenter + offsetVector : parentObj.roofTopCenter - offsetVector;
-                        eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
+						eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + Define.Do_Kun_Height * Vector3.up;
 
                         VerRidgeCtrlPtList.Add(topCenter);
                         VerRidgeCtrlPtList.Add((topCenter + VerRidgeBotPosList[iIndex]) * 0.5f);
@@ -2381,109 +2016,45 @@ public class RoofController : MonoBehaviour
                         MainRidgeList.Add(CreateMainRidgeStruct4Point(VerRidgeCtrlPtList));
                         MainRidgeList.Add(CreateMainRidgeStruct4Point(CtrlPointList));
                     }
-                    createMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
+					CreateMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
 
-                    ////** 屋簷
-                    eaveStruct = CreateEaveStruct4Point(MainRidgeList[3], MainRidgeList[1]); //* 正面屋簷
-                    eaveStructA = CreateEaveStruct4Point(MainRidgeList[5], MainRidgeList[3]); //* 側面屋簷
-                    roofSurfaceStruct = CreateRoofSurfaceForShyShanAA(MainRidgeList[3], MainRidgeList[1], eaveStruct);          //* 屋面
-                    roofSurfaceStructA = CreateRoofSurfaceAA(MainRidgeList[5], MainRidgeList[3], eaveStructA);
-                    ////** 複製表面瓦片
-                    CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, Vector3.zero, roofSurfaceStruct.body);
-                    CopyRoofFunction(parentObj.roof, 180, parentObj.roofTopCenter, 2, Vector3.zero, roofSurfaceStructA.body);
-                   
+		
+					for (int iIndex = 0; iIndex < 4; iIndex++)
+					{
+						//* 建立各屋簷
+						EaveList.Add(CreateEaveStruct4Point(MainRidgeList[((iIndex + 1) % 4)*2+1], MainRidgeList[iIndex*2+1]));
+						//* 建立個屋頂表面
+						if (iIndex == 0 || iIndex == 2)//* 山花面屋簷
+						{
+							SurfaceList.Add(CreateRoofSurfaceForShyShanAA(MainRidgeList[((iIndex + 1) % 4) * 2 + 1], MainRidgeList[iIndex * 2 + 1], EaveList[iIndex]));
+						}
+						else  //* 正面屋簷
+						{
+							SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[((iIndex + 1) % 4) * 2 + 1], MainRidgeList[iIndex * 2 + 1], EaveList[iIndex]));
+						}
+					}
                 }
                 #endregion
                 break;
-			case MainController.RoofType.Zan_Jian_Ding2:
-                #region  Zan_Jian_Ding2
-                List<RidgeStruct> eaveList = new List<RidgeStruct>();
+			case MainController.RoofType.Dome:
+				#region  Dome
+				//主脊-MainRidge輔助線 
+				eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[ColumnIndex_Zero].x - parentObj.roofTopCenter.x, 0, columnTopPosList[ColumnIndex_Zero].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + Define.Do_Kun_Height * Vector3.up;
 
-				MainRidgeList.Clear();
-				//* 建立各主脊
-				for (int iIndex = 0; iIndex < columnTopPosList.Count; iIndex++)
-				{
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-					MainRidgeList.Add(CreateMainRidgeStruct(parentObj.roofTopCenter, columnTopPosList[iIndex] + eave2eaveColumnOffsetVector));
-				}
-				createMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
-				//* 建立各屋簷
-				for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
-				{
-					if (iIndex == MainRidgeList.Count - 1)
-					{
-						//eaveList.Add(CreateEaveStruct(MainRidgeList[iIndex], MainRidgeList[0]));
-						eaveList.Add(CreateEaveStruct(MainRidgeList[0], MainRidgeList[iIndex]));
-					}
-					else
-					{
-						//eaveList.Add(CreateEaveStruct(MainRidgeList[iIndex], MainRidgeList[iIndex + 1]));
-						eaveList.Add(CreateEaveStruct(MainRidgeList[iIndex + 1], MainRidgeList[iIndex]));
-					}
-				}
-				//* 建立個屋頂表面
-				for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
-				{
-					if (iIndex == MainRidgeList.Count - 1)
-					{
-						//SurfaceList.Add(CreateRoofSurfaceA(MainRidgeList[iIndex], MainRidgeList[0],eaveList[iIndex]));
-						SurfaceList.Add(CreateRoofSurfaceA(MainRidgeList[0], MainRidgeList[iIndex], eaveList[iIndex]));
-					}
-					else
-					{
-						//SurfaceList.Add(CreateRoofSurfaceA(MainRidgeList[iIndex], MainRidgeList[iIndex + 1],eaveList[iIndex]));
-						SurfaceList.Add(CreateRoofSurfaceA(MainRidgeList[iIndex + 1], MainRidgeList[iIndex], eaveList[iIndex]));
-					}
-				}
-                #endregion
-                break;
-            case MainController.RoofType.Zan_Jian_Ding3:
-                #region  Zan_Jian_Ding3
-                List<RidgeStruct> eaveList1 = new List<RidgeStruct>();
-
-                MainRidgeList.Clear();
-                //* 建立各主脊
-                for (int iIndex = 0; iIndex < columnTopPosList.Count; iIndex++)
-                {
-                    eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + beamsHeight * Vector3.up;
-
-                    List<Vector3> ctrlPointList = new List<Vector3>();
+                    ctrlPointList = new List<Vector3>();
                     ctrlPointList.Add(parentObj.roofTopCenter);
-                    ctrlPointList.Add((parentObj.roofTopCenter + columnTopPosList[iIndex]) / 2 + mainRidgeHeightOffset *  Vector3.up);
-                    ctrlPointList.Add(columnTopPosList[iIndex] + Define.Do_Kun_Height * Vector3.up);
-                    ctrlPointList.Add(columnTopPosList[iIndex] + eave2eaveColumnOffsetVector);
+					ctrlPointList.Add((parentObj.roofTopCenter + columnTopPosList[ColumnIndex_Zero]) / 2 + mainRidgeHeightOffset * Vector3.up);
+					ctrlPointList.Add(columnTopPosList[ColumnIndex_Zero] + Define.Do_Kun_Height * Vector3.up);
+					ctrlPointList.Add(columnTopPosList[ColumnIndex_Zero] + eave2eaveColumnOffsetVector);
 
                     MainRidgeList.Add(CreateMainRidgeStruct4Point(ctrlPointList));
-                }
-                createMainRidgeTileFromList(ModelController.Instance.mainRidgeModelStruct, MainRidgeList);
-                //* 建立各屋簷
-                for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
-                {
-                    if (iIndex == MainRidgeList.Count - 1)
-                    {
-                        eaveList1.Add(CreateEaveStruct4Point(MainRidgeList[0], MainRidgeList[iIndex]));
-                        //eaveList1.Add(CreateEaveStruct4Point(MainRidgeList[iIndex], MainRidgeList[0]));
-                    }
-                    else
-                    {
-                        eaveList1.Add(CreateEaveStruct4Point(MainRidgeList[iIndex + 1], MainRidgeList[iIndex]));                        
-                        //eaveList1.Add(CreateEaveStruct4Point(MainRidgeList[iIndex], MainRidgeList[iIndex + 1]));
-                    }
-                }
-                //* 建立個屋頂表面
-                for (int iIndex = 0; iIndex < MainRidgeList.Count; iIndex++)
-                {
-                    if (iIndex == MainRidgeList.Count - 1)
-                    {
-                        SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[0], MainRidgeList[iIndex], eaveList1[iIndex]));
-                    }
-                    else
-                    {
-                        SurfaceList.Add(CreateRoofSurfaceAA(MainRidgeList[iIndex + 1], MainRidgeList[iIndex], eaveList1[iIndex]));
-                    }
-                }
-                #endregion
-                break;
+
+					//* 建立各屋簷
+					EaveList.Add(CreateEaveStruct(MainRidgeList[0]));
+						//* 建立個屋頂表面
+					SurfaceList.Add(CreateRoofSurfaceForDome(MainRidgeList[0], EaveList[0]));
+				#endregion
+					break;
         }
 	}
 

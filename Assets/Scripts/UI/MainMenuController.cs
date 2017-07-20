@@ -27,7 +27,7 @@ public class MainMenuController : Singleton<MainMenuController>
     public Button StateBtn;
 
     List<RoofTypeInfo> typeInfoList;
-    int nowRoofTypeIndex = 0;
+    public int nowRoofTypeIndex = 0;
     // Use this for initialization
     void Start()
     {
@@ -68,9 +68,9 @@ public class MainMenuController : Singleton<MainMenuController>
     void initTypeMenuData()
     {
         typeInfoList = new List<RoofTypeInfo>();
-        typeInfoList.Add(new RoofTypeInfo("攢尖", 0, Color.blue,MainController.RoofType.Zan_Jian_Ding3));
+        typeInfoList.Add(new RoofTypeInfo("攢尖", 0, Color.blue,MainController.RoofType.Zan_Jian_Ding));
         typeInfoList.Add(new RoofTypeInfo("廡殿", 1, Color.yellow, MainController.RoofType.Wu_Dian_Ding));
-        typeInfoList.Add(new RoofTypeInfo("露頂", 2, Color.red, MainController.RoofType.Lu_Ding));
+        typeInfoList.Add(new RoofTypeInfo("盝頂", 2, Color.red, MainController.RoofType.Lu_Ding));
         typeInfoList.Add(new RoofTypeInfo("歇山", 3, Color.white, MainController.RoofType.Shya_Shan_Ding));
     }
     /**

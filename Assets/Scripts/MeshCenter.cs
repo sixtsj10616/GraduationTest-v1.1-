@@ -218,19 +218,19 @@ public class MeshCenter : Singleton<MeshCenter>
 
 		int vert = 0;
 		// PosList
-		pList[vert++] = Quaternion.AngleAxis(rotateAngle, Vector3.up) * bottomPos;
+		pList[vert++] =bottomPos;
 		for (int i = 0; i < nbSides; i++)
 		{
 			float rad = (float)i / nbSides * _2pi;
-			Vector3 pos = Quaternion.AngleAxis(rotateAngle, Vector3.up) * (new Vector3(Mathf.Cos(rad) * bottomRadius, 0f, Mathf.Sin(rad) * bottomRadius) + bottomPos);
+			Vector3 pos = Quaternion.AngleAxis(rotateAngle, Vector3.up) * (new Vector3(Mathf.Cos(rad) * bottomRadius, 0f, Mathf.Sin(rad) * bottomRadius)) + bottomPos;
 			pList[vert++] = pos;
 			controlPointPosList.Add(pos);
 		}
-		pList[vert++] = Quaternion.AngleAxis(rotateAngle, Vector3.up) * topPos;
+		pList[vert++] = topPos;
 		for (int i = 0; i < nbSides; i++)
 		{
 			float rad = (float)i / nbSides * _2pi;
-			Vector3 pos = Quaternion.AngleAxis(rotateAngle, Vector3.up) * (new Vector3(Mathf.Cos(rad) * topRadius, 0f, Mathf.Sin(rad) * topRadius) + topPos);
+			Vector3 pos = Quaternion.AngleAxis(rotateAngle, Vector3.up) * (new Vector3(Mathf.Cos(rad) * topRadius, 0f, Mathf.Sin(rad) * topRadius)) + topPos;
 			pList[vert++] = pos;
 			controlPointPosList.Add(pos);
 		}
@@ -999,7 +999,7 @@ public class MeshCenter : Singleton<MeshCenter>
 		CatLine curve = new CatLine();
 		curve.controlPointPosList = globalPosList;
 		curve.SetLineNumberOfPoints(segmentation);
-		curve.SetCatmullRom(0.1f, 1);
+		curve.SetCatmullRom(0.1f);
 		// PosList
 		Vector3[] pList = new Vector3[(nbSides + 1) * curve.anchorInnerPointlist.Count];
 		int vert = 0;
