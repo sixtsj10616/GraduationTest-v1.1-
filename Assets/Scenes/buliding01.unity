@@ -13075,7 +13075,7 @@ MonoBehaviour:
   selectFloor: 0
   sides: 4
   buildingType: 1
-  roofType: 1
+  roofType: 0
   initPlatformWidth_DownStair: 40
   initPlatformLength_DownStair: 50
   initPlatformHeight_DownStair: 5

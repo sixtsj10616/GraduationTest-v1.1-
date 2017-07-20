@@ -429,11 +429,11 @@ public class CombineTing : MonoBehaviour
 						case MainController.RoofType.Shya_Shan_Ding:
 
 						CheckMainRidge(LTing, LTingIntersectionColIndex * 2, LTingCenter, RTingCenter);
-						MainController.ShowPos(LTing.roofController.MainRidgeList[LTingIntersectionColIndex * 2].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.blue, 3);
+						//MainController.ShowPos(LTing.roofController.MainRidgeList[LTingIntersectionColIndex * 2].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.blue, 3);
 						CheckMainRidge(LTing, LTingIntersectionColIndex * 2+1, LTingCenter, RTingCenter);
-						MainController.ShowPos(LTing.roofController.MainRidgeList[LTingIntersectionColIndex * 2+1].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.red, 3);
+						//MainController.ShowPos(LTing.roofController.MainRidgeList[LTingIntersectionColIndex * 2+1].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.red, 3);
 						CheckMainRidge(LTing, ((LTingIntersectionColIndex + 1) % newLTingColPos.Count) * 2, LTingCenter, RTingCenter);
-						MainController.ShowPos(LTing.roofController.MainRidgeList[((LTingIntersectionColIndex + 1) % newLTingColPos.Count) * 2].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.yellow, 3);
+						//MainController.ShowPos(LTing.roofController.MainRidgeList[((LTingIntersectionColIndex + 1) % newLTingColPos.Count) * 2].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.yellow, 3);
 						CheckMainRidge(LTing, ((LTingIntersectionColIndex + 1) % newLTingColPos.Count) * 2 + 1, LTingCenter, RTingCenter);
 
 						CheckMainRidge(RTing, RTingIntersectionColIndex * 2, LTingCenter, RTingCenter);
