@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
+using System.Reflection;
 public class PlatFormStruct
 {
 	public List<Vector3> facadeDir = new List<Vector3>();
@@ -40,20 +42,21 @@ public class PlatformController : MonoBehaviour
 	 */
 	public void InitFunction(BuildingObj parentObj, Vector3 platformCenter, float platformFrontWidth, float platformFrontLength, float platformHeight, bool isStair, float rotateAngle=0)
 	{
-		this.parentObj = parentObj;
+
+        this.parentObj = parentObj;
 		this.platWidth = platformFrontWidth;
 		this.platLength = platformFrontLength;
 		this.platHeight = platformHeight;
 		this.isStair = isStair;
 		stairHeight = platformHeight;
-
-		parentObj.platformCenter = platformCenter;
+        parentObj.platformCenter = platformCenter;
 		//***********************************************************************
 		platFormStruct = CreatePlatform(parentObj.platform, platformCenter,rotateAngle);
 		StartCreateBorder(isBorder);
 		StartCreateStair(isStair);
-		//***********************************************************************
-	}
+
+    }
+   
 	/**
 	 * 更新移動後資訊
 	 */

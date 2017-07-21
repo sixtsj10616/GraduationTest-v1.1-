@@ -84,11 +84,15 @@ public class MainController : Singleton<MainController>
     public int buildingCount = 0;
     // Use this for initialization
 
-    
+    public GameObject StyleMainVC;
     
     private void Awake()
     {
         InitFunction();
+        if (StyleMainVC.activeInHierarchy)
+        {
+            StyleMainVC.GetComponent<StyleMainVC>().initBuildingsInfo();
+        }
     }
     private void Update()
     {
@@ -169,7 +173,7 @@ public class MainController : Singleton<MainController>
         }
         else
         {
-			GameObject building = new GameObject("building" + buildingCount++);
+            GameObject building = new GameObject("building" + buildingCount++);
             building.gameObject.AddComponent<BuildingObj>();
 			building.GetComponent<BuildingObj>().InitFunction(building, buildingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null,(int)roofType, false);
             Buildings.Add(building.GetComponent<BuildingObj>());
@@ -490,6 +494,29 @@ public class MainController : Singleton<MainController>
     }
     public void UpdateRoofToggleInfo(Toggle toggle)
     {
+
+    }
+    /**
+     * 
+     */
+    public void tmpUpdateRoof()
+    {
+        BuildingObj nowBuilding = Buildings[selectFloor];
+        nowBuilding.roofController.mainRidgeHeightOffset = Random.Range(-3,3);
+        nowBuilding.ResetRoofFunction();
+    }
+    public void UpdateALL(List<Dictionary<string, List<DataInfo>>> DataList)
+    {
+        DataCenter.Instance.ArrayDataToBuildingDataMethod3(DataList);
+        for (int iIndex = 0; iIndex < Buildings.Count; iIndex++)
+        {
+            BuildingObj nowBuilding = Buildings[iIndex];
+            PlatformController platform = nowBuilding.platformController;
+
+            //nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, platform.platHeight, platform.isStair);
+            //nowBuilding.ResetBodyFunction();
+            nowBuilding.ResetRoofFunction();
+        }
 
     }
     /**

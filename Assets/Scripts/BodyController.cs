@@ -121,7 +121,7 @@ public class BodyController : MonoBehaviour
 	}
     /**
      * 重製屋身以簡易的參數
-     * 
+     * 原本的初始化所需參數過多，目前重製只需要柱高
      */
     public void ResetWithSimpleInfo(BuildingObj parentObj, float platformHeight)
     {
@@ -160,14 +160,17 @@ public class BodyController : MonoBehaviour
         }
     }
     /**
-     * 調整柱子位置列表
+     * 調整柱子位置列表 (!!注意目前只有四邊形，方法感覺也可以在調整)
      * 輸入位移(z:面寬，x:進深)
+     * 流程 : 取出 0 號柱子位置並加上位移量，之後算與原始位置的放大比率，
+     * 將其他的柱子也都乘上此比率
      */
     public void UpdateOrigBottonPos(float offsetZ, float offsetX)
     {
         if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
         {
             //print("offsetZ : " + offsetZ + " offsetX : " + offsetX);
+            //** 第一行暫時這樣，感覺會有問題
             Vector3 pos = new Vector3(origBotPosList[0].x + offsetX, origBotPosList[0].y, origBotPosList[0].z - offsetZ);
             Vector3 scaleVec = new Vector3(pos.x / origBotPosList[0].x, pos.y / origBotPosList[0].y, pos.z / origBotPosList[0].z);
             for (int iIndex = 0; iIndex < 4; iIndex++)

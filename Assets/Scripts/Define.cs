@@ -30,4 +30,10 @@ public class Define : MonoBehaviour {
     public const int Large = 1000;
     public const int Medium = 500;
     public const int Low = 250;
+
+    //***           資料          ***//
+    public const string RoofDataList = "RoofDataList";
+    public const string BodyDataList = "BodyDataList";
+    public const string PlatformDataList = "PlatformDataList";
+
 }
