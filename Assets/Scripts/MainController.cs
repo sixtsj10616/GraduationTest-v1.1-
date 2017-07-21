@@ -128,11 +128,11 @@ public class MainController : Singleton<MainController>
 			LTing.GetComponent<BuildingObj>().InitFunction(LTing, LTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null,(int)roofType, false);
 			//脊對齊
 			#region RidgeAlign
-				//Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
+				Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
 			#endregion
 			//邊對齊
 			#region EdgeAlign
-			Vector3 RTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
+			//Vector3 RTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
 			#endregion
 			RTingCenter.y = 0;
 			//每一個形狀需要的間距不同
@@ -156,31 +156,14 @@ public class MainController : Singleton<MainController>
             {
                 GameObject combinTing = new GameObject("CombinTing");
                 CombineTing combineTingCtrl = combinTing.AddComponent<CombineTing>();
-                //BodyController bodyController = combinTing.AddComponent<BodyController>();
                 LTing.transform.parent = combinTing.transform;
                 RTing.transform.parent = combinTing.transform;
 
-				combineTingCtrl.mainBuilding = LTing.GetComponent<BuildingObj>();
-				combineTingCtrl.subBuilding = RTing.GetComponent<BuildingObj>();
-                //** 調整組合亭中的柱子列表，再創造出柱子
-				combineTingCtrl.AdjustColPos(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>(), LTingCenter, RTingCenter);
-                combineTingCtrl.CreateRingColumn(combinTing, 1, 1, LTing.GetComponent<BodyController>().eaveColumnHeight, "TingCol");
-                //** 摧毀原先兩亭的body
-                Destroy(LTing.GetComponent<BuildingObj>().body);
-                Destroy(RTing.GetComponent<BuildingObj>().body);
-                //** 建立欄杆
-				combineTingCtrl.CreateRingBalustrade(ModelController.Instance, 1.2f, 0.1f * LTing.GetComponent<BodyController>().eaveColumnHeight, combinTing);
-				combineTingCtrl.CreateRingFrieze(ModelController.Instance, 1f, 0.8f * LTing.GetComponent<BodyController>().eaveColumnHeight, LTing.GetComponent<BodyController>().eaveColumnHeight, combinTing);
-				combineTingCtrl.CheckAllSurface(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>(), LTingCenter, RTingCenter);
-                //*** (meshCombine)
-//                 for (int iIndex = 0; iIndex < LTing.GetComponent<RoofController>().SurfaceList.Count; iIndex++)
-//                 {
-//                     LTing.GetComponent<RoofController>().CombineTileBySurfaceList(LTing.GetComponent<RoofController>().SurfaceList[iIndex]);
-//                 }
-//                 for (int iIndex = 0; iIndex < RTing.GetComponent<RoofController>().SurfaceList.Count; iIndex++)
-//                 {
-//                     RTing.GetComponent<RoofController>().CombineTileBySurfaceList(RTing.GetComponent<RoofController>().SurfaceList[iIndex]);
-//                 }
+				combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>());
+	
+				//** 摧毀原先兩亭的body
+				Destroy(LTing.GetComponent<BuildingObj>().body);
+				Destroy(RTing.GetComponent<BuildingObj>().body);
             }
 			Buildings.Add(LTing.GetComponent<BuildingObj>());
         }

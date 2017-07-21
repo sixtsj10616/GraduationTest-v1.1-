@@ -5,86 +5,453 @@ using System.Reflection;
 using System;
 public class CombineTing : MonoBehaviour
 {
+	public class BodyController4CT
+	{
+		public List<Vector3> eaveColumnPosList = new List<Vector3>();   //* 簷柱位置列表
+		public List<Vector3> goldColumnPosList = new List<Vector3>();   //* 金柱位置列表
+		public List<Vector3> eaveCornerColumnPosList = new List<Vector3>();   //* 簷柱位置列表
+		public List<Vector3> goldCornerColumnPosList = new List<Vector3>();   //* 金柱位置列表
+		public List<GameObject> windowObjList = new List<GameObject>(); //* 窗戶物件列表
+		public List<GameObject> doorObjList = new List<GameObject>();   //* 大門物件列表
+		public int goldColumnBayNumber = 3;//間數量
+		public int eaveColumnBayNumber = 5;
+		public int unitNumberInBay = 3;//間內有幾個單位(如:一間內有幾個門+窗)
+		public int doorNumber = 1;//門的數量(若間為奇數 則門為單扇 / 偶數 則門為雙扇)
+		/** 
+ * 條整柱子位置並存放至ColumnList中
+ * 流程:先將兩亭的柱子列表內縮至適當位置，算出需移動柱子的方向向量
+ *      ，由此向量與另一亭的同邊柱子位置做一個平面並計算需位移的距離
+ *      兩亭皆完成此步驟後將所有點加入新的列表中，並調整 List 順序
+ */
+		public void InitFunction(GameObject parent, List<Vector3> eaveCornerColumnPosList, List<Vector3> goldCornerColumnPosList, float eaveColumnHeight) 
+		{
+			this.eaveCornerColumnPosList = eaveCornerColumnPosList;
+			this.goldCornerColumnPosList = goldCornerColumnPosList;
+			//CreateBody
+			eaveColumnPosList.Clear();
+			goldColumnPosList.Clear();
+			List<int> entranceIndexList = new List<int>();
+			eaveColumnPosList = CalculateColumnPos(eaveCornerColumnPosList, entranceIndexList, eaveColumnBayNumber);
+			goldColumnPosList = CalculateColumnPos(goldCornerColumnPosList, entranceIndexList, goldColumnBayNumber);
+			CreateRingColumn(parent,eaveColumnPosList, 1, 1, eaveColumnHeight, "TingEaveCol");
+			CreateRingColumn(parent, goldColumnPosList, 1, 1, eaveColumnHeight, "TingGoldCol");
+			//建築牆面
+			CreateRingWall(ModelController.Instance.goldColumnModelStruct, goldColumnPosList, eaveColumnHeight, 1, unitNumberInBay,goldColumnBayNumber, doorNumber, parent);
+			//** 建立欄杆
+			CreateRingBalustrade(ModelController.Instance, eaveColumnPosList, 1.2f, 0.1f * eaveColumnHeight, parent);
+			CreateRingFrieze(ModelController.Instance, eaveColumnPosList, 1f, 0.8f * eaveColumnHeight, eaveColumnHeight, parent);
 
-	public float Center;
-	public List<Vector3> ColumnList;
+			//*** (meshCombine)
+			//                 for (int iIndex = 0; iIndex < LTing.GetComponent<RoofController>().SurfaceList.Count; iIndex++)
+			//                 {
+			//                     LTing.GetComponent<RoofController>().CombineTileBySurfaceList(LTing.GetComponent<RoofController>().SurfaceList[iIndex]);
+			//                 }
+			//                 for (int iIndex = 0; iIndex < RTing.GetComponent<RoofController>().SurfaceList.Count; iIndex++)
+			//                 {
+			//                     RTing.GetComponent<RoofController>().CombineTileBySurfaceList(RTing.GetComponent<RoofController>().SurfaceList[iIndex]);
+			//                 }
+		}
+
+		/**
+		 * 計算簷柱位置
+		*/
+		private List<Vector3> CalculateColumnPos(List<Vector3> posList, List<int> entranceIndexList,int bayNumber)
+		{
+			List<Vector3> newPosList = new List<Vector3>();
+			for (int i = 0; i < posList.Count; i++)
+			{
+				Vector3 columnPos = posList[i];
+				newPosList.Add(columnPos);
+
+				if (!entranceIndexList.Contains(i))
+				{
+					//eaveBayColumn
+					int nextIndex = (i + 1) % posList.Count;
+					Vector3 posNext = posList[nextIndex];
+
+					float disBetweenColumn = Vector3.Distance(columnPos, posNext);
+					float bayWidth = disBetweenColumn / bayNumber;
+					Vector3 bayDir = posNext - columnPos;
+
+					for (int j = 1; j < bayNumber; j++)
+					{
+						Vector3 bayColumnPos = bayDir.normalized * (j * bayWidth) + columnPos;
+						newPosList.Add(bayColumnPos);
+					}
+				}
+			}
+			return newPosList;
+		}
+		/**
+		 * 建立柱子群模型 (從BodyController搬來的，發現那個還是不好用)
+		 */
+		public List<ColumnStruct> CreateRingColumn(GameObject parentObj, List<Vector3> ColumnList, float columnTopRadius, float columnDownRadius, float columnHeight, string columnName)
+		{
+			List<ColumnStruct> columnList = new List<ColumnStruct>();
+			for (int i = 0; i < ColumnList.Count; i++)
+			{
+				ColumnStruct newColumn = CreateColumn(parentObj, ColumnList[i], columnTopRadius, columnDownRadius, columnHeight, columnDownRadius * 1.2f, columnHeight * 0.05f, columnName);
+			}
+			return columnList;
+		}
+		/**
+		 * 建立柱子模型  (從BodyController搬來的，發現那個還是不好用)
+		 */
+		private ColumnStruct CreateColumn(GameObject parentObj, Vector3 pos, float topRadius, float downRadius, float height, float fundationRadius, float fundationHeight, string name = "Column")
+		{
+			ColumnStruct columnStruct = new ColumnStruct();
+
+			float columnFundationHeight = height * 0.05f;
+			float columnRemainHeight = height - columnFundationHeight;
+
+			GameObject col = new GameObject(name);
+			//col.transform.position = pos + new Vector3(0, columnRemainHeight / 2.0f + columnFundationHeight, 0);
+			col.transform.parent = parentObj.transform;
+			col.AddComponent<CylinderMesh>();
+
+			Vector3 topPos = pos + (columnRemainHeight + columnFundationHeight) * Vector3.up;
+			Vector3 bottomPos = pos + columnFundationHeight * Vector3.up;
+
+			col.GetComponent<CylinderMesh>().CylinderInitSetting(pos, topPos, bottomPos, topRadius, downRadius);
+			col.GetComponent<CylinderMesh>().SetMesh();
+			columnStruct.columnObj = col;
+			columnStruct.columnMesh = col.GetComponent<CylinderMesh>();
+			columnStruct.topPos = topPos;
+			columnStruct.bottomPos = bottomPos;
+			//Fundation
+			GameObject fun = new GameObject(name + "Fundation");
+			fun.transform.parent = col.transform;
+			fun.AddComponent<CylinderMesh>();
+
+			topPos = pos + columnFundationHeight * Vector3.up;
+			bottomPos = pos;
+
+			fun.GetComponent<CylinderMesh>().CylinderInitSetting(pos - new Vector3(0, height / 2.0f, 0), topPos, bottomPos, fundationRadius, fundationRadius);
+			fun.GetComponent<CylinderMesh>().SetMesh();
+
+			columnStruct.fundation = col.GetComponent<CylinderMesh>();
+
+			return columnStruct;
+		}   /**
+     * 建造門楣模型
+     */
+		public void CreateRingFrieze(ModelController modelController, List<Vector3> ColumnList, float columnRadius, float heightOffset, float eaveColumnHeight, GameObject parent)
+		{
+			float friezeWidth = modelController.eaveColumnModelStruct.friezeModelStruct.bound.size.x;//裝飾物長度
+			float friezeHeight = modelController.eaveColumnModelStruct.friezeModelStruct.bound.size.y;//裝飾物長度
+			float friezeLengh = modelController.eaveColumnModelStruct.friezeModelStruct.bound.size.z;//裝飾物深度
+			for (int i = 0; i < ColumnList.Count; i++)
+			{
+				float width = friezeWidth;
+				float height = friezeHeight;
+				float dis = Vector3.Distance(ColumnList[i], ColumnList[(i + 1) % ColumnList.Count]) - columnRadius * 2;
+				int number = Mathf.Max(Mathf.FloorToInt(dis / width), 1);
+				Vector3 dir = ColumnList[(i + 1) % ColumnList.Count] - ColumnList[i];
+				float disDiff = (dis - width * number) / number;
+				width = dis / number;
+				float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+				for (int j = 0; j < number; j++)
+				{
+					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + ColumnList[i] + heightOffset * Vector3.up;
+					GameObject clone = Instantiate(modelController.eaveColumnModelStruct.friezeModelStruct.model, pos, modelController.eaveColumnModelStruct.friezeModelStruct.model.transform.rotation) as GameObject;
+					clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.friezeModelStruct.rotation);
+					clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z) * (width) / friezeWidth);
+					clone.transform.parent = parent.transform;
+				}
+
+				//FriezeWall(frieze上方裝飾牆)
+				GameObject friezeWall = new GameObject("FriezeWall");
+				MeshFilter meshFilter = friezeWall.AddComponent<MeshFilter>();
+				MeshRenderer meshRenderer = friezeWall.AddComponent<MeshRenderer>();
+				friezeWall.transform.parent = parent.transform;
+				meshRenderer.material.color = Color.yellow;
+				float rotateAngleZ = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+				float friezeWallHeight = (eaveColumnHeight - heightOffset - friezeHeight / 2.0f);
+				Vector3 posZ = (ColumnList[i] + ColumnList[(i + 1) % ColumnList.Count]) / 2.0f + (heightOffset + friezeHeight / 2.0f + friezeWallHeight / 2.0f) * Vector3.up;
+				MeshCenter.Instance.CreateCubeMesh(posZ, dis, friezeWallHeight, 0.5f, rotateAngleZ, meshFilter);
+
+				if (dis >= modelController.eaveColumnModelStruct.sparrowBraceModelStruct.bound.size.x * 2.5f)
+				{
+					//sparrowBrace雀替
+					Vector3 posX = dir.normalized * (columnRadius) + ColumnList[i] + (heightOffset - friezeHeight / 2.0f) * Vector3.up;
+					float rotateAngleX = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+					GameObject sparrowBrace = Instantiate(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model, posX, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model.transform.rotation) as GameObject;
+					sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngleX, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
+
+					sparrowBrace.transform.parent = parent.transform;
+
+					posX = -dir.normalized * (columnRadius) + ColumnList[(i + 1) % ColumnList.Count] + (heightOffset - friezeHeight / 2.0f) * Vector3.up;
+					rotateAngleX = (Vector3.Dot(Vector3.forward, -dir) < 0 ? Vector3.Angle(-dir, Vector3.right) : -Vector3.Angle(-dir, Vector3.right));
+					sparrowBrace = Instantiate(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model, posX, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model.transform.rotation) as GameObject;
+					sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngleX, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
+
+					sparrowBrace.transform.parent = parent.transform;
+				}
+			}
+		}
+		/**
+		 * 建立柵欄模型  (從BodyController搬來的，發現那個還是不好用)
+		 */
+		public void CreateRingBalustrade(ModelController modelController, List<Vector3> ColumnList, float columnRadius, float heightOffset, GameObject parent)
+		{
+			float balustradeWidth = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.x;//欄杆長度
+			float balustradeHeight = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.y;//欄杆長度
+			float balustradeLengh = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.z;//欄杆深度
+
+			for (int i = 0; i < ColumnList.Count; i++)
+			{
+				float width = balustradeWidth;
+				float dis = Vector3.Distance(ColumnList[i], ColumnList[(i + 1) % ColumnList.Count]) - columnRadius * 2;
+				int number = Mathf.Max(Mathf.FloorToInt(dis / width), 1);
+				Vector3 dir = ColumnList[(i + 1) % ColumnList.Count] - ColumnList[i];
+				float disDiff = (dis - width * number) / number;
+				width = dis / number;
+
+				float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+				for (int j = 0; j < number; j++)
+				{
+					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + ColumnList[i] + heightOffset * Vector3.up;
+					GameObject clone = Instantiate(modelController.eaveColumnModelStruct.balustradeModelStruct.model, pos, modelController.eaveColumnModelStruct.balustradeModelStruct.model.transform.rotation) as GameObject;
+					clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.balustradeModelStruct.rotation);
+					clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z) * (width) / balustradeWidth);
+					clone.transform.parent = parent.transform;
+				}
+			}
+		}
+		/**
+		* 建造整圈牆模型 
+		 */
+		public void CreateRingWall(GoldColumnModelStruct goldColumnModelStruct, List<Vector3> columnList, float goldColumnHeight,float columnRadius, int unit, int goldColumnBayNumber,int doorNumber,GameObject parentObj)
+		{
+			float wallHeight = goldColumnHeight;//牆長度
+			float wallLengh = columnRadius * 2.0f;//牆深度
+
+			float windowWidth = goldColumnModelStruct.windowModelStruct.bound.size.x;//裝飾物長度
+			float windowHeight = goldColumnModelStruct.windowModelStruct.bound.size.y;//裝飾物長度
+			float windowLengh = goldColumnModelStruct.windowModelStruct.bound.size.z;//裝飾物深度
+
+
+			float doorWidth = goldColumnModelStruct.doorModelStruct.bound.size.x;//裝飾物長度
+			float doorHeight = goldColumnModelStruct.doorModelStruct.bound.size.y;//裝飾物長度
+			float doorLengh = goldColumnModelStruct.doorModelStruct.bound.size.z;//裝飾物深度
+
+
+			float windowWallWidth = goldColumnModelStruct.windowWallModelStruct.bound.size.x;//裝飾物長度
+			float windowWallHeight = goldColumnModelStruct.windowWallModelStruct.bound.size.y;//裝飾物長度
+			float windowWallLengh = goldColumnModelStruct.windowWallModelStruct.bound.size.z;//裝飾物深度
+
+			float doorMidIndex = ((float)goldColumnBayNumber / 2);
+			doorNumber = Mathf.Clamp(doorNumber, 0, Mathf.CeilToInt(doorMidIndex));
+			int doorMaxIndex = (int)((goldColumnBayNumber % 2 == 1) ? (doorMidIndex + (doorNumber - 1)) : (doorMidIndex + (doorNumber - 1) + 0.5f));
+			int doorMinIndex = (int)((goldColumnBayNumber % 2 == 1) ? (doorMidIndex - (doorNumber - 1)) : (doorMidIndex - (doorNumber - 1) - 0.5f));
+			for (int i = 0; i < columnList.Count; i++)
+			{
+				float dis = Vector3.Distance(columnList[i], columnList[(i + 1) % columnList.Count]) - columnRadius * 2;
+
+				Vector3 dir = columnList[(i + 1) % columnList.Count] - columnList[i];
+				//門
+				if (((i % (goldColumnBayNumber)) <= doorMaxIndex) && (i % (goldColumnBayNumber) >= doorMinIndex))
+				{
+					float width = dis;
+					for (int j = 0; j < 1; j++)
+					{
+						float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+						Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i] + wallHeight/2.0f*Vector3.up;
+						float disDiff = doorWidth - width;
+						float doorWidthScale = (width) / (doorWidth);
+						float doorHeightScale = wallHeight / (doorHeight);
+						//door
+						GameObject clone = Instantiate(goldColumnModelStruct.doorModelStruct.model, pos, goldColumnModelStruct.doorModelStruct.model.transform.rotation) as GameObject;
+						clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(goldColumnModelStruct.doorModelStruct.rotation);
+						clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x * doorWidthScale, clone.transform.GetChild(0).localScale.y * doorHeightScale, (clone.transform.GetChild(0).localScale.z));
+						//clone.transform.GetChild(0).localScale = Vector3.Scale(clone.transform.GetChild(0).localScale, clone.transform.rotation * clone.transform.GetChild(0).transform.rotation * (new Vector3(doorWidthScale, doorHeightScale, 1)));
+						clone.transform.parent = parentObj.transform;
+						doorObjList.Add(clone);
+					}
+
+				}
+				else//窗
+				{
+					float width = dis / unit;
+					for (int j = 0; j < unit; j++)
+					{
+						#region windowWall
+						float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
+						Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i] + wallHeight/2.0f*Vector3.up;
+						float disDiff = windowWallWidth - width;
+						float windowWallWidthScale = (width) / (windowWallWidth);
+						float windowWallHeightScale = wallHeight / (windowWallHeight);
+						//windowWall
+						GameObject clone = Instantiate(goldColumnModelStruct.windowWallModelStruct.model, pos, goldColumnModelStruct.windowWallModelStruct.model.transform.rotation) as GameObject;
+						clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(goldColumnModelStruct.windowWallModelStruct.rotation);
+						clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x * windowWallWidthScale, clone.transform.GetChild(0).localScale.y * windowWallHeightScale, (clone.transform.GetChild(0).localScale.z));
+
+						clone.transform.parent = parentObj.transform;
+						windowObjList.Add(clone);
+						#endregion
+					}
+				}
+
+			}
+		}
+		/** 
+		 * 交換 ColumnList 中兩指定位置內容 (需先用過adjustColPos)
+		 */
+		private void SwitchColumnListPos(List<Vector3> ColumnList, int firstPos, int secondPos)
+		{
+			Vector3 tmpV3 = ColumnList[firstPos];
+			ColumnList[firstPos] = ColumnList[secondPos];
+			ColumnList[secondPos] = tmpV3;
+		}
+		/**
+		 * 縮放柱子位置
+		 * 輸入 : 柱子列表，柱子群中心點，向中心縮減的長度
+		 */
+		private List<Vector3> ScaleColumnPos(List<Vector3> ColList, Vector3 Center, float scaleDis)
+		{
+			List<Vector3> NewColList = new List<Vector3>();
+			for (int iIndex = 0; iIndex < ColList.Count; iIndex++)
+			{
+				Vector2 v2CenterToCol = new Vector2(ColList[iIndex].x - Center.x, ColList[iIndex].z - Center.z);
+				Vector3 eaveColumnPos = ColList[iIndex] - new Vector3(v2CenterToCol.x, 0, v2CenterToCol.y).normalized * scaleDis;
+				NewColList.Add(eaveColumnPos);
+			}
+			return NewColList;
+		}
+	}
+
 	public enum AlignType { EdgeAlign, RidgeAlign };
-	public AlignType alignType = AlignType.EdgeAlign;
+	public AlignType alignType = AlignType.RidgeAlign;
 
 	public BuildingObj mainBuilding;
 	public BuildingObj subBuilding;
-	/** 
-	 * 條整柱子位置並存放至ColumnList中
-	 * 流程:先將兩亭的柱子列表內縮至適當位置，算出需移動柱子的方向向量
-	 *      ，由此向量與另一亭的同邊柱子位置做一個平面並計算需位移的距離
-	 *      兩亭皆完成此步驟後將所有點加入新的列表中，並調整 List 順序
-	 */
-	public void AdjustColPos(BuildingObj LTing, BuildingObj RTing, Vector3 LTingCenter, Vector3 RTingCenter)
+
+	public BodyController4CT bodyCtrl4CT;
+
+	public Vector3 LTingCenter;
+	public Vector3 RTingCenter;
+	public void InitFunction(BuildingObj LTing, BuildingObj RTing) 
+	{
+		mainBuilding = LTing;
+		subBuilding = RTing;
+		this.LTingCenter = LTing.platformCenter;
+		this.RTingCenter = RTing.platformCenter;
+
+		//** 調整組合亭中的柱子列表，再創造出柱子位置
+		List<Vector3> eaveColList = new List<Vector3>();
+		List<Vector3> goldColList = new List<Vector3>();
+		AdjustColPos(LTing, RTing, LTingCenter, RTingCenter,ref eaveColList,ref goldColList);
+		//創建屋身
+		bodyCtrl4CT=new BodyController4CT();
+		bodyCtrl4CT.InitFunction(this.gameObject, eaveColList, goldColList, LTing.bodyController.eaveColumnHeight);
+		//切割交界的脊與屋面
+		CheckAllSurface(LTing, RTing, LTingCenter, RTingCenter);
+	
+
+	}
+	public void AdjustColPos(BuildingObj LTing, BuildingObj RTing, Vector3 LTingCenter, Vector3 RTingCenter, ref List<Vector3> eaveColList, ref List<Vector3> goldColList)
 	{
 		int LTingIntersectionColIndex = 0;
 		int RTingIntersectionColIndex = 0;
-		List<Vector3> newLTingColPos = LTing.bodyController.GetColumnStructTopPosList(LTing.bodyController.eaveCornerColumnList);
-		List<Vector3> newRTingColPos = RTing.bodyController.GetColumnStructTopPosList(RTing.bodyController.eaveCornerColumnList);
+		//檐柱
+		List<Vector3> LEaveColPosList = LTing.bodyController.GetColumnStructTopPosList(LTing.bodyController.eaveCornerColumnList);
+		List<Vector3> REaveColPosList = RTing.bodyController.GetColumnStructTopPosList(RTing.bodyController.eaveCornerColumnList);
+		//金柱
+		List<Vector3> LGoldColPosList = LTing.bodyController.GetColumnStructTopPosList(LTing.bodyController.goldCornerColumnList);
+		List<Vector3> RGoldColPosList = RTing.bodyController.GetColumnStructTopPosList(RTing.bodyController.goldCornerColumnList);
+
+		Debug.Log("LEaveColPosList.Count" + LEaveColPosList.Count);
+		Debug.Log("LGoldColPosList.Count" + LGoldColPosList.Count);
 		Plane midPlan = new Plane((LTingCenter - RTingCenter).normalized, (LTingCenter + RTingCenter) / 2);
+
 		switch (alignType)
 		{
 			//脊對齊(一組交界點)
 			case AlignType.RidgeAlign:
 				#region RidgeAlign
 				//交界點
-				LTingIntersectionColIndex = FindOtherSideIndex(newLTingColPos, RTingCenter, midPlan)[0];
-				RTingIntersectionColIndex = FindOtherSideIndex(newRTingColPos, LTingCenter, midPlan)[0];
-				Vector3 LTingSiftDir = (newLTingColPos[(LTingIntersectionColIndex - 1 + newLTingColPos.Count) % newLTingColPos.Count] - newLTingColPos[LTingIntersectionColIndex]).normalized;
+				LTingIntersectionColIndex = FindOtherSideIndex(LEaveColPosList, RTingCenter, midPlan)[0];
+				RTingIntersectionColIndex = FindOtherSideIndex(REaveColPosList, LTingCenter, midPlan)[0];
+				Vector3 LTingSiftDir = (LEaveColPosList[(LTingIntersectionColIndex - 1 + LEaveColPosList.Count) % LEaveColPosList.Count] - LEaveColPosList[LTingIntersectionColIndex]).normalized;
 				//Vector3 RTingSiftDir = -LTingSiftDir;
-				Vector3 RTingSiftDir = (newRTingColPos[(RTingIntersectionColIndex - 1 + newLTingColPos.Count) % newRTingColPos.Count] - newRTingColPos[RTingIntersectionColIndex]).normalized;
+				Vector3 RTingSiftDir = (REaveColPosList[(RTingIntersectionColIndex - 1 + REaveColPosList.Count) % REaveColPosList.Count] - REaveColPosList[RTingIntersectionColIndex]).normalized;
 				//四邊形使用(長寬不同)
-				Plane LTingMovePlan = new Plane(LTingSiftDir, newRTingColPos[RTingIntersectionColIndex]);
-				Plane RTingMovePlan = new Plane(RTingSiftDir, newLTingColPos[LTingIntersectionColIndex]);
-				float LTingSiftDis = LTingMovePlan.GetDistanceToPoint(newLTingColPos[LTingIntersectionColIndex]);
-				float RTingSiftDis = RTingMovePlan.GetDistanceToPoint(newRTingColPos[RTingIntersectionColIndex]);
+				Plane LTingMovePlan = new Plane();
+				Plane RTingMovePlan = new Plane();
 				//多邊形使用(長寬相同)
-				Ray LRay = new Ray(newLTingColPos[LTingIntersectionColIndex], LTingSiftDir);
-				Ray RRay = new Ray(newRTingColPos[RTingIntersectionColIndex], RTingSiftDir);
-				ColumnList = new List<Vector3>();
+				Ray LRay = new Ray();
+				Ray RRay = new Ray();
+
+				float LTingSiftDis =0;
+				float RTingSiftDis =0;
 				//放入0至LTingIntersectionColIndex到左亭
 				for (int iIndex = 0; iIndex <= LTingIntersectionColIndex; iIndex++)
 				{
-					ColumnList.Add(newLTingColPos[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					eaveColList.Add(LEaveColPosList[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					goldColList.Add(LGoldColPosList[iIndex] - LTing.bodyController.goldColumnHeight * Vector3.up);
 					if (iIndex == LTingIntersectionColIndex)
 					{
-						if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
+						if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)//矩形
 						{
-							ColumnList[ColumnList.Count - 1] = ColumnList[ColumnList.Count - 1] - LTingSiftDis * LTingSiftDir;
+							//檐柱
+							LTingMovePlan = new Plane(LTingSiftDir, REaveColPosList[RTingIntersectionColIndex]);
+							LTingSiftDis = LTingMovePlan.GetDistanceToPoint(LEaveColPosList[LTingIntersectionColIndex]);
+							eaveColList[eaveColList.Count - 1] = eaveColList[eaveColList.Count - 1] - LTingSiftDis * LTingSiftDir;
+							//金柱
+							LTingMovePlan = new Plane(LTingSiftDir, RGoldColPosList[RTingIntersectionColIndex]);
+							LTingSiftDis = LTingMovePlan.GetDistanceToPoint(LGoldColPosList[LTingIntersectionColIndex]);
+							goldColList[goldColList.Count - 1] = goldColList[goldColList.Count - 1] - LTingSiftDis * LTingSiftDir;
 						}
-						else
+						else//正規多邊形
 						{
+							//檐柱
+							LRay = new Ray(LEaveColPosList[LTingIntersectionColIndex], LTingSiftDir);
 							if (midPlan.Raycast(LRay, out LTingSiftDis))
-								ColumnList[ColumnList.Count - 1] = LRay.GetPoint(LTingSiftDis) - LTing.bodyController.eaveColumnHeight * Vector3.up;
+								eaveColList[eaveColList.Count - 1] = LRay.GetPoint(LTingSiftDis) - LTing.bodyController.eaveColumnHeight * Vector3.up;
+							//金柱
+							LRay = new Ray(LGoldColPosList[LTingIntersectionColIndex], LTingSiftDir);
+							if (midPlan.Raycast(LRay, out LTingSiftDis))
+								goldColList[goldColList.Count - 1] = LRay.GetPoint(LTingSiftDis) - LTing.bodyController.goldColumnHeight * Vector3.up;
 						}
 					}
 				}
 				//放入所有右亭
-				for (int iIndex = 0; iIndex < newRTingColPos.Count; iIndex++)
+				for (int iIndex = 0; iIndex < REaveColPosList.Count; iIndex++)
 				{
-					int RIndex = (iIndex + RTingIntersectionColIndex + 1) % newRTingColPos.Count;
-					ColumnList.Add(newRTingColPos[RIndex] - RTing.bodyController.eaveColumnHeight * Vector3.up);
+					int RIndex = (iIndex + RTingIntersectionColIndex + 1) % REaveColPosList.Count;
+					eaveColList.Add(REaveColPosList[RIndex] - RTing.bodyController.eaveColumnHeight * Vector3.up);
+					goldColList.Add(RGoldColPosList[RIndex] - RTing.bodyController.goldColumnHeight * Vector3.up);
 					if (RIndex == RTingIntersectionColIndex)
 					{
-						if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
+						if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)//矩形
 						{
-							ColumnList[ColumnList.Count - 1] = ColumnList[ColumnList.Count - 1] - RTingSiftDis * RTingSiftDir;
+							//檐柱
+							RTingMovePlan = new Plane(RTingSiftDir, LEaveColPosList[LTingIntersectionColIndex]);
+							RTingSiftDis = RTingMovePlan.GetDistanceToPoint(REaveColPosList[RTingIntersectionColIndex]);
+							eaveColList[eaveColList.Count - 1] = eaveColList[eaveColList.Count - 1] - RTingSiftDis * RTingSiftDir;
+							//金柱
+							RTingMovePlan = new Plane(RTingSiftDir, LGoldColPosList[LTingIntersectionColIndex]);
+							RTingSiftDis = RTingMovePlan.GetDistanceToPoint(RGoldColPosList[RTingIntersectionColIndex]);
+							goldColList[goldColList.Count - 1] = goldColList[goldColList.Count - 1] - RTingSiftDis * RTingSiftDir;
 						}
-						else
+						else//正規多邊形
 						{
+							//檐柱
+							RRay = new Ray(REaveColPosList[RTingIntersectionColIndex], RTingSiftDir);
 							if (midPlan.Raycast(RRay, out RTingSiftDis))
-								ColumnList[ColumnList.Count - 1] = RRay.GetPoint(RTingSiftDis) - RTing.bodyController.eaveColumnHeight * Vector3.up;
+								eaveColList[eaveColList.Count - 1] = RRay.GetPoint(RTingSiftDis) - RTing.bodyController.eaveColumnHeight * Vector3.up;
+							//金柱
+							RRay = new Ray(RGoldColPosList[RTingIntersectionColIndex], RTingSiftDir);
+							if (midPlan.Raycast(RRay, out RTingSiftDis))
+								goldColList[goldColList.Count - 1] = RRay.GetPoint(RTingSiftDis) - RTing.bodyController.goldColumnHeight * Vector3.up;
 						}
 					}
 				}
-				//放入LTingIntersectionColIndex至 newRTingColPos.Count-1到左亭
-				for (int iIndex = LTingIntersectionColIndex + 1; iIndex < newLTingColPos.Count; iIndex++)
+				//放入LTingIntersectionColIndex至 REaveColPosList.Count-1到左亭
+				for (int iIndex = LTingIntersectionColIndex + 1; iIndex < LEaveColPosList.Count; iIndex++)
 				{
-					ColumnList.Add(newLTingColPos[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					eaveColList.Add(LEaveColPosList[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					goldColList.Add(LGoldColPosList[iIndex] - LTing.bodyController.goldColumnHeight * Vector3.up);
 				}
 				#endregion
 				break;
@@ -92,58 +459,67 @@ public class CombineTing : MonoBehaviour
 			case AlignType.EdgeAlign:
 				#region EdgeAlign
 				//第一組交界點
-				LTingIntersectionColIndex = FindOtherSideIndex(newLTingColPos, RTingCenter, midPlan)[0];
-				Debug.Log("First LTingIntersectionColIndex" + LTingIntersectionColIndex);
-				List<int> RIntersectionIndexList = FindOtherSideIndex(newRTingColPos, LTingCenter, midPlan);
+				LTingIntersectionColIndex = FindOtherSideIndex(LEaveColPosList, RTingCenter, midPlan)[0];
+				List<int> RIntersectionIndexList = FindOtherSideIndex(REaveColPosList, LTingCenter, midPlan);
+				//另一亭與LTingIntersectionColIndex交界的index
+				RTingIntersectionColIndex = FindOtherSideCloserIndex(RIntersectionIndexList, REaveColPosList, LEaveColPosList[LTingIntersectionColIndex]);
 
-				RTingIntersectionColIndex = FindOtherSideCloserIndex(RIntersectionIndexList, newRTingColPos, newLTingColPos[LTingIntersectionColIndex]);
-
-				LTingSiftDir = (newLTingColPos[(LTingIntersectionColIndex - 1 + newLTingColPos.Count) % newLTingColPos.Count] - newLTingColPos[LTingIntersectionColIndex]).normalized;
+				LTingSiftDir = (LEaveColPosList[(LTingIntersectionColIndex - 1 + LEaveColPosList.Count) % LEaveColPosList.Count] - LEaveColPosList[LTingIntersectionColIndex]).normalized;
 				//多邊形使用(長寬相同)
-				LRay = new Ray(newLTingColPos[LTingIntersectionColIndex], LTingSiftDir);
+				LRay = new Ray();
 
 				Debug.Log("First RTingIntersectionColIndex" + RTingIntersectionColIndex);
-				ColumnList = new List<Vector3>();
+
 				//放入0至LTingIntersectionColIndex到左亭
 				for (int iIndex = 0; iIndex <= LTingIntersectionColIndex; iIndex++)
 				{
-					ColumnList.Add(newLTingColPos[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					eaveColList.Add(LEaveColPosList[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					goldColList.Add(LGoldColPosList[iIndex] - LTing.bodyController.goldColumnHeight * Vector3.up);
 					if (iIndex == LTingIntersectionColIndex)
 					{
+						//檐柱
+						LRay = new Ray(LEaveColPosList[LTingIntersectionColIndex], LTingSiftDir);
 						if (midPlan.Raycast(LRay, out LTingSiftDis))
-							ColumnList[ColumnList.Count - 1] = LRay.GetPoint(LTingSiftDis) - LTing.bodyController.eaveColumnHeight * Vector3.up;
+							eaveColList[eaveColList.Count - 1] = LRay.GetPoint(LTingSiftDis) - LTing.bodyController.eaveColumnHeight * Vector3.up;
+						//金柱
+						LRay = new Ray(LGoldColPosList[LTingIntersectionColIndex], LTingSiftDir);
+						if (midPlan.Raycast(LRay, out LTingSiftDis))
+							goldColList[goldColList.Count - 1] = LRay.GetPoint(LTingSiftDis) - LTing.bodyController.goldColumnHeight * Vector3.up;
 					}
 				}
 
 				//第二組交界點
-				LTingIntersectionColIndex = FindOtherSideIndex(newLTingColPos, RTingCenter, midPlan)[1];
+				LTingIntersectionColIndex = FindOtherSideIndex(LEaveColPosList, RTingCenter, midPlan)[1];
 				Debug.Log("Second RTingIntersectionColIndex" + RTingIntersectionColIndex);
-				LTingSiftDir = (newLTingColPos[(LTingIntersectionColIndex + 1) % newLTingColPos.Count] - newLTingColPos[LTingIntersectionColIndex]).normalized;
-				//多邊形使用(長寬相同)
-				LRay = new Ray(newLTingColPos[LTingIntersectionColIndex], LTingSiftDir);
+				LTingSiftDir = (LEaveColPosList[(LTingIntersectionColIndex + 1) % LEaveColPosList.Count] - LEaveColPosList[LTingIntersectionColIndex]).normalized;
+		
 				//放入所有右亭
-				for (int iIndex = 1; iIndex < newRTingColPos.Count; iIndex++)
+				for (int iIndex = 1; iIndex < REaveColPosList.Count; iIndex++)
 				{
-					int RIndex = (iIndex + RTingIntersectionColIndex) % newRTingColPos.Count;
-					ColumnList.Add(newRTingColPos[RIndex] - RTing.bodyController.eaveColumnHeight * Vector3.up);
-					Debug.Log("RIndex" + RIndex);
-					if (iIndex == newRTingColPos.Count - 1)
+					int RIndex = (iIndex + RTingIntersectionColIndex) % REaveColPosList.Count;
+					eaveColList.Add(REaveColPosList[RIndex] - RTing.bodyController.eaveColumnHeight * Vector3.up);
+					goldColList.Add(RGoldColPosList[RIndex] - RTing.bodyController.goldColumnHeight * Vector3.up);
+					if (iIndex == REaveColPosList.Count - 1)//右亭最後一個點即是第二個另一亭與LTingIntersectionColIndex交界的index
 					{
+						//檐柱
+						LRay = new Ray(LEaveColPosList[LTingIntersectionColIndex], LTingSiftDir);
 						if (midPlan.Raycast(LRay, out LTingSiftDis))
-							ColumnList[ColumnList.Count - 1] = LRay.GetPoint(LTingSiftDis) - RTing.bodyController.eaveColumnHeight * Vector3.up;
+							eaveColList[eaveColList.Count - 1] = LRay.GetPoint(LTingSiftDis) - RTing.bodyController.eaveColumnHeight * Vector3.up;
+						//金柱
+						LRay = new Ray(LGoldColPosList[LTingIntersectionColIndex], LTingSiftDir);
+						if (midPlan.Raycast(LRay, out LTingSiftDis))
+							goldColList[goldColList.Count - 1] = LRay.GetPoint(LTingSiftDis) - RTing.bodyController.goldColumnHeight * Vector3.up;
 					}
 				}
-				//放入LTingIntersectionColIndex至 newRTingColPos.Count-1到左亭
-				for (int iIndex = LTingIntersectionColIndex + 1; iIndex < newLTingColPos.Count; iIndex++)
+				//放入LTingIntersectionColIndex至 REaveColPosList.Count-1到左亭
+				for (int iIndex = LTingIntersectionColIndex + 1; iIndex < LEaveColPosList.Count; iIndex++)
 				{
-					ColumnList.Add(newLTingColPos[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					eaveColList.Add(LEaveColPosList[iIndex] - LTing.bodyController.eaveColumnHeight * Vector3.up);
+					goldColList.Add(LGoldColPosList[iIndex] - LTing.bodyController.goldColumnHeight * Vector3.up);
 				}
 				#endregion
 				break;
-
-
 		}
-
 	}
 	//檢查亭亭與亭中交界點對應編號
 	int FindOtherSideCloserIndex(List<int> intersectionIndexList, List<Vector3> tingColPos, Vector3 pos)
@@ -174,166 +550,8 @@ public class CombineTing : MonoBehaviour
 		}
 		return indexList;
 	}
-	/** 
-	 * 交換 ColumnList 中兩指定位置內容 (需先用過adjustColPos)
-	 */
-	private void switchColumnListPos(int firstPos, int secondPos)
-	{
-		Vector3 tmpV3 = ColumnList[firstPos];
-		ColumnList[firstPos] = ColumnList[secondPos];
-		ColumnList[secondPos] = tmpV3;
-	}
-	/**
-	 * 縮放柱子位置
-	 * 輸入 : 柱子列表，柱子群中心點，向中心縮減的長度
-	 */
-	private List<Vector3> ScaleColumnPos(List<Vector3> ColList, Vector3 Center, float scaleDis)
-	{
-		List<Vector3> NewColList = new List<Vector3>();
-		for (int iIndex = 0; iIndex < ColList.Count; iIndex++)
-		{
-			Vector2 v2CenterToCol = new Vector2(ColList[iIndex].x - Center.x, ColList[iIndex].z - Center.z);
-			Vector3 eaveColumnPos = ColList[iIndex] - new Vector3(v2CenterToCol.x, 0, v2CenterToCol.y).normalized * scaleDis;
-			NewColList.Add(eaveColumnPos);
-		}
-		return NewColList;
-	}
-	/**
-	 * 建立柱子群 (從BodyController搬來的，發現那個還是不好用)
-	 */
-	public List<ColumnStruct> CreateRingColumn(GameObject parentObj, float columnTopRadius, float columnDownRadius, float columnHeight, string columnName)
-	{
-		List<ColumnStruct> columnList = new List<ColumnStruct>();
-		for (int i = 0; i < ColumnList.Count; i++)
-		{
-			ColumnStruct newColumn = CreateColumn(parentObj, ColumnList[i], columnTopRadius, columnDownRadius, columnHeight, columnDownRadius * 1.2f, columnHeight * 0.05f, columnName);
-		}
-		return columnList;
-	}
-	/**
-	 * 建立柱子 (從BodyController搬來的，發現那個還是不好用)
-	 */
-	private ColumnStruct CreateColumn(GameObject parentObj, Vector3 pos, float topRadius, float downRadius, float height, float fundationRadius, float fundationHeight, string name = "Column")
-	{
-		ColumnStruct columnStruct = new ColumnStruct();
 
-		float columnFundationHeight = height * 0.05f;
-		float columnRemainHeight = height - columnFundationHeight;
 
-		GameObject col = new GameObject(name);
-		//col.transform.position = pos + new Vector3(0, columnRemainHeight / 2.0f + columnFundationHeight, 0);
-		col.transform.parent = parentObj.transform;
-		col.AddComponent<CylinderMesh>();
-
-		Vector3 topPos = pos + (columnRemainHeight + columnFundationHeight) * Vector3.up;
-		Vector3 bottomPos = pos + columnFundationHeight * Vector3.up;
-
-		col.GetComponent<CylinderMesh>().CylinderInitSetting(pos, topPos, bottomPos, topRadius, downRadius);
-		col.GetComponent<CylinderMesh>().SetMesh();
-		columnStruct.columnObj = col;
-		columnStruct.columnMesh = col.GetComponent<CylinderMesh>();
-		columnStruct.topPos = topPos;
-		columnStruct.bottomPos = bottomPos;
-		//Fundation
-		GameObject fun = new GameObject(name + "Fundation");
-		fun.transform.parent = col.transform;
-		fun.AddComponent<CylinderMesh>();
-
-		topPos = pos + columnFundationHeight * Vector3.up;
-		bottomPos = pos;
-
-		fun.GetComponent<CylinderMesh>().CylinderInitSetting(pos - new Vector3(0, height / 2.0f, 0), topPos, bottomPos, fundationRadius, fundationRadius);
-		fun.GetComponent<CylinderMesh>().SetMesh();
-
-		columnStruct.fundation = col.GetComponent<CylinderMesh>();
-
-		return columnStruct;
-	}   /**
-     * 建造整門楣
-     */
-	public void CreateRingFrieze(ModelController modelController, float columnRadius, float heightOffset, float eaveColumnHeight, GameObject parent)
-	{
-		float friezeWidth = modelController.eaveColumnModelStruct.friezeModelStruct.bound.size.x;//裝飾物長度
-		float friezeHeight = modelController.eaveColumnModelStruct.friezeModelStruct.bound.size.y;//裝飾物長度
-		float friezeLengh = modelController.eaveColumnModelStruct.friezeModelStruct.bound.size.z;//裝飾物深度
-		for (int i = 0; i < ColumnList.Count; i++)
-		{
-			float width = friezeWidth;
-			float height = friezeHeight;
-			float dis = Vector3.Distance(ColumnList[i], ColumnList[(i + 1) % ColumnList.Count]) - columnRadius * 2;
-			int number = Mathf.Max(Mathf.FloorToInt(dis / width), 1);
-			Vector3 dir = ColumnList[(i + 1) % ColumnList.Count] - ColumnList[i];
-			float disDiff = (dis - width * number) / number;
-			width = dis / number;
-			float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
-			for (int j = 0; j < number; j++)
-			{
-				Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + ColumnList[i] + heightOffset * Vector3.up;
-				GameObject clone = Instantiate(modelController.eaveColumnModelStruct.friezeModelStruct.model, pos, modelController.eaveColumnModelStruct.friezeModelStruct.model.transform.rotation) as GameObject;
-				clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.friezeModelStruct.rotation);
-				clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z) * (width) / friezeWidth);
-				clone.transform.parent = parent.transform;
-			}
-
-			//FriezeWall(frieze上方裝飾牆)
-			GameObject friezeWall = new GameObject("FriezeWall");
-			MeshFilter meshFilter = friezeWall.AddComponent<MeshFilter>();
-			MeshRenderer meshRenderer = friezeWall.AddComponent<MeshRenderer>();
-			friezeWall.transform.parent = parent.transform;
-			meshRenderer.material.color = Color.yellow;
-			float rotateAngleZ = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
-			float friezeWallHeight = (eaveColumnHeight - heightOffset - friezeHeight / 2.0f);
-			Vector3 posZ = (ColumnList[i] + ColumnList[(i + 1) % ColumnList.Count]) / 2.0f + (heightOffset + friezeHeight / 2.0f + friezeWallHeight / 2.0f) * Vector3.up;
-			MeshCenter.Instance.CreateCubeMesh(posZ, dis, friezeWallHeight, 0.5f, rotateAngleZ, meshFilter);
-
-			if (dis >= modelController.eaveColumnModelStruct.sparrowBraceModelStruct.bound.size.x * 2.5f)
-			{
-				//sparrowBrace雀替
-				Vector3 posX = dir.normalized * (columnRadius) + ColumnList[i] + (heightOffset - friezeHeight / 2.0f) * Vector3.up;
-				float rotateAngleX = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
-				GameObject sparrowBrace = Instantiate(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model, posX, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model.transform.rotation) as GameObject;
-				sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngleX, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
-
-				sparrowBrace.transform.parent = parent.transform;
-
-				posX = -dir.normalized * (columnRadius) + ColumnList[(i + 1) % ColumnList.Count] + (heightOffset - friezeHeight / 2.0f) * Vector3.up;
-				rotateAngleX = (Vector3.Dot(Vector3.forward, -dir) < 0 ? Vector3.Angle(-dir, Vector3.right) : -Vector3.Angle(-dir, Vector3.right));
-				sparrowBrace = Instantiate(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model, posX, modelController.eaveColumnModelStruct.sparrowBraceModelStruct.model.transform.rotation) as GameObject;
-				sparrowBrace.transform.rotation = Quaternion.AngleAxis(rotateAngleX, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.sparrowBraceModelStruct.rotation);
-
-				sparrowBrace.transform.parent = parent.transform;
-			}
-		}
-	}
-	/**
-	 * 建立柵欄 (從BodyController搬來的，發現那個還是不好用)
-	 */
-	public void CreateRingBalustrade(ModelController modelController, float columnRadius, float heightOffset, GameObject parent)
-	{
-		float balustradeWidth = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.x;//欄杆長度
-		float balustradeHeight = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.y;//欄杆長度
-		float balustradeLengh = modelController.eaveColumnModelStruct.balustradeModelStruct.bound.size.z;//欄杆深度
-
-		for (int i = 0; i < ColumnList.Count; i++)
-		{
-			float width = balustradeWidth;
-			float dis = Vector3.Distance(ColumnList[i], ColumnList[(i + 1) % ColumnList.Count]) - columnRadius * 2;
-			int number = Mathf.Max(Mathf.FloorToInt(dis / width), 1);
-			Vector3 dir = ColumnList[(i + 1) % ColumnList.Count] - ColumnList[i];
-			float disDiff = (dis - width * number) / number;
-			width = dis / number;
-
-			float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
-			for (int j = 0; j < number; j++)
-			{
-				Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + ColumnList[i] + heightOffset * Vector3.up;
-				GameObject clone = Instantiate(modelController.eaveColumnModelStruct.balustradeModelStruct.model, pos, modelController.eaveColumnModelStruct.balustradeModelStruct.model.transform.rotation) as GameObject;
-				clone.transform.rotation = Quaternion.AngleAxis(rotateAngle, Vector3.up) * Quaternion.Euler(modelController.eaveColumnModelStruct.balustradeModelStruct.rotation);
-				clone.transform.GetChild(0).localScale = new Vector3(clone.transform.GetChild(0).localScale.x, clone.transform.GetChild(0).localScale.y, (clone.transform.GetChild(0).localScale.z) * (width) / balustradeWidth);
-				clone.transform.parent = parent.transform;
-			}
-		}
-	}
 	/**
 	 * 檢查主脊
 	 */
@@ -375,8 +593,8 @@ public class CombineTing : MonoBehaviour
 		List<Vector3> newRTingColPos = RTing.bodyController.GetColumnStructTopPosList(RTing.bodyController.eaveCornerColumnList);
 
 		Plane midPlan = new Plane((LTingCenter - RTingCenter).normalized, (LTingCenter + RTingCenter) / 2);//* 兩亭中間切平面
-		int LTingIntersectionColIndex = FindOtherSideIndex(newLTingColPos, RTingCenter, midPlan)[0];
-		int RTingIntersectionColIndex = FindOtherSideIndex(newRTingColPos, LTingCenter, midPlan)[0];
+		List<int> LTingIntersectionColIndex = FindOtherSideIndex(newLTingColPos, RTingCenter, midPlan);
+		List<int> RTingIntersectionColIndex = FindOtherSideIndex(newRTingColPos, LTingCenter, midPlan);
 		Debug.Log("LTingIntersectionColIndex " + LTingIntersectionColIndex);
 		Debug.Log("RTingIntersectionColIndex " + RTingIntersectionColIndex);
 		switch (alignType)
@@ -387,16 +605,17 @@ public class CombineTing : MonoBehaviour
 				switch (MainController.Instance.roofType)
 				{
 					case MainController.RoofType.Zan_Jian_Ding:
+
 						//一條脊相接
-						CheckMainRidge(LTing, LTingIntersectionColIndex, LTingCenter, RTingCenter);
-						
-						CheckMainRidge(RTing, RTingIntersectionColIndex, LTingCenter, RTingCenter);
-						
-						CheckSurface(LTing, (LTingIntersectionColIndex - 1 + newLTingColPos.Count) % newLTingColPos.Count, LTingCenter, RTingCenter);
-						CheckSurface(LTing, LTingIntersectionColIndex, LTingCenter, RTingCenter);
-						
-						CheckSurface(RTing, (RTingIntersectionColIndex - 1 + newRTingColPos.Count) % newRTingColPos.Count, LTingCenter, RTingCenter);
-						CheckSurface(RTing, RTingIntersectionColIndex, LTingCenter, RTingCenter);
+						CheckMainRidge(LTing, LTingIntersectionColIndex[0], LTingCenter, RTingCenter);
+
+						CheckMainRidge(RTing, RTingIntersectionColIndex[0], LTingCenter, RTingCenter);
+
+						CheckSurface(LTing, (LTingIntersectionColIndex[0] - 1 + newLTingColPos.Count) % newLTingColPos.Count, LTingCenter, RTingCenter);
+						CheckSurface(LTing, LTingIntersectionColIndex[0], LTingCenter, RTingCenter);
+
+						CheckSurface(RTing, (RTingIntersectionColIndex[0] - 1 + newRTingColPos.Count) % newRTingColPos.Count, LTingCenter, RTingCenter);
+						CheckSurface(RTing, RTingIntersectionColIndex[0], LTingCenter, RTingCenter);
 						break;
 
 				}
@@ -412,45 +631,37 @@ public class CombineTing : MonoBehaviour
 					case MainController.RoofType.Lu_Ding:
 					case MainController.RoofType.Wu_Dian_Ding:
 						//兩條脊相接
-						CheckMainRidge(LTing, LTingIntersectionColIndex, LTingCenter, RTingCenter);
-						CheckMainRidge(LTing, (LTingIntersectionColIndex + 1) % newLTingColPos.Count, LTingCenter, RTingCenter);
-						
-						CheckMainRidge(RTing, RTingIntersectionColIndex, LTingCenter, RTingCenter);
-						CheckMainRidge(RTing, (RTingIntersectionColIndex + 1) % newRTingColPos.Count, LTingCenter, RTingCenter);
-						
-						CheckSurface(LTing, (LTingIntersectionColIndex - 1 + newLTingColPos.Count) % newLTingColPos.Count, LTingCenter, RTingCenter);
-						CheckSurface(LTing, LTingIntersectionColIndex, LTingCenter, RTingCenter);
-						CheckSurface(LTing, (LTingIntersectionColIndex + 1) % newLTingColPos.Count, LTingCenter, RTingCenter);
-						
-						CheckSurface(RTing, (RTingIntersectionColIndex - 1 + newRTingColPos.Count) % newRTingColPos.Count, LTingCenter, RTingCenter);
-						CheckSurface(RTing, RTingIntersectionColIndex, LTingCenter, RTingCenter);
-						CheckSurface(RTing, (RTingIntersectionColIndex + 1) % newRTingColPos.Count, LTingCenter, RTingCenter);
+
+						for (int i = 0; i < 2; i++)
+						{
+							CheckMainRidge(LTing, LTingIntersectionColIndex[i], LTingCenter, RTingCenter);
+							CheckMainRidge(RTing, RTingIntersectionColIndex[i], LTingCenter, RTingCenter);
+
+							CheckSurface(LTing, (LTingIntersectionColIndex[i] - 1 + newLTingColPos.Count) % newLTingColPos.Count, LTingCenter, RTingCenter);
+							CheckSurface(LTing, LTingIntersectionColIndex[i], LTingCenter, RTingCenter);
+
+							CheckSurface(RTing, (RTingIntersectionColIndex[i] - 1 + newRTingColPos.Count) % newRTingColPos.Count, LTingCenter, RTingCenter);
+							CheckSurface(RTing, RTingIntersectionColIndex[i], LTingCenter, RTingCenter);
+						}
 						break;
-						case MainController.RoofType.Shya_Shan_Ding:
+					case MainController.RoofType.Shya_Shan_Ding:
+						for (int i = 0; i < 2; i++)
+						{
+							CheckMainRidge(LTing, LTingIntersectionColIndex[i] * 2, LTingCenter, RTingCenter);
+							CheckMainRidge(LTing, LTingIntersectionColIndex[i] * 2 + 1, LTingCenter, RTingCenter);
 
-						CheckMainRidge(LTing, LTingIntersectionColIndex * 2, LTingCenter, RTingCenter);
-						//MainController.ShowPos(LTing.roofController.MainRidgeList[LTingIntersectionColIndex * 2].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.blue, 3);
-						CheckMainRidge(LTing, LTingIntersectionColIndex * 2+1, LTingCenter, RTingCenter);
-						//MainController.ShowPos(LTing.roofController.MainRidgeList[LTingIntersectionColIndex * 2+1].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.red, 3);
-						CheckMainRidge(LTing, ((LTingIntersectionColIndex + 1) % newLTingColPos.Count) * 2, LTingCenter, RTingCenter);
-						//MainController.ShowPos(LTing.roofController.MainRidgeList[((LTingIntersectionColIndex + 1) % newLTingColPos.Count) * 2].controlPointDictionaryList["MidControlPoint"], this.gameObject, Color.yellow, 3);
-						CheckMainRidge(LTing, ((LTingIntersectionColIndex + 1) % newLTingColPos.Count) * 2 + 1, LTingCenter, RTingCenter);
+							CheckMainRidge(RTing, RTingIntersectionColIndex[i] * 2, LTingCenter, RTingCenter);
+							CheckMainRidge(RTing, RTingIntersectionColIndex[i] * 2 + 1, LTingCenter, RTingCenter);
 
-						CheckMainRidge(RTing, RTingIntersectionColIndex * 2, LTingCenter, RTingCenter);
-						CheckMainRidge(RTing, RTingIntersectionColIndex * 2+1, LTingCenter, RTingCenter);
-						CheckMainRidge(RTing, ((RTingIntersectionColIndex + 1) % newRTingColPos.Count) * 2, LTingCenter, RTingCenter);
-						CheckMainRidge(RTing, ((RTingIntersectionColIndex + 1) % newRTingColPos.Count) * 2 + 1, LTingCenter, RTingCenter);
+							CheckSurface(LTing, (LTingIntersectionColIndex[i] - 1 + newLTingColPos.Count) % newLTingColPos.Count, LTingCenter, RTingCenter);
+							CheckSurface(LTing, LTingIntersectionColIndex[i], LTingCenter, RTingCenter);
 
-						CheckSurface(LTing, (LTingIntersectionColIndex - 1 + newLTingColPos.Count) % newLTingColPos.Count, LTingCenter, RTingCenter);
-						CheckSurface(LTing, LTingIntersectionColIndex, LTingCenter, RTingCenter);
-						CheckSurface(LTing, (LTingIntersectionColIndex + 1) % newLTingColPos.Count, LTingCenter, RTingCenter);
-						
-						CheckSurface(RTing, (RTingIntersectionColIndex - 1 + newRTingColPos.Count) % newRTingColPos.Count, LTingCenter, RTingCenter);
-						CheckSurface(RTing, RTingIntersectionColIndex, LTingCenter, RTingCenter);
-						CheckSurface(RTing, (RTingIntersectionColIndex + 1) % newRTingColPos.Count, LTingCenter, RTingCenter);
+							CheckSurface(RTing, (RTingIntersectionColIndex[i] - 1 + newRTingColPos.Count) % newRTingColPos.Count, LTingCenter, RTingCenter);
+							CheckSurface(RTing, RTingIntersectionColIndex[i], LTingCenter, RTingCenter);
+						}
 						break;
-						case MainController.RoofType.Dome:
-						CheckSurface(LTing,0, LTingCenter, RTingCenter);
+					case MainController.RoofType.Dome:
+						CheckSurface(LTing, 0, LTingCenter, RTingCenter);
 						CheckSurface(RTing, 0, LTingCenter, RTingCenter);
 						break;
 
@@ -471,7 +682,7 @@ public class CombineTing : MonoBehaviour
 			RoofSurfaceRidgeStruct surfaceRidge = surface.leftRoofSurfaceTileRidgeList[iIndex];
 			RemoveSurfacePosByPlane(midPlane, surfaceRidge, Ting.roofTopCenter);
 		}
-		if (surface.midRoofSurfaceTileRidge!=null) RemoveSurfacePosByPlane(midPlane, surface.midRoofSurfaceTileRidge, Ting.roofTopCenter);
+		if (surface.midRoofSurfaceTileRidge != null) RemoveSurfacePosByPlane(midPlane, surface.midRoofSurfaceTileRidge, Ting.roofTopCenter);
 		for (int iIndex = 0; iIndex < surface.rightRoofSurfaceTileRidgeList.Count; iIndex++)
 		{
 			RoofSurfaceRidgeStruct surfaceRidge = surface.rightRoofSurfaceTileRidgeList[iIndex];

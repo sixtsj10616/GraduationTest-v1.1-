@@ -75,18 +75,18 @@ public class BuildingObj : MonoBehaviour {
 		//入口位置
 		//entraneIndexList.SetEntranceIndex(0);
 
-        if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
-        {
-			platformController.InitFunction(this, platformCenter, platWidth, platLength, platHeight, isStair, rotateAngle);
-			bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
-			roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, roofType);
-        }
-        else
-        {
+//         if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
+//         {
+// 			platformController.InitFunction(this, platformCenter, platWidth, platLength, platHeight, isStair, rotateAngle);
+// 			bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
+// 			roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, roofType);
+//         }
+//         else
+//         {
 			platformController.InitFunction(this, platformCenter, platWidth, platLength, platHeight, isStair, rotateAngle);
             bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
 			roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, roofType);
-        }
+       // }
 		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
 
 	}
@@ -208,8 +208,7 @@ public class BuildingObj : MonoBehaviour {
         }
         bodyController.windowObjList.Clear();
         bodyController.doorObjList.Clear();
-        bodyController.CreateRingWall(ModelController.Instance.goldColumnModelStruct, bodyController.GetColumnStructPosList(bodyController.goldColumnList),
-                                        bodyController.goldColumnRadius, bodyController.unitNumberInBay, bodyController.doorNumber);
+		bodyController.CreateRingWall(ModelController.Instance.goldColumnModelStruct, bodyController.GetColumnStructPosList(bodyController.goldColumnList), bodyController.goldColumnRadius, bodyController.unitNumberInBay, bodyController.goldColumnbayNumber, bodyController.doorNumber);
     }
     /**
      * 重設門楣

@@ -25,14 +25,14 @@ public class BodyController : MonoBehaviour
 
 	public int goldColumnbayNumber = 5;//間數量
 	public int eaveColumnbayNumber = 5;
-	public int unitNumberInBay = 2;
-	public int doorNumber =1;
+	public int unitNumberInBay = 2;//間內有幾個單位(如:一間內有幾個門+窗)
+	public int doorNumber = 1;//門的數量(若間為奇數 則門為單扇 / 偶數 則門為雙扇)
 	public float eaveColumnHeight;
 	public float goldColumnHeight;
 	public float eaveColumnRadius = 0.5f;
 	public float goldColumnRadius = 0.5f;
 	public float columnFundationHeight;//柱礎高度
-    public bool isGoldColumn = false;
+    public bool isGoldColumn = true;
     public bool isFrieze = true;
     public bool isBalustrade = true;
 
@@ -47,6 +47,7 @@ public class BodyController : MonoBehaviour
     public List<ColumnStruct> eaveColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> goldColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> eaveCornerColumnList = new List<ColumnStruct>();
+	public List<ColumnStruct> goldCornerColumnList = new List<ColumnStruct>();
 	//***********************************************************************
 	public List<Vector3> GetColumnStructTopPosList(List<ColumnStruct> columnStructList)
 	{
@@ -104,15 +105,15 @@ public class BodyController : MonoBehaviour
 				CreateBody(bottomPosList, parentObj.entraneIndexList.List, parentObj.bodyCenter);
 				if (goldColumnList.Count > 0 )
 				{
-					CreateRingWall(ModelController.Instance.goldColumnModelStruct, GetColumnStructPosList(goldColumnList), goldColumnRadius, unitNumberInBay, doorNumber);
+					CreateRingWall(ModelController.Instance.goldColumnModelStruct, GetColumnStructBottomPosList(goldColumnList), goldColumnRadius, unitNumberInBay, goldColumnbayNumber, doorNumber);
 				}
                 if (eaveColumnList.Count > 0 && isFrieze)
                 {
-                    CreateRingFrieze(ModelController.Instance.eaveColumnModelStruct, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.7f * eaveColumnHeight);
+					CreateRingFrieze(ModelController.Instance.eaveColumnModelStruct, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.7f * eaveColumnHeight);
                 }
                 if (eaveColumnList.Count > 0 && isBalustrade)
                 {
-                    CreateRingBalustrade(ModelController.Instance.eaveColumnModelStruct, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.1f * eaveColumnHeight);
+					CreateRingBalustrade(ModelController.Instance.eaveColumnModelStruct, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.1f * eaveColumnHeight);
                 }
                 break;
 			#endregion
@@ -137,17 +138,21 @@ public class BodyController : MonoBehaviour
         {
             #region Chuan_Dou
             case BodyType.Chuan_Dou:
+				//計算bay柱子群位置
 				CreateBody(origBotPosList, parentObj.entraneIndexList.List, parentObj.bodyCenter);
                 if (goldColumnList.Count > 0 )
                 {
-                    CreateRingWall(ModelController.Instance.goldColumnModelStruct, GetColumnStructPosList(goldColumnList), goldColumnRadius, unitNumberInBay, doorNumber);
+					//建造整圈牆模型
+					CreateRingWall(ModelController.Instance.goldColumnModelStruct, GetColumnStructPosList(goldColumnList), goldColumnRadius, unitNumberInBay, goldColumnbayNumber, doorNumber);
                 }
                 if (eaveColumnList.Count > 0 && isFrieze)
                 {
+					//建造門楣模型
                     CreateRingFrieze(ModelController.Instance.eaveColumnModelStruct, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.7f * eaveColumnHeight);
                 }
                 if (eaveColumnList.Count > 0 && isBalustrade)
                 {
+					//建立柵欄模型
                     CreateRingBalustrade(ModelController.Instance.eaveColumnModelStruct, GetColumnStructBottomPosList(eaveColumnList), eaveColumnRadius, 0.1f * eaveColumnHeight);
                 }
                 break;
@@ -234,7 +239,7 @@ public class BodyController : MonoBehaviour
 	}
 
     /**
-     * 建造整圈柱子
+     * 建造整圈柱子模型
      */
 	public List<ColumnStruct> CreateRingColumn(GameObject parentObj, List<Vector3> posList, float columnTopRadius, float columnDownRadius, float columnHeight, float fundationRadius, float fundationHeight, string columnName)
 	{
@@ -246,9 +251,11 @@ public class BodyController : MonoBehaviour
 		}
 		return columnList;
 	}
+	// 計算bay柱子群位置
     private void CreateBody(List<Vector3> posList, List<int> entranceIndexList, Vector3 bodyCenter)
     {
         eaveCornerColumnList.Clear();
+		goldCornerColumnList.Clear();
         goldColumnList.Clear();
         eaveColumnList.Clear();
         eaveColumnPosList = CalculateEveaColumnPos(posList, entranceIndexList, bodyCenter);
@@ -268,12 +275,16 @@ public class BodyController : MonoBehaviour
             if (entranceIndexList.Contains(i)) count++;
             else count += eaveColumnbayNumber;
         }
-
+		if (goldColumnbayNumber <= 0) goldColumnbayNumber = 1;
+		for (int i = 0, count = 0; i < (int)MainController.Instance.sides; i++)
+		{
+			goldCornerColumnList.Add(goldColumnList[count]);
+			count += goldColumnbayNumber;
+		}
     }
-   
-    /**
-     * 計算簷柱位置
-     */
+	 /**
+  * 計算簷柱位置
+  */
     private List<Vector3> CalculateEveaColumnPos(List<Vector3> posList, List<int> entranceIndexList, Vector3 bodyCenter)
     {
         List<Vector3> eaveColumnPosList = new List<Vector3>();
@@ -337,12 +348,12 @@ public class BodyController : MonoBehaviour
         }
             return goldColumnPosList;
     }
-    /**
-     * 建造整圈牆
-     */
-    public void CreateRingWall(GoldColumnModelStruct goldColumnModelStruct, List<Vector3> columnList, float columnRadius, int bayNumber, int doorNumber)
+	/**
+	 * 建造整圈牆(columnList為bottom位置)
+	 */
+	public void CreateRingWall(GoldColumnModelStruct goldColumnModelStruct, List<Vector3> columnList, float columnRadius, int unit,int goldColumnbayNumber, int doorNumber)
 	{
-		float wallHeight = eaveColumnHeight;//牆長度
+		float wallHeight = goldColumnHeight;//牆長度
 		float wallLengh = columnRadius * 2.0f;//牆深度
 
 		float windowWidth = goldColumnModelStruct.windowModelStruct.bound.size.x;//裝飾物長度
@@ -375,7 +386,7 @@ public class BodyController : MonoBehaviour
 				for (int j = 0; j < 1; j++)
 				{
 					float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
-					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i];
+					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i] + goldColumnHeight/2.0f*Vector3.up;
 					float disDiff = doorWidth - width;
 					float doorWidthScale = (width) / (doorWidth);
 					float doorHeightScale = wallHeight / (doorHeight);
@@ -391,12 +402,12 @@ public class BodyController : MonoBehaviour
 			}
 			else//窗
 			{
-				float width = dis / bayNumber;
-				for (int j = 0; j < bayNumber; j++)
+				float width = dis / unit;
+				for (int j = 0; j < unit; j++)
 				{
 				#region windowWall
 					float rotateAngle = (Vector3.Dot(Vector3.forward, dir) < 0 ? Vector3.Angle(dir, Vector3.right) : -Vector3.Angle(dir, Vector3.right));
-					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i];
+					Vector3 pos = dir.normalized * (width / 2.0f + j * width + columnRadius) + columnList[i] + goldColumnHeight / 2.0f * Vector3.up;
 					float disDiff = windowWallWidth - width;
 					float windowWallWidthScale = (width) / (windowWallWidth);
 					float windowWallHeightScale = wallHeight / (windowWallHeight);
@@ -439,10 +450,10 @@ public class BodyController : MonoBehaviour
 
 		}
 	}
-    /**
-     * 建造整門楣
-     */
-    public void CreateRingFrieze(EaveColumnModelStruct eaveColumnModelStruct, List<Vector3> columnList, float columnRadius, float heightOffset)
+	/**
+	 * 建造整門楣(columnList為bottom位置)
+	 */
+	public void CreateRingFrieze(EaveColumnModelStruct eaveColumnModelStruct, List<Vector3> columnList, float columnRadius, float heightOffset)
 	{
 		float friezeWidth = eaveColumnModelStruct.friezeModelStruct.bound.size.x;//裝飾物長度
 		float friezeHeight = eaveColumnModelStruct.friezeModelStruct.bound.size.y;//裝飾物長度
