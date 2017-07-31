@@ -127,18 +127,24 @@ public class MainController : Singleton<MainController>
 
             GameObject LTing = new GameObject("building1");
             GameObject RTing = new GameObject("building2");
+			//GameObject MTing = new GameObject("building3");
+			//GameObject GTing = new GameObject("building4");
             LTing.gameObject.AddComponent<BuildingObj>();
             RTing.gameObject.AddComponent<BuildingObj>();
+			//MTing.gameObject.AddComponent<BuildingObj>();
+			//GTing.gameObject.AddComponent<BuildingObj>();
 			LTing.GetComponent<BuildingObj>().InitFunction(LTing, LTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null,(int)roofType, false);
 			//脊對齊
 			#region RidgeAlign
-				Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
+				Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2];
+				//Vector3 MTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3];
 			#endregion
 			//邊對齊
 			#region EdgeAlign
 			//Vector3 RTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
 			#endregion
 			RTingCenter.y = 0;
+			//MTingCenter.y = 0;
 			//每一個形狀需要的間距不同
 			//RTingCenter -= (RTingCenter - LTingCenter).normalized * 20;
 			ShowPos(RTingCenter, this.gameObject, Color.blue, 10);
@@ -155,20 +161,28 @@ public class MainController : Singleton<MainController>
 				rotateAngle = 360.0f / (int)MainController.Instance.sides / 2;
 			}
 			RTing.GetComponent<BuildingObj>().InitFunction(RTing, RTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
+
+			//MTing.GetComponent<BuildingObj>().InitFunction(MTing, MTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
+			//Vector3 GTingCenter = MTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
+			//GTingCenter.y = 0;
+			//GTing.GetComponent<BuildingObj>().InitFunction(GTing, GTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
 			//是否需要合併
-			if (isNeedCombine(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>()))
-            {
+			//if (isNeedCombine(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>()))
+          //  {
                 GameObject combinTing = new GameObject("CombinTing");
                 CombineTing combineTingCtrl = combinTing.AddComponent<CombineTing>();
                 LTing.transform.parent = combinTing.transform;
                 RTing.transform.parent = combinTing.transform;
-
+				//MTing.transform.parent = combinTing.transform;
+				//combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>(), MTing.GetComponent<BuildingObj>(), GTing.GetComponent<BuildingObj>());
 				combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>());
 	
 				//** 摧毀原先兩亭的body
 				Destroy(LTing.GetComponent<BuildingObj>().body);
 				Destroy(RTing.GetComponent<BuildingObj>().body);
-            }
+				//Destroy(MTing.GetComponent<BuildingObj>().body);
+				//Destroy(GTing.GetComponent<BuildingObj>().body);
+           // }
 			Buildings.Add(LTing.GetComponent<BuildingObj>());
         }
         else

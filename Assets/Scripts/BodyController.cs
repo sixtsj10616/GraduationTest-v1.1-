@@ -143,7 +143,7 @@ public class BodyController : MonoBehaviour
                 if (goldColumnList.Count > 0 )
                 {
 					//建造整圈牆模型
-					CreateRingWall(ModelController.Instance.goldColumnModelStruct, GetColumnStructPosList(goldColumnList), goldColumnRadius, unitNumberInBay, goldColumnbayNumber, doorNumber);
+					CreateRingWall(ModelController.Instance.goldColumnModelStruct, GetColumnStructBottomPosList(goldColumnList), goldColumnRadius, unitNumberInBay, goldColumnbayNumber, doorNumber);
                 }
                 if (eaveColumnList.Count > 0 && isFrieze)
                 {
@@ -178,6 +178,7 @@ public class BodyController : MonoBehaviour
                 Vector3 newPos = origBotPosList[iIndex];
                 newPos.Scale(scaleVec);
                 origBotPosList[iIndex] = newPos;
+				Debug.Log("origBotPosList[" + iIndex + "] " + origBotPosList[iIndex]);
             }
          
             //for (int iIndex = 1; iIndex < 4; iIndex++)
