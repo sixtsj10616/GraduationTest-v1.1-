@@ -170,14 +170,7 @@ public class PlatformController : MonoBehaviour
 		}
 		else
 		{
-			if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
-			{
-				controlPointPosList = MeshCenter.Instance.CreateCubeMesh(pos, platWidth, platHeight, platLength, -45 + rotateAngle, meshFilter);
-			}
-			else
-			{
 				controlPointPosList = MeshCenter.Instance.CreateRegularRingMesh(pos, (int)MainController.Instance.sides, platformRadius, platHeight, 360.0f / (int)MainController.Instance.sides / 2 + rotateAngle, meshFilter);
-			}
 		}
 		//計算底部與頂部位置
 		platFormStruct.bottomPointPosList.Clear();

@@ -127,21 +127,31 @@ public class MainController : Singleton<MainController>
 
             GameObject LTing = new GameObject("building1");
             GameObject RTing = new GameObject("building2");
+			GameObject MTing = new GameObject("building3");
+			GameObject GTing = new GameObject("building4");
+			GameObject HTing = new GameObject("building5");
             LTing.gameObject.AddComponent<BuildingObj>();
             RTing.gameObject.AddComponent<BuildingObj>();
+			MTing.gameObject.AddComponent<BuildingObj>();
+			GTing.gameObject.AddComponent<BuildingObj>();
+			HTing.gameObject.AddComponent<BuildingObj>();
 			LTing.GetComponent<BuildingObj>().InitFunction(LTing, LTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null,(int)roofType, false);
 			//脊對齊
 			#region RidgeAlign
-				Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
+			//Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
+				//Vector3 MTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1];
 			#endregion
 			//邊對齊
 			#region EdgeAlign
-			//Vector3 RTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
+				Vector3 RTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
+				Vector3 MTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3]) / 2;
 			#endregion
 			RTingCenter.y = 0;
+			MTingCenter.y = 0;
 			//每一個形狀需要的間距不同
-			//RTingCenter -= (RTingCenter - LTingCenter).normalized * 20;
+			//RTingCenter += (RTingCenter - LTingCenter).normalized * 20;
 			ShowPos(RTingCenter, this.gameObject, Color.blue, 10);
+			ShowPos(MTingCenter, this.gameObject, Color.yellow, 10);
 			//預設旋轉角度
 			if (((int)MainController.Instance.sides % 2) == 0)
 			{
@@ -155,6 +165,16 @@ public class MainController : Singleton<MainController>
 				rotateAngle = 360.0f / (int)MainController.Instance.sides / 2;
 			}
 			RTing.GetComponent<BuildingObj>().InitFunction(RTing, RTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
+
+			MTing.GetComponent<BuildingObj>().InitFunction(MTing, MTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
+			//Vector3 GTingCenter = MTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2];
+			Vector3 GTingCenter=(LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2]) / 2;
+			GTingCenter.y = 0;
+			GTing.GetComponent<BuildingObj>().InitFunction(GTing, GTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
+
+			Vector3 HTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0]) / 2;
+			HTingCenter.y = 0;
+			HTing.GetComponent<BuildingObj>().InitFunction(HTing, HTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
 			//是否需要合併
 			if (isNeedCombine(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>()))
             {
@@ -162,12 +182,18 @@ public class MainController : Singleton<MainController>
                 CombineTing combineTingCtrl = combinTing.AddComponent<CombineTing>();
                 LTing.transform.parent = combinTing.transform;
                 RTing.transform.parent = combinTing.transform;
-
-				combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>());
+				MTing.transform.parent = combinTing.transform;
+				GTing.transform.parent = combinTing.transform;
+				HTing.transform.parent = combinTing.transform;
+				combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>(), MTing.GetComponent<BuildingObj>(), GTing.GetComponent<BuildingObj>(), HTing.GetComponent<BuildingObj>());
+				//combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>());
 	
 				//** 摧毀原先兩亭的body
 				Destroy(LTing.GetComponent<BuildingObj>().body);
 				Destroy(RTing.GetComponent<BuildingObj>().body);
+				Destroy(MTing.GetComponent<BuildingObj>().body);
+				Destroy(GTing.GetComponent<BuildingObj>().body);
+				Destroy(HTing.GetComponent<BuildingObj>().body);
             }
 			Buildings.Add(LTing.GetComponent<BuildingObj>());
         }
@@ -245,36 +271,36 @@ public class MainController : Singleton<MainController>
 	*/
     public bool isNeedCombine(BuildingObj LTing , BuildingObj RTing)
     {
-		List<Vector3> newLTingColPos = LTing.bodyController.GetColumnStructTopPosList(LTing.bodyController.eaveCornerColumnList);
-		List<Vector3> newRTingColPos =RTing.bodyController.GetColumnStructTopPosList(RTing.bodyController.eaveCornerColumnList);
- /**
-     * 檢查兩個亭是否需要合併(檢查向量方向)
-     */
+		List<Vector3> newLTingColPos = LTing.bodyController.GetColumnStructBottomPosList(LTing.bodyController.eaveCornerColumnList);
+		List<Vector3> newRTingColPos = RTing.bodyController.GetColumnStructBottomPosList(RTing.bodyController.eaveCornerColumnList);
+		/**
+			* 檢查兩個亭是否需要合併(檢查向量方向)
+			*/
 		int outPointCount2Point = 0;
 		int outPointCount2Center = 0;
-		for(int j=0;j<newRTingColPos.Count;j++)
+		for (int j = 0; j < newRTingColPos.Count; j++)
 		{
-			Vector3 lastCross2Point=Vector3.zero;
+			Vector3 lastCross2Point = Vector3.zero;
 			Vector3 lastCross2Center = Vector3.zero;
-			for(int i=0;i<newLTingColPos.Count;i++)//v和所有的e 外積方向相同 代表在正規凸多邊形內部
+			for (int i = 0; i < newLTingColPos.Count; i++)//v和所有的e 外積方向相同 代表在正規凸多邊形內部
 			{
-				Vector3 e=newLTingColPos[(i+1)%newLTingColPos.Count]-newLTingColPos[i];
-				Vector3 v=newLTingColPos[i]- newRTingColPos[j];
-				Vector3 newCross=Vector3.Cross(e,v).normalized;
-				if (Vector3.Dot(newCross, lastCross2Point) < 0 && lastCross2Point != Vector3.zero)//j點落在亭外
+				Vector3 e = newLTingColPos[(i + 1) % newLTingColPos.Count] - newLTingColPos[i];
+				Vector3 v = newRTingColPos[j] - newLTingColPos[i];
+				Vector3 newCross = Vector3.Cross(e, v).normalized;
+				if ((Vector3.Dot(newCross, lastCross2Point) <= 0) && (lastCross2Point != Vector3.zero))//j點落在亭外
 				{
 					outPointCount2Point++;
 					break;
 				}
 				lastCross2Point = newCross;
 			}
-			//邊界中心點落
+			//邊界中心點
 			for (int i = 0; i < newLTingColPos.Count; i++)
 			{
 				Vector3 e = newLTingColPos[(i + 1) % newLTingColPos.Count] - newLTingColPos[i];
-				Vector3 v = (newLTingColPos[(i + 1) % newLTingColPos.Count] + newLTingColPos[i]) / 2;
+				Vector3 v = (newRTingColPos[(j + 1) % newRTingColPos.Count] + newRTingColPos[j]) / 2 - newLTingColPos[i];
 				Vector3 newCross = Vector3.Cross(e, v).normalized;
-				if (Vector3.Dot(newCross, lastCross2Center) < 0 && lastCross2Center != Vector3.zero)//j點落在亭外
+				if ((Vector3.Dot(newCross, lastCross2Center)) <= 0 && (lastCross2Center != Vector3.zero))//j點落在亭外
 				{
 					outPointCount2Center++;
 					break;
