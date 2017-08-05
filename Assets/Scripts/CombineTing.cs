@@ -15,6 +15,7 @@ public class CombinedInfo
 	//紀錄所有柱子個別交了多少亭
 	public List<int> colStates;
 
+
 }
 public class CombineTing : MonoBehaviour
 {
@@ -351,6 +352,7 @@ public class CombineTing : MonoBehaviour
 		combinedInfos = CheckConnectedInfo(BuildingsList);
 		Debug.Log("combinedInfos.Count" + combinedInfos.Count);
 		for (int n = 0; n < combinedInfos.Count; n++)
+
 		{
 			Debug.Log("***********************************************************************");
 			Debug.Log("combinedInfos : " + n);
@@ -477,6 +479,7 @@ public class CombineTing : MonoBehaviour
 	{
 		List<CombinedInfo> combinedInfos = new List<CombinedInfo>();
 		for (int i = 0; i < BuildingsList.Count; i++)
+
 		{
 			CombinedInfo combinedInfo = new CombinedInfo();
 			combinedInfos.Add(combinedInfo);
@@ -486,27 +489,18 @@ public class CombineTing : MonoBehaviour
 			Dictionary<int, List<int>> info = new Dictionary<int, List<int>>();
 			BuildingObj LTing = BuildingsList[i];
 			for (int j = BuildingsList.Count-1; j >=0; j--)
+
 			{
 				if (i == j) continue;
 				BuildingObj RTing = BuildingsList[j];
 				if (isNeedCombine(LTing, RTing))
 				{
 					Debug.Log(i + "&" + j + " Nedd to be combined");
-					//檐柱
-					List<Vector3> LEaveColPosList = LTing.bodyController.GetColumnStructBottomPosList(LTing.bodyController.eaveCornerColumnList);
-					List<Vector3> REaveColPosList = RTing.bodyController.GetColumnStructBottomPosList(RTing.bodyController.eaveCornerColumnList);
-					//中心點位置
-					Vector3 LTingCenter = LTing.platformCenter;
-					Vector3 RTingCenter = RTing.platformCenter;
-					//交平面
-					Plane midPlan = new Plane((LTingCenter - RTingCenter).normalized, (LTingCenter + RTingCenter) / 2);
-					//i亭交j亭的交界點
-					List<int> LIntersectionIndexList = new List<int>(FindOtherSideIndex(LEaveColPosList, RTingCenter, midPlan));
-					//與j亭交LIntersectionIndexList
-					info.Add(j, LIntersectionIndexList);
-				}
 
-			}
+					}
+
+					}
+
 			combinedInfos[i].Info = info;
 		}
 		/**
@@ -584,6 +578,7 @@ public class CombineTing : MonoBehaviour
 		}
 		return !(outPointCount2Point == newRTingColPos.Count) || !(outPointCount2Center == newRTingColPos.Count);
 	}
+
 	void ColListRecursive_COPY(ref List<Vector3> eaveColList, ref List<Vector3> goldColList, int fromBuildingIndex, int buildingIndex, int startColIndex, bool counterclockwise = true)
 	{
 
