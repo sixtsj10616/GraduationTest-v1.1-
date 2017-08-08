@@ -13510,9 +13510,9 @@ MonoBehaviour:
   Buildings: []
   selectFloor: 0
   sides: 4
-  buildingType: 0
+  buildingType: 1
   roofType: 0
-  initPlatformWidth_DownStair: 40
+  initPlatformWidth_DownStair: 50
   initPlatformLength_DownStair: 50
   initPlatformHeight_DownStair: 5
   initPlatformHeight_TopStair: 1
