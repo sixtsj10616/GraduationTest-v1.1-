@@ -337,7 +337,7 @@ public class CombineTing : MonoBehaviour
 	public AlignType alignType = AlignType.EdgeAlign;
 
 	public List<BuildingObj> BuildingsList = new List<BuildingObj>();
-
+	public List<int> listBuildingIndex = new List<int>();
 	public BodyController4CT bodyCtrl4CT;
 
 	public List<CombinedInfo> combinedInfos = new List<CombinedInfo>();

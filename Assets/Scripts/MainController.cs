@@ -50,10 +50,12 @@ public class ListPairVector3
 }
 public class MainController : Singleton<MainController>
 {
-
+	public List<CombineTing> AllCT;
+	public List<List<BuildingObj>> AllBuildings = new List<List<BuildingObj>>(); //* 所有建築樓層列表
 	//public GameObject building;
-	public List<BuildingObj> Buildings = new List<BuildingObj>();       //* 建築樓層列表
+	public List<BuildingObj> Buildings = new List<BuildingObj>();       //* 目前正在編輯建築樓層列表
     public int selectFloor = 0;                                         //* 目前 選擇/建造 的樓層
+	public int selectBuildingsIndex = 0;  
     //FormFactor***********************************************************************
     public enum FormFactorSideType { ThreeSide = 3, FourSide = 4, FiveSide = 5, SixSide = 6, EightSide = 8 };
     public FormFactorSideType sides = FormFactorSideType.FourSide;
@@ -110,6 +112,16 @@ public class MainController : Singleton<MainController>
             }
         }
     }
+	List<BuildingObj> AddBuilding(Vector3 pos, float rotateAngle) 
+	{
+		List<BuildingObj> buildings = new List<BuildingObj>(); 
+		GameObject building = new GameObject("building" + buildingCount++);
+		building.gameObject.AddComponent<BuildingObj>();
+		building.GetComponent<BuildingObj>().InitFunction(building, pos, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
+		buildings.Add(building.GetComponent<BuildingObj>());
+
+		return buildings;
+	}
     /**
      * 初始化
      */
@@ -119,39 +131,34 @@ public class MainController : Singleton<MainController>
 		//?????這著值不能亂取
 		initMainRidgeHeightOffset_DownStair = initMainRidgeHeightOffset_TopStair * (1.0f - floorScaleRatio) / (initAllJijaHeight_TopStair / initAllJijaHeight_DownStair);
         
-        if (buildingType == BuildingType.CombinTing)
-        {
-			float rotateAngle=0;
-            Vector3 LTingCenter = Vector3.zero;
-			ShowPos(LTingCenter,this.gameObject,Color.red,10);
+     	if (buildingType == BuildingType.CombinTing)
+		{
+			float rotateAngle = 0;
+			Vector3 LTingCenter = Vector3.zero;
+			List<BuildingObj> LTing = AddBuilding(LTingCenter, 0);
+			AllBuildings.Add(LTing);
 
-            GameObject LTing = new GameObject("building1");
-            GameObject RTing = new GameObject("building2");
-			GameObject MTing = new GameObject("building3");
-			GameObject GTing = new GameObject("building4");
-			GameObject HTing = new GameObject("building5");
-            LTing.gameObject.AddComponent<BuildingObj>();
-            RTing.gameObject.AddComponent<BuildingObj>();
-			MTing.gameObject.AddComponent<BuildingObj>();
-			GTing.gameObject.AddComponent<BuildingObj>();
-			HTing.gameObject.AddComponent<BuildingObj>();
-			LTing.GetComponent<BuildingObj>().InitFunction(LTing, LTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null,(int)roofType, false);
 			//脊對齊
 			#region RidgeAlign
 			//Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
-				//Vector3 MTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1];
+			//Vector3 MTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1];
 			#endregion
 			//邊對齊
 			#region EdgeAlign
-				Vector3 RTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
-				Vector3 MTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3]) / 2;
+			Vector3 RTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
+			Vector3 MTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3]) / 2;
+			Vector3 GTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2]) / 2;
+		
+			Vector3 HTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0]) / 2;
+
 			#endregion
 			RTingCenter.y = 0;
 			MTingCenter.y = 0;
+			GTingCenter.y = 0;
+			HTingCenter.y = 0;
+
 			//每一個形狀需要的間距不同
 			//RTingCenter += (RTingCenter - LTingCenter).normalized * 20;
-			ShowPos(RTingCenter, this.gameObject, Color.blue, 10);
-			ShowPos(MTingCenter, this.gameObject, Color.yellow, 10);
 			//預設旋轉角度
 			if (((int)MainController.Instance.sides % 2) == 0)
 			{
@@ -164,47 +171,41 @@ public class MainController : Singleton<MainController>
 			{
 				rotateAngle = 360.0f / (int)MainController.Instance.sides / 2;
 			}
-			RTing.GetComponent<BuildingObj>().InitFunction(RTing, RTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
-
-			MTing.GetComponent<BuildingObj>().InitFunction(MTing, MTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
-			//Vector3 GTingCenter = MTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2];
-			Vector3 GTingCenter=(LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2]) / 2;
-			GTingCenter.y = 0;
-			GTing.GetComponent<BuildingObj>().InitFunction(GTing, GTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
-
-			Vector3 HTingCenter = (LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3] + LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0]) / 2;
-			HTingCenter.y = 0;
-			HTing.GetComponent<BuildingObj>().InitFunction(HTing, HTingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
-			//是否需要合併
-			if (isNeedCombine(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>()))
-            {
-                GameObject combinTing = new GameObject("CombinTing");
-                CombineTing combineTingCtrl = combinTing.AddComponent<CombineTing>();
-                LTing.transform.parent = combinTing.transform;
-                RTing.transform.parent = combinTing.transform;
-				MTing.transform.parent = combinTing.transform;
-				GTing.transform.parent = combinTing.transform;
-				HTing.transform.parent = combinTing.transform;
-				combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>(), MTing.GetComponent<BuildingObj>(), GTing.GetComponent<BuildingObj>(), HTing.GetComponent<BuildingObj>());
+			ShowPos(LTingCenter, this.gameObject, Color.red, 10);
+			ShowPos(RTingCenter, this.gameObject, Color.blue, 10);
+			ShowPos(MTingCenter, this.gameObject, Color.yellow, 10);
+			List<BuildingObj> RTing = AddBuilding(RTingCenter, rotateAngle);
+			AllBuildings.Add(RTing);
+			List<BuildingObj> MTing = AddBuilding(MTingCenter, rotateAngle);
+			AllBuildings.Add(MTing);
+			List<BuildingObj> GTing = AddBuilding(GTingCenter, rotateAngle);
+			AllBuildings.Add(GTing);
+			List<BuildingObj> HTing = AddBuilding(HTingCenter, rotateAngle);
+			AllBuildings.Add(HTing);
+			{
+				GameObject combinTing = new GameObject("CombinTing");
+				CombineTing combineTingCtrl = combinTing.AddComponent<CombineTing>();
+				LTing[0].transform.parent = combinTing.transform;
+				RTing[0].transform.parent = combinTing.transform;
+				MTing[0].transform.parent = combinTing.transform;
+				GTing[0].transform.parent = combinTing.transform;
+				HTing[0].transform.parent = combinTing.transform;
+				combineTingCtrl.InitFunction(LTing[0].GetComponent<BuildingObj>(), RTing[0].GetComponent<BuildingObj>(), MTing[0].GetComponent<BuildingObj>(), GTing[0].GetComponent<BuildingObj>(), HTing[0].GetComponent<BuildingObj>());
 				//combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>());
-	
-				//** 摧毀原先兩亭的body
-				Destroy(LTing.GetComponent<BuildingObj>().body);
-				Destroy(RTing.GetComponent<BuildingObj>().body);
-				Destroy(MTing.GetComponent<BuildingObj>().body);
-				Destroy(GTing.GetComponent<BuildingObj>().body);
-				Destroy(HTing.GetComponent<BuildingObj>().body);
-            }
-			Buildings.Add(LTing.GetComponent<BuildingObj>());
-        }
-        else
-        {
-            GameObject building = new GameObject("building" + buildingCount++);
-            building.gameObject.AddComponent<BuildingObj>();
-			building.GetComponent<BuildingObj>().InitFunction(building, buildingCenter, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null,(int)roofType, false);
-            Buildings.Add(building.GetComponent<BuildingObj>());
-        }
 
+				//** 摧毀原先兩亭的body
+				Destroy(LTing[0].GetComponent<BuildingObj>().body);
+				Destroy(RTing[0].GetComponent<BuildingObj>().body);
+				Destroy(MTing[0].GetComponent<BuildingObj>().body);
+				Destroy(GTing[0].GetComponent<BuildingObj>().body);
+				Destroy(HTing[0].GetComponent<BuildingObj>().body);
+			}
+
+		}
+		else
+			AllBuildings.Add(AddBuilding(buildingCenter, 0));
+
+		Buildings=AllBuildings[selectBuildingsIndex];
         //OnPlamformSliderChange plamMenuDelegate = (Slider slider, float value) => UpdatePlameSliderInfo(slider, value);
     }
 

@@ -13507,11 +13507,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c2aa74428f0a7d428a86de12de800ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AllCT: []
   Buildings: []
   selectFloor: 0
+  selectBuildingsIndex: 1
   sides: 4
-  buildingType: 1
-  roofType: 0
+  buildingType: 0
+  roofType: 4
   initPlatformWidth_DownStair: 50
   initPlatformLength_DownStair: 50
   initPlatformHeight_DownStair: 5
