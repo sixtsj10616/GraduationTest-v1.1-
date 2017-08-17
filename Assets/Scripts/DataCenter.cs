@@ -133,6 +133,12 @@ public class DataCenter : Singleton<DataCenter> {
                                             new Vector3(0, nowFloor.bodyController.eaveColumnRadius, 10)));
             bodyDataList.Add(new DataInfo("goldColumnRadius",
                                             new Vector3(0, nowFloor.bodyController.goldColumnRadius, 10)));
+            bodyDataList.Add(new DataInfo("eaveColRadInflate",
+                                            new Vector3(0, nowFloor.bodyController.eaveColRadInflate, 4)));
+            bodyDataList.Add(new DataInfo("eaveColTopOffset",
+                                           new Vector3(0, nowFloor.bodyController.eaveColTopOffset, 8)));
+            bodyDataList.Add(new DataInfo("eaveColBotOffset",
+                                           new Vector3(0, nowFloor.bodyController.eaveColBotOffset, 8)));
             bodyDataList.Add(new DataInfo("isGoldColumn",
                                              new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isGoldColumn), 1)));
             bodyDataList.Add(new DataInfo("isFrieze",

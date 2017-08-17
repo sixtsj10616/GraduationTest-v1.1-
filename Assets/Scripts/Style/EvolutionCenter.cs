@@ -60,6 +60,24 @@ public class EvolutionCenter : Singleton<EvolutionCenter>
         return newDataList;
     }
     /**
+     * 柱子暫用
+     */
+    public Vector2 MutateData(Vector2 v2Data, float probability, float intensity)
+    {
+        Vector2 newVec2 = new Vector2();
+        newVec2.x = Random.Range(0.5f, 3.5f);
+        newVec2.y = v2Data.y;
+
+        return newVec2;
+        //float fThreshold = Random.Range(0.0f, 1.0f);
+        //if (fThreshold < probability)
+        //{
+        //    newVec2.x = Random.Range(0.5f, 3.5f);
+        //    //newVec2.y
+        //}
+    }
+
+    /**
     * 變異運算
     * 若為 BOOL 則相反
     * 其餘則亂數 (目前)

@@ -13,6 +13,8 @@ public class Define : MonoBehaviour {
 
     //***           屋身          ***//
     public const float initEaveColumnHeight   = 11;
+    public const int initColRadSegment = 7;
+
 
     //***           屋頂          ***//
     public const float initJijaHeight = 13;

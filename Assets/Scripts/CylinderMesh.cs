@@ -241,7 +241,7 @@ public class CylinderMesh : MonoBehaviour
 		mesh.Optimize();
 
 	}*/
-		public void SetMesh()
+	public void SetMesh()
 	{
 		Mesh mesh = new Mesh();
 		meshFilter.mesh = mesh;
@@ -439,4 +439,714 @@ public class CylinderMesh : MonoBehaviour
 		//transform.rotation = Quaternion.Euler(topPos - bottomPos);
 		transform.RotateAround(bottomPos, topPos - bottomPos, Vector3.Angle(Vector3.up,topPos - bottomPos));
 	}
+
+    public void SetMesh(List<float> listMidRadius)
+    {
+        Mesh mesh = new Mesh();
+        meshFilter.mesh = mesh;
+        mesh.Clear();
+
+        int nbSides = sections;                 //* 一圈要有多少點
+        int nbHeightSeg = listMidRadius.Count; // Not implemented yet
+        int nbVerticesCap = nbSides + 1;
+        #region Vertices
+
+        // bottom + top + sides
+        Vector3[] vertices = new Vector3[listMidRadius.Count * nbSides + nbSides * 2 + 2]; //** 柱身 + 上下面 + 上下中心點
+        int vert = 0;
+        float _2pi = Mathf.PI * 2f;
+        Vector3 Dir = (topPos - bottomPos).normalized;              //** 成長方向向量
+        cylinderLength = Vector3.Magnitude(topPos - bottomPos);     //** 整體長度
+
+        // Bottom cap
+        vertices[vert++] = bottomPos;
+        while (vert <= nbSides)
+        {
+            float rad = (float)vert / nbSides * _2pi;
+            vertices[vert] = (new Vector3(Mathf.Cos(rad) * bottomRadius, 0, Mathf.Sin(rad) * bottomRadius) + bottomPos);
+            vert++;
+        }
+
+        // Sides
+        for (int iIndex = 0; iIndex < listMidRadius.Count; iIndex++)
+        {
+            int angle = 0; //* 角度百分比用
+            float segHeight = cylinderLength / (listMidRadius.Count - 1) * iIndex ; //**目前節數的高度
+            float segTopRad = topRadius * listMidRadius[iIndex];                    //**目前節數半徑
+            Vector3 segTopPos = bottomPos + Dir * segHeight ;                       //**目前節數位置
+           
+
+            while (angle < nbSides)
+            {
+                float rad = (float)angle / nbSides * _2pi;
+                vertices[vert] = (new Vector3(Mathf.Cos(rad) * segTopRad, 0, Mathf.Sin(rad) * segTopRad) + segTopPos);
+                //vertices[vert] = (Quaternion.LookRotation(topPos - bottomPos) * new Vector3(Mathf.Cos(rad) * segTopRad, 0, Mathf.Sin(rad) * segTopRad) + segTopPos);
+               
+                vert++;
+                angle++;
+            }
+        }
+
+        // Top cap
+        for (int iIndex = 0; iIndex < nbSides; iIndex++)  //** 頂部一圈 + 中心點
+        {
+            float rad = (float) iIndex / nbSides * _2pi;
+            vertices[vert] = (new Vector3(Mathf.Cos(rad) * topRadius, 0, Mathf.Sin(rad) * topRadius) + bottomPos + Dir * cylinderLength);
+            vert++;
+        }
+        vertices[vert++] = bottomPos + Dir * cylinderLength;
+
+        for (int t = 0; t < vertices.Length; t++)
+        {
+            vertices[t] -= transform.position;
+        }
+        #endregion
+
+        #region Normales
+
+        // bottom + top + sides
+        Vector3[] normales = new Vector3[vertices.Length];
+        vert = 0;
+
+        // Bottom cap
+        while (vert <= nbSides)                     //** 底部一圈 + 中心點
+        {
+            normales[vert++] = Vector3.down;
+        }
+
+        // Sides
+        for (int iIndex = 0; iIndex < listMidRadius.Count ; iIndex++)
+        {
+            int v = 0;              //* 角度比例用
+            while (v < nbSides)
+            {
+                float rad = (float) v / nbSides * _2pi;
+                float cos = Mathf.Cos(rad);
+                float sin = Mathf.Sin(rad);
+
+                normales[vert] = new Vector3(cos, 0f, sin);
+               // normales[vert + 1] = normales[vert];
+
+                vert++;
+                v++;
+            }
+        }
+
+        // Top cap
+        for (int iIndex = 0; iIndex <= nbSides; iIndex++)  //** 頂部一圈 + 中心點
+        {
+            normales[vert++] = Vector3.up;
+        }
+       
+
+        #endregion
+
+        #region UVs
+        //Vector2[] uvs = new Vector2[vertices.Length];
+
+        //// Bottom cap
+        //int u = 0;
+        //uvs[u++] = new Vector2(0.5f, 0.5f);
+        //while (u <= nbSides)
+        //{
+        //    float rad = (float)u / nbSides * _2pi;
+        //    uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+        //    u++;
+        //}
+
+        //// Top cap
+        //uvs[u++] = new Vector2(0.5f, 0.5f);
+        //while (u <= nbSides * 2 + 1)
+        //{
+        //    float rad = (float)u / nbSides * _2pi;
+        //    uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+        //    u++;
+        //}
+
+        //// Sides
+        //for (int iIndex = 1; iIndex <= listMidRadius.Count - 1; iIndex++)
+        //{
+        //    int u_sides = 0;
+        //    while (u_sides < nbSides)
+        //    {
+        //        float t = (float)u_sides / nbSides;
+        //        uvs[u] = new Vector3(t, 1f);
+        //        uvs[u + 1] = new Vector3(t, 0f);
+        //        u += 2;
+        //        u_sides++;
+        //    }
+        //    uvs[u] = new Vector2(1f, 1f);
+        //    uvs[u + 1] = new Vector2(1f, 0f);
+        //    u += 2;
+        //}
+
+        #endregion
+
+        #region Triangles
+        int nbTriangles = nbSides + nbSides + nbSides * 2 * (listMidRadius.Count - 1);
+        int[] triangles = new int[nbTriangles * 3];
+
+        // Bottom cap
+        int tri = 0;
+        int i = 0;          //* 陣列索引
+        while (tri < nbSides - 1)
+        {
+            triangles[i] = 0;
+            triangles[i + 1] = tri + 1;
+            triangles[i + 2] = tri + 2;
+            tri++;
+            i += 3;
+        }
+        triangles[i] = 0;
+        triangles[i + 1] = tri + 1;
+        triangles[i + 2] = 1;
+        tri++;                  //* if side = 10, tri = 10
+        i += 3;
+
+        // Sides
+        for (int iIndex = 2; iIndex <= listMidRadius.Count ; iIndex++)
+        {
+            for (int iSide = 0; iSide < nbSides -1; iSide++)
+            {
+                int verIndex = iIndex * nbSides + iSide  + 1;
+
+                triangles[i] = verIndex;
+                triangles[i + 1] = verIndex - nbSides + 1;
+                triangles[i + 2] = verIndex - nbSides ;
+                i += 3;
+
+                triangles[i] = verIndex;
+                triangles[i + 1] = verIndex + 1;
+                triangles[i + 2] = verIndex - nbSides + 1;
+                i += 3;
+            }
+            int lastIndex = (iIndex + 1) * nbSides;
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides * 2 + 1;
+            triangles[i + 2] = lastIndex - nbSides;
+            i += 3;
+
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides + 1;
+            triangles[i + 2] = lastIndex - nbSides * 2 + 1;
+            i += 3;
+        }
+
+
+        // Top cap
+        //tri++;
+        for (int iIndex = 0; iIndex  <  nbSides-1; iIndex++)
+        {
+            int lastIndex = vertices.Length - 1;
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides + iIndex + 1;
+            triangles[i + 2] = lastIndex - nbSides + iIndex ;
+            
+            i += 3;
+        }
+        triangles[i] = vertices.Length - 1;
+        triangles[i + 1] = vertices.Length - 1 - nbSides;
+        triangles[i + 2] = vertices.Length - 2;
+
+        #endregion
+
+        mesh.vertices = vertices;
+        mesh.normals = normales;
+       // mesh.uv = uvs;
+        mesh.triangles = triangles;
+
+        mesh.RecalculateBounds();
+        ;
+        //transform.RotateAround(bottomPos, topPos - bottomPos, Vector3.Angle(Vector3.up, topPos - bottomPos));
+    }
+
+    /**
+     * 失敗 - 但有重複使用座標點，失敗原因為三角形方向
+     */
+    public void tmpSetMesh(List<float> listMidRadius)
+    {
+        Mesh mesh = new Mesh();
+        meshFilter.mesh = mesh;
+        mesh.Clear();
+
+
+        int nbSides = sections;                 //* 一圈要有多少點
+        int nbHeightSeg = listMidRadius.Count; // Not implemented yet
+
+        int nbVerticesCap = nbSides + 1;
+        #region Vertices
+
+        // bottom + top + sides
+        Vector3[] vertices = new Vector3[listMidRadius.Count * nbSides + 2]; //** 也許最後的 +2 也要乘上 nbHeightSeg
+
+        int vert = 0;
+        float _2pi = Mathf.PI * 2f;
+
+        cylinderLength = Vector3.Magnitude(topPos - bottomPos);
+
+        // Bottom cap
+        vertices[vert++] = bottomPos;
+        while (vert <= nbSides)
+        {
+            float rad = (float)vert / nbSides * _2pi;
+            vertices[vert] = (new Vector3(Mathf.Cos(rad) * bottomRadius, 0, Mathf.Sin(rad) * bottomRadius) + bottomPos);
+            vert++;
+        }
+
+        // Sides
+        for (int iIndex = 1; iIndex <= listMidRadius.Count - 1; iIndex++)
+        {
+            int angle = 0; //* 角度百分比用
+            float segHeight = cylinderLength / (listMidRadius.Count - 1) * iIndex; //**目前節數的高度
+            float segTopRad = topRadius * listMidRadius[iIndex];                    //**目前節數上半徑
+            //float segBotRad = bottomRadius * listMidRadius[iIndex-1];               //**目前節數下半徑
+            Vector3 segTopPos = bottomPos + Vector3.up * segHeight;                 //**目前節數上位置
+            //Vector3 segBotPos = bottomPos + Vector3.up * segHeight * (iIndex - 1);  //**目前節數下位置
+
+            while (angle < nbSides)
+            {
+                float rad = (float)angle / nbSides * _2pi;
+                vertices[vert] = (new Vector3(Mathf.Cos(rad) * segTopRad, 0, Mathf.Sin(rad) * segTopRad) + segTopPos);
+                //vertices[vert + 1] = (new Vector3(Mathf.Cos(rad) * bottomRadius, 0, Mathf.Sin(rad) * bottomRadius) + segBotPos);
+                vert++;
+                angle++;
+            }
+            //vertices[vert] = vertices[vert - nbSides];          //** 貌似是為了後續計算方便用，所以多取一個點(同節第一個點)
+            //vert++;
+
+            //vertices[vert] = vertices[vert - 2 * nbSides];
+            //vertices[vert + 1] = vertices[vert + 1 - 2 * nbSides];
+            //vert += 2;
+        }
+
+        // Top cap
+        vertices[vert++] = bottomPos + Vector3.up * cylinderLength;
+        //vertices[vert++] = (bottomPos + Vector3.up * cylinderLength);
+        //while (vert <= nbSides * 2 + 1)
+        //{
+        //    float rad = (float)(vert - nbSides - 1) / nbSides * _2pi;
+        //    vertices[vert] = (new Vector3(Mathf.Cos(rad) * topRadius, 0, Mathf.Sin(rad) * topRadius) + bottomPos + Vector3.up * cylinderLength);
+        //    vert++;
+        //}
+
+        for (int t = 0; t < vertices.Length; t++)
+        {
+            vertices[t] -= transform.position;
+        }
+        #endregion
+
+        #region Normales
+
+        // bottom + top + sides
+        Vector3[] normales = new Vector3[vertices.Length];
+        vert = 0;
+
+        // Bottom cap
+        while (vert < nbSides)
+        {
+            normales[vert++] = Vector3.down;
+        }
+
+        // Sides
+        for (int iIndex = 1; iIndex < listMidRadius.Count - 1; iIndex++)
+        {
+            int v = 0;              //* 角度比例用
+            while (v < nbSides)
+            {
+                float rad = (float)v / nbSides * _2pi;
+                float cos = Mathf.Cos(rad);
+                float sin = Mathf.Sin(rad);
+
+                normales[vert] = new Vector3(cos, 0f, sin);
+                // normales[vert + 1] = normales[vert];
+
+                vert++;
+                v++;
+            }
+            //normales[vert] = normales[vert - nbSides  ];
+            //vert++;
+        }
+
+        // Top cap
+        for (int iIndex = 0; iIndex <= nbSides; iIndex++)  //** 頂部一圈 + 中心點
+        {
+            normales[vert++] = Vector3.up;
+        }
+
+        //while (vert <= nbSides * 2 + 1)
+        //{
+        //    normales[vert++] = Vector3.up;
+        //}
+
+        #endregion
+
+        #region UVs
+        //Vector2[] uvs = new Vector2[vertices.Length];
+
+        //// Bottom cap
+        //int u = 0;
+        //uvs[u++] = new Vector2(0.5f, 0.5f);
+        //while (u <= nbSides)
+        //{
+        //    float rad = (float)u / nbSides * _2pi;
+        //    uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+        //    u++;
+        //}
+
+        //// Top cap
+        //uvs[u++] = new Vector2(0.5f, 0.5f);
+        //while (u <= nbSides * 2 + 1)
+        //{
+        //    float rad = (float)u / nbSides * _2pi;
+        //    uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+        //    u++;
+        //}
+
+        //// Sides
+        //for (int iIndex = 1; iIndex <= listMidRadius.Count - 1; iIndex++)
+        //{
+        //    int u_sides = 0;
+        //    while (u_sides < nbSides)
+        //    {
+        //        float t = (float)u_sides / nbSides;
+        //        uvs[u] = new Vector3(t, 1f);
+        //        uvs[u + 1] = new Vector3(t, 0f);
+        //        u += 2;
+        //        u_sides++;
+        //    }
+        //    uvs[u] = new Vector2(1f, 1f);
+        //    uvs[u + 1] = new Vector2(1f, 0f);
+        //    u += 2;
+        //}
+
+        #endregion
+
+        #region Triangles
+        //int nbTriangles = nbSides + nbSides + nbSides * 2;
+        //int[] triangles = new int[nbTriangles * 3 + 3];
+        int nbTriangles = nbSides + nbSides + nbSides * 2 * (listMidRadius.Count - 1);
+        int[] triangles = new int[nbTriangles * 3];
+
+        // Bottom cap
+        int tri = 0;
+        int i = 0;          //* 陣列索引
+        while (tri < nbSides - 1)
+        {
+            triangles[i] = 0;
+            triangles[i + 1] = tri + 1;
+            triangles[i + 2] = tri + 2;
+            tri++;
+            i += 3;
+        }
+        triangles[i] = 0;
+        triangles[i + 1] = tri + 1;
+        triangles[i + 2] = 1;
+        tri++;                  //* if side = 10, tri = 10
+        i += 3;
+
+        // Sides
+        for (int iIndex = 1; iIndex <= listMidRadius.Count - 1; iIndex++)
+        {
+            for (int iSide = 0; iSide < nbSides - 1; iSide++)
+            {
+                int verIndex = iIndex * nbSides + iSide + 1;
+
+                triangles[i] = verIndex;
+                triangles[i + 1] = verIndex - nbSides;
+                triangles[i + 2] = verIndex - nbSides + 1;
+                i += 3;
+
+                triangles[i] = verIndex;
+                triangles[i + 1] = verIndex - nbSides + 1;
+                triangles[i + 2] = verIndex + 1;
+                i += 3;
+            }
+            int lastIndex = (iIndex + 1) * nbSides;
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides;
+            triangles[i + 2] = lastIndex - nbSides * 2 + 1;
+            i += 3;
+
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides * 2 + 1;
+            triangles[i + 2] = lastIndex - nbSides + 1;
+            i += 3;
+        }
+
+
+        // Top cap
+        //tri++;
+        for (int iIndex = 0; iIndex < nbSides - 1; iIndex++)
+        {
+            int lastIndex = vertices.Length - 1;
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides + iIndex;
+            triangles[i + 2] = lastIndex - nbSides + iIndex + 1;
+
+            i += 3;
+        }
+        triangles[i] = vertices.Length - 1;
+        triangles[i + 1] = vertices.Length - 2;
+        triangles[i + 2] = vertices.Length - 1 - nbSides;
+
+        #endregion
+
+        mesh.vertices = vertices;
+        mesh.normals = normales;
+        // mesh.uv = uvs;
+        mesh.triangles = triangles;
+
+        mesh.RecalculateBounds();
+        ;
+        //transform.up = Vector3.Normalize(topPos - bottomPos);
+        //transform.rotation = Quaternion.Euler(topPos - bottomPos);
+        transform.RotateAround(bottomPos, topPos - bottomPos, Vector3.Angle(Vector3.up, topPos - bottomPos));
+    }
+    /**
+     * 備份 - 單純圓柱沒問題，但!! 目前需求要可以上下底可位移，且柱身沿著傾斜方向向量膨脹
+     */
+    public void tmpSetMesh2(List<float> listMidRadius)
+    {
+        Mesh mesh = new Mesh();
+        meshFilter.mesh = mesh;
+        mesh.Clear();
+
+        int nbSides = sections;                 //* 一圈要有多少點
+        int nbHeightSeg = listMidRadius.Count; // Not implemented yet
+        int nbVerticesCap = nbSides + 1;
+        #region Vertices
+
+        // bottom + top + sides
+        Vector3[] vertices = new Vector3[listMidRadius.Count * nbSides + nbSides * 2 + 2]; //** 柱身 + 上下面 + 上下中心點
+        int vert = 0;
+        float _2pi = Mathf.PI * 2f;
+
+        cylinderLength = Vector3.Magnitude(topPos - bottomPos);
+
+        // Bottom cap
+        vertices[vert++] = bottomPos;
+        while (vert <= nbSides)
+        {
+            float rad = (float)vert / nbSides * _2pi;
+            vertices[vert] = (new Vector3(Mathf.Cos(rad) * bottomRadius, 0, Mathf.Sin(rad) * bottomRadius) + bottomPos);
+            vert++;
+        }
+
+        // Sides
+        for (int iIndex = 0; iIndex < listMidRadius.Count; iIndex++)
+        {
+            int angle = 0; //* 角度百分比用
+            float segHeight = cylinderLength / (listMidRadius.Count - 1) * iIndex; //**目前節數的高度
+            float segTopRad = topRadius * listMidRadius[iIndex];                    //**目前節數上半徑
+            //float segBotRad = bottomRadius * listMidRadius[iIndex-1];               //**目前節數下半徑
+            Vector3 segTopPos = bottomPos + Vector3.up * segHeight;                 //**目前節數上位置
+            //Vector3 segBotPos = bottomPos + Vector3.up * segHeight * (iIndex - 1);  //**目前節數下位置
+
+            while (angle < nbSides)
+            {
+                float rad = (float)angle / nbSides * _2pi;
+                vertices[vert] = (new Vector3(Mathf.Cos(rad) * segTopRad, 0, Mathf.Sin(rad) * segTopRad) + segTopPos);
+                //vertices[vert] = (Quaternion.LookRotation(topPos - bottomPos) * new Vector3(Mathf.Cos(rad) * segTopRad, 0, Mathf.Sin(rad) * segTopRad) + segTopPos);
+                //vertices[vert + 1] = (new Vector3(Mathf.Cos(rad) * bottomRadius, 0, Mathf.Sin(rad) * bottomRadius) + segBotPos);
+                vert++;
+                angle++;
+            }
+            //vertices[vert] = vertices[vert - nbSides];          //** 貌似是為了後續計算方便用，所以多取一個點(同節第一個點)
+            //vert++;
+
+            //vertices[vert] = vertices[vert - 2 * nbSides];
+            //vertices[vert + 1] = vertices[vert + 1 - 2 * nbSides];
+            //vert += 2;
+        }
+
+        // Top cap
+        for (int iIndex = 0; iIndex < nbSides; iIndex++)  //** 頂部一圈 + 中心點
+        {
+            float rad = (float)iIndex / nbSides * _2pi;
+            vertices[vert] = (new Vector3(Mathf.Cos(rad) * topRadius, 0, Mathf.Sin(rad) * topRadius) + bottomPos + Vector3.up * cylinderLength);
+            vert++;
+        }
+        vertices[vert++] = bottomPos + Vector3.up * cylinderLength;
+        //vertices[vert++] = (bottomPos + Vector3.up * cylinderLength);
+        //while (vert <= nbSides * 2 + 1)
+        //{
+        //    float rad = (float)(vert - nbSides - 1) / nbSides * _2pi;
+        //    vertices[vert] = (new Vector3(Mathf.Cos(rad) * topRadius, 0, Mathf.Sin(rad) * topRadius) + bottomPos + Vector3.up * cylinderLength);
+        //    vert++;
+        //}
+
+        for (int t = 0; t < vertices.Length; t++)
+        {
+            vertices[t] -= transform.position;
+        }
+        #endregion
+
+        #region Normales
+
+        // bottom + top + sides
+        Vector3[] normales = new Vector3[vertices.Length];
+        vert = 0;
+
+        // Bottom cap
+        while (vert <= nbSides)                     //** 底部一圈 + 中心點
+        {
+            normales[vert++] = Vector3.down;
+        }
+
+        // Sides
+        for (int iIndex = 0; iIndex < listMidRadius.Count; iIndex++)
+        {
+            int v = 0;              //* 角度比例用
+            while (v < nbSides)
+            {
+                float rad = (float)v / nbSides * _2pi;
+                float cos = Mathf.Cos(rad);
+                float sin = Mathf.Sin(rad);
+
+                normales[vert] = new Vector3(cos, 0f, sin);
+                // normales[vert + 1] = normales[vert];
+
+                vert++;
+                v++;
+            }
+            //normales[vert] = normales[vert - nbSides  ];
+            //vert++;
+        }
+
+        // Top cap
+        for (int iIndex = 0; iIndex <= nbSides; iIndex++)  //** 頂部一圈 + 中心點
+        {
+            normales[vert++] = Vector3.up;
+        }
+
+        //while (vert <= nbSides * 2 + 1)
+        //{
+        //    normales[vert++] = Vector3.up;
+        //}
+
+        #endregion
+
+        #region UVs
+        //Vector2[] uvs = new Vector2[vertices.Length];
+
+        //// Bottom cap
+        //int u = 0;
+        //uvs[u++] = new Vector2(0.5f, 0.5f);
+        //while (u <= nbSides)
+        //{
+        //    float rad = (float)u / nbSides * _2pi;
+        //    uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+        //    u++;
+        //}
+
+        //// Top cap
+        //uvs[u++] = new Vector2(0.5f, 0.5f);
+        //while (u <= nbSides * 2 + 1)
+        //{
+        //    float rad = (float)u / nbSides * _2pi;
+        //    uvs[u] = new Vector2(Mathf.Cos(rad) * .5f + .5f, Mathf.Sin(rad) * .5f + .5f);
+        //    u++;
+        //}
+
+        //// Sides
+        //for (int iIndex = 1; iIndex <= listMidRadius.Count - 1; iIndex++)
+        //{
+        //    int u_sides = 0;
+        //    while (u_sides < nbSides)
+        //    {
+        //        float t = (float)u_sides / nbSides;
+        //        uvs[u] = new Vector3(t, 1f);
+        //        uvs[u + 1] = new Vector3(t, 0f);
+        //        u += 2;
+        //        u_sides++;
+        //    }
+        //    uvs[u] = new Vector2(1f, 1f);
+        //    uvs[u + 1] = new Vector2(1f, 0f);
+        //    u += 2;
+        //}
+
+        #endregion
+
+        #region Triangles
+        //int nbTriangles = nbSides + nbSides + nbSides * 2;
+        //int[] triangles = new int[nbTriangles * 3 + 3];
+        int nbTriangles = nbSides + nbSides + nbSides * 2 * (listMidRadius.Count - 1);
+        int[] triangles = new int[nbTriangles * 3];
+
+        // Bottom cap
+        int tri = 0;
+        int i = 0;          //* 陣列索引
+        while (tri < nbSides - 1)
+        {
+            triangles[i] = 0;
+            triangles[i + 1] = tri + 1;
+            triangles[i + 2] = tri + 2;
+            tri++;
+            i += 3;
+        }
+        triangles[i] = 0;
+        triangles[i + 1] = tri + 1;
+        triangles[i + 2] = 1;
+        tri++;                  //* if side = 10, tri = 10
+        i += 3;
+
+        // Sides
+        for (int iIndex = 2; iIndex <= listMidRadius.Count; iIndex++)
+        {
+            for (int iSide = 0; iSide < nbSides - 1; iSide++)
+            {
+                int verIndex = iIndex * nbSides + iSide + 1;
+
+                triangles[i] = verIndex;
+                triangles[i + 1] = verIndex - nbSides + 1;
+                triangles[i + 2] = verIndex - nbSides;
+                i += 3;
+
+                triangles[i] = verIndex;
+                triangles[i + 1] = verIndex + 1;
+                triangles[i + 2] = verIndex - nbSides + 1;
+                i += 3;
+            }
+            int lastIndex = (iIndex + 1) * nbSides;
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides * 2 + 1;
+            triangles[i + 2] = lastIndex - nbSides;
+            i += 3;
+
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides + 1;
+            triangles[i + 2] = lastIndex - nbSides * 2 + 1;
+            i += 3;
+        }
+
+
+        // Top cap
+        //tri++;
+        for (int iIndex = 0; iIndex < nbSides - 1; iIndex++)
+        {
+            int lastIndex = vertices.Length - 1;
+            triangles[i] = lastIndex;
+            triangles[i + 1] = lastIndex - nbSides + iIndex + 1;
+            triangles[i + 2] = lastIndex - nbSides + iIndex;
+
+            i += 3;
+        }
+        triangles[i] = vertices.Length - 1;
+        triangles[i + 1] = vertices.Length - 1 - nbSides;
+        triangles[i + 2] = vertices.Length - 2;
+
+        #endregion
+
+        mesh.vertices = vertices;
+        mesh.normals = normales;
+        // mesh.uv = uvs;
+        mesh.triangles = triangles;
+
+        mesh.RecalculateBounds();
+        ;
+        //transform.up = Vector3.Normalize(topPos - bottomPos);
+        //transform.rotation = Quaternion.Euler(topPos - bottomPos);
+
+        transform.RotateAround(bottomPos, topPos - bottomPos, Vector3.Angle(Vector3.up, topPos - bottomPos));
+    }
 }

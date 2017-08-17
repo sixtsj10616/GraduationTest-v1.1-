@@ -24,13 +24,16 @@ public class BodyController : MonoBehaviour
 	public float goldColumnRatio2platformOffset;
 
 	public int goldColumnbayNumber = 5;//間數量
-	public int eaveColumnbayNumber = 5;
+	public int eaveColumnbayNumber = 1;
 	public int unitNumberInBay = 2;
 	public int doorNumber =1;
-	public float eaveColumnHeight;
+    public float eaveColTopOffset = 0.0f;           //* 簷柱上方位移
+    public float eaveColBotOffset = 0.0f;           //* 簷柱下方位移
+    public float eaveColumnHeight;
 	public float goldColumnHeight;
 	public float eaveColumnRadius = 0.5f;
 	public float goldColumnRadius = 0.5f;
+    public float eaveColRadInflate = 3.0f;          //* 簷柱膨脹值
 	public float columnFundationHeight;//柱礎高度
     public bool isGoldColumn = false;
     public bool isFrieze = true;
@@ -43,6 +46,7 @@ public class BodyController : MonoBehaviour
     public List<GameObject> doorObjList = new List<GameObject>();   //* 大門物件列表
     public List<GameObject> friezeObjList = new List<GameObject>(); //* 門楣物件列表
     public List<GameObject> balusObjList = new List<GameObject>();  //* 門楣物件列表
+    List<float> eaveColRadList;                                     //* 簷柱半徑比例列表
     //***********************************************************************
     public List<ColumnStruct> eaveColumnList = new List<ColumnStruct>();
 	public List<ColumnStruct> goldColumnList = new List<ColumnStruct>();
@@ -85,7 +89,7 @@ public class BodyController : MonoBehaviour
 		this.parentObj = parentObj;
 		this.eaveColumnHeight = eaveColumnHeight;
 		this.goldColumnHeight = goldColumnHeight;
-        this.origBotPosList = bottomPosList;
+        this.origBotPosList = bottomPosList;                //** 初始時先記下原始底座的 PosList
 
         columnFundationHeight = eaveColumnHeight * 0.05f;
 
@@ -198,36 +202,50 @@ public class BodyController : MonoBehaviour
 		}
 	}
 
-	private ColumnStruct CreateColumn(GameObject parentObj, Vector3 pos, float topRadius, float downRadius, float height, float fundationRadius, float fundationHeight, string name = "Column")
+    /**
+     * 製作單一柱子 (包誇柱子與柱基)
+     * 輸入 : 1. parentObj , 2. 位置 , 3. topRadius : 上半徑 , 4. downRadius : 下半徑 
+     *        5. height : 柱高 ,  6. fundationRadius : 柱基半徑 , 7. fundationHeight : 柱基高 
+     *        8. name : 物件名稱 , 9. 柱子膨脹半徑比例列表
+     *        
+     */
+    public ColumnStruct CreateColumn(GameObject parentObj, Vector3 pos, float topRadius, float downRadius, float height, float fundationRadius, float fundationHeight, string name = "Column" , List<float> RadRateList = null)
 	{
-		ColumnStruct columnStruct = new ColumnStruct();
+        GameObject col = new GameObject(name);
+        ColumnStruct columnStruct = new ColumnStruct();
+        Vector3 topPos = AdjustPostionToCenterOffset(pos + (height / 2.0f) * Vector3.up , eaveColTopOffset);
+        Vector3 bottomPos = AdjustPostionToCenterOffset(pos - (height / 2.0f - fundationHeight) * Vector3.up , eaveColBotOffset);
 
-		GameObject col = new GameObject(name);
-		col.transform.parent = parentObj.transform;
+        //print("orig pos :" + (pos + (height / 2.0f) * Vector3.up));
+        //print("topPos :" + topPos);
+        col.transform.parent = parentObj.transform;
 		col.AddComponent<CylinderMesh>();
-
-		Vector3 topPos = pos + (height / 2.0f) * Vector3.up;
-		Vector3 bottomPos = pos - (height / 2.0f - fundationHeight) * Vector3.up;
-
 		col.GetComponent<CylinderMesh>().CylinderInitSetting(pos, topPos, bottomPos, topRadius, downRadius);
-		col.GetComponent<CylinderMesh>().SetMesh();
-		columnStruct.columnObj = col;
+        if ( this.eaveColBotOffset != 0 || this.eaveColTopOffset != 0 || RadRateList != null)
+        {
+            col.GetComponent<CylinderMesh>().SetMesh(RadRateList);
+        }
+        else
+        {
+            col.GetComponent<CylinderMesh>().SetMesh();
+        }
+        
+        columnStruct.columnObj = col;
 		columnStruct.columnMesh = col.GetComponent<CylinderMesh>();
 		columnStruct.topPos = topPos;
 		columnStruct.bottomPos = pos - (height / 2.0f) * Vector3.up;
-		//Fundation
+		
+        //*** Fundation 柱杵
 		GameObject fun = new GameObject(name + "Fundation");
 		//fun.transform.position = pos - new Vector3(0, height / 2.0f, 0);
 		fun.transform.parent = col.transform;
 		fun.AddComponent<CylinderMesh>();
+		topPos = AdjustPostionToCenterOffset(pos + (fundationHeight) * Vector3.up - (height / 2.0f) * Vector3.up , eaveColBotOffset);
+		bottomPos = AdjustPostionToCenterOffset(pos - (height / 2.0f) * Vector3.up , eaveColBotOffset);
 
-		topPos = pos + (fundationHeight) * Vector3.up - (height / 2.0f) * Vector3.up;
-		bottomPos = pos - (height / 2.0f) * Vector3.up;
-
-		fun.GetComponent<CylinderMesh>().CylinderInitSetting(pos - new Vector3(0, height / 2.0f, 0), topPos, bottomPos, fundationRadius, fundationRadius);
-		fun.GetComponent<CylinderMesh>().SetMesh();
-
-		columnStruct.fundation = col.GetComponent<CylinderMesh>();
+        fun.GetComponent<CylinderMesh>().CylinderInitSetting(pos - new Vector3(0, height / 2.0f, 0), topPos, bottomPos, fundationRadius, fundationRadius);
+        fun.GetComponent<CylinderMesh>().SetMesh();
+        columnStruct.fundation = fun.GetComponent<CylinderMesh>();
 
 		return columnStruct;
 	}
@@ -238,18 +256,23 @@ public class BodyController : MonoBehaviour
 
     /**
      * 建造整圈柱子
+     * 若 eaveColRadInflate (簷柱半徑膨脹值) 為 0 則為一般
+     * 否則計算 簷柱半徑膨脹列表 後製造柱子
      */
-	public List<ColumnStruct> CreateRingColumn(GameObject parentObj, List<Vector3> posList, float columnTopRadius, float columnDownRadius, float columnHeight, float fundationRadius, float fundationHeight, string columnName)
+    public List<ColumnStruct> CreateRingColumn(GameObject parentObj, List<Vector3> posList, float columnTopRadius, float columnDownRadius, float columnHeight, float fundationRadius, float fundationHeight, string columnName)
 	{
 		List<ColumnStruct> columnList = new List<ColumnStruct>();
 		for (int i = 0; i < posList.Count; i++)
 		{
-			ColumnStruct newColumn = CreateColumn(parentObj, posList[i], columnTopRadius, columnDownRadius, columnHeight, fundationRadius, fundationHeight, columnName);
-			columnList.Add(newColumn);
+            ColumnStruct newColumn = CreateColumn(parentObj, posList[i], columnTopRadius, columnDownRadius, columnHeight, fundationRadius, fundationHeight, columnName,this.eaveColRadList);
+            columnList.Add(newColumn);
 		}
 		return columnList;
 	}
 
+    /**
+     * 製作屋身
+     */
     private void CreateBody(List<Vector3> posList, List<int> entranceIndexList, Vector3 bodyCenter)
     {
         eaveCornerColumnList.Clear();
@@ -257,7 +280,16 @@ public class BodyController : MonoBehaviour
         eaveColumnList.Clear();
         eaveColumnPosList = CalculateEveaColumnPos(posList, entranceIndexList, bodyCenter);
         goldColumnPosList = CalculateGoldColumnPos(posList, entranceIndexList, bodyCenter);
-       
+
+        //*** 屋身柱子膨脹，直接做一個柱身各節半徑列表
+        if (this.eaveColRadInflate != 0)
+        {
+            this.eaveColRadList = CalculateColumeRadiusInflateList(this.eaveColRadInflate, Define.initColRadSegment); 
+        }
+        else
+        {
+            this.eaveColRadList = new List<float>() { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+        }
         eaveColumnList = CreateRingColumn(parentObj.body, eaveColumnPosList, eaveColumnRadius, eaveColumnRadius, eaveColumnHeight, eaveColumnRadius * 1.2f, columnFundationHeight, "EaveColumn");
         if (isGoldColumn)
         {
@@ -544,4 +576,96 @@ public class BodyController : MonoBehaviour
 			}
 		}
 	}
+
+    /**
+     * 計算膨脹列比率表
+     * 輸入 : 1. fInflated : 最大膨脹值 , 2. segCount : 段數
+     */
+    public List<float> CalculateColumeRadiusInflateList(float fInflated , int segCount)
+    {
+        List<float> listRad = new List<float>() { 1.0f };
+        int halfSeg = segCount / 2;
+        float InflateVal = fInflated / halfSeg;
+        CatLine rateLine = new CatLine();
+        rateLine.controlPointPosList.Add(new Vector3(1.0f ,0.0f ,0.0f));
+        rateLine.controlPointPosList.Add(new Vector3(fInflated, this.eaveColumnHeight/2, 0.0f));
+        rateLine.controlPointPosList.Add(new Vector3(1.0f, this.eaveColumnHeight, 0.0f));
+        rateLine.SetLineNumberOfPoints(Define.Medium);
+        rateLine.SetCatmullRom(0.0f);
+
+        for (int iIndex = 1; iIndex <= segCount; iIndex++)
+        {
+            //** 不知為何用轉型會失敗
+            // float Rate = iIndex / segCount;
+            // int index = (int)((rateLine.innerPointList.Count-1) * Rate);
+            listRad.Add(rateLine.innerPointList[(rateLine.innerPointList.Count-1) / (segCount + 1) * iIndex].x);  
+        }
+
+        //for (int iIndex = 0; iIndex < segCount; iIndex++)
+        //{
+        //    if (iIndex <= halfSeg)
+        //    {
+        //        listRad.Add(listRad[listRad.Count-1] + InflateVal);
+        //    }
+        //    else
+        //    {
+        //        listRad.Add(listRad[listRad.Count-1] - InflateVal);
+        //    }
+        //}
+        listRad.Add(1.0f);
+        return listRad;
+    }
+    /**
+     * 計算膨脹列比率表 " 2 "
+     * 輸入 : 1. fInflated : 最大膨脹值 , 2. fatOffset : 最大膨脹位置位移 ,3. segCount : 段數
+     * 最大膨脹位置位移為 (-1~1 表示柱子的 1/4高處 到 3/4處)
+     */
+    public List<float> CalculateColumeRadiusInflateList(float fInflated , float fatOffset ,int segCount)
+    {
+        List<float> listRad = new List<float>() { 1.0f };
+        int halfSeg = segCount / 2;
+        float InflateVal = fInflated / halfSeg;
+        CatLine rateLine = new CatLine();
+        rateLine.controlPointPosList.Add(new Vector3(1.0f, 0.0f, 0.0f));
+        rateLine.controlPointPosList.Add(new Vector3(fInflated, this.eaveColumnHeight / 2 + (this.eaveColumnHeight / 4 * fatOffset) , 0.0f));
+        rateLine.controlPointPosList.Add(new Vector3(1.0f, this.eaveColumnHeight, 0.0f));
+        rateLine.SetLineNumberOfPoints(Define.Medium);
+        rateLine.SetCatmullRom(0.0f);
+
+        for (int iIndex = 1; iIndex <= segCount; iIndex++)
+        {
+            //** 不知為何用轉型會失敗
+            // float Rate = iIndex / segCount;
+            // int index = (int)((rateLine.innerPointList.Count-1) * Rate);
+            listRad.Add(rateLine.innerPointList[(rateLine.innerPointList.Count - 1) / (segCount + 1) * iIndex].x);
+        }
+
+        //for (int iIndex = 0; iIndex < segCount; iIndex++)
+        //{
+        //    if (iIndex <= halfSeg)
+        //    {
+        //        listRad.Add(listRad[listRad.Count-1] + InflateVal);
+        //    }
+        //    else
+        //    {
+        //        listRad.Add(listRad[listRad.Count-1] - InflateVal);
+        //    }
+        //}
+        listRad.Add(1.0f);
+        return listRad;
+    }
+
+    /**
+     * 調整位置往屋身中心位移
+     */
+    public Vector3 AdjustPostionToCenterOffset(Vector3 pos , float offset)
+    {
+        if (offset == 0)
+        {
+            return pos;
+        }
+        Vector3 centerDir = new Vector3(parentObj.bodyCenter.x - pos.x, 0, parentObj.bodyCenter.z - pos.z).normalized;
+        Vector3 newPos = pos + centerDir * offset;
+        return newPos;
+    }
 }

@@ -834,7 +834,9 @@ public class RoofController : MonoBehaviour
 		Vector3 leftCtrlPointPos = LeftMainRidgeStruct.controlPointDictionaryList[MainRidgeControlPointType.EaveCtrlPoint.ToString()];
 		Vector3 eaveDir = (rightCtrlPointPos - leftCtrlPointPos).normalized;
 		float eaveDist = (rightCtrlPointPos - leftCtrlPointPos).magnitude;
-		Vector3 midCtrlPointPos = (rightCtrlPointPos + leftCtrlPointPos) / 2 + eaveCurveHeightOffset * Vector3.up;
+        //Vector3 midCtrlPointPos = (rightCtrlPointPos + leftCtrlPointPos) / 2 + eaveCurveHeightOffset * Vector3.up;
+        //*** 修正: midCtrlPointPos 後面減去翼角上升的幅度，達到翼角上下調整時屋簷不會跟著改動
+        Vector3 midCtrlPointPos = (rightCtrlPointPos + leftCtrlPointPos) / 2 + eaveCurveHeightOffset * Vector3.up + flyEaveHeightOffset * Vector3.down;
         Vector3 midRCtrlPointPos = midCtrlPointPos + 0.35f * eaveDir * eaveDist;
         Vector3 midLCtrlPointPos = midCtrlPointPos - 0.35f * eaveDir * eaveDist;
         //Vector3 midRCtrlPointPos = midCtrlPointPos + eaveDir * eave2FlyEaveOffset;
@@ -843,13 +845,13 @@ public class RoofController : MonoBehaviour
 
 		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.RightControlPoint.ToString(), rightCtrlPointPos);
 		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.LeftControlPoint.ToString(), leftCtrlPointPos);
-		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), midCtrlPointPos);   
+		//newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidControlPoint.ToString(), midCtrlPointPos);   
 		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidRControlPoint.ToString(), midRCtrlPointPos);
 		newRidgeStruct.controlPointDictionaryList.Add(EaveControlPointType.MidLControlPoint.ToString(), midLCtrlPointPos);
 
 		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(rightCtrlPointPos);
 		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midRCtrlPointPos);
-		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midCtrlPointPos);
+		//newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midCtrlPointPos);
 		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(midLCtrlPointPos);
 		newRidgeStruct.ridgeCatLine.controlPointPosList.Add(leftCtrlPointPos);
 
@@ -1857,7 +1859,9 @@ public class RoofController : MonoBehaviour
 				//* 建立各主脊
 				for (int iIndex = 0; iIndex < columnTopPosList.Count; iIndex++)
 				{
-					eave2eaveColumnOffsetVector = Vector3.Normalize(new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset + flyEaveHeightOffset * Vector3.up + Define.Do_Kun_Height * Vector3.up;
+					eave2eaveColumnOffsetVector = Vector3.Normalize(
+                                    new Vector3(columnTopPosList[iIndex].x - parentObj.roofTopCenter.x, 0, columnTopPosList[iIndex].z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset 
+                                    + flyEaveHeightOffset * Vector3.up + Define.Do_Kun_Height * Vector3.up;
 
 					ctrlPointList = new List<Vector3>();
 					ctrlPointList.Add(parentObj.roofTopCenter);
