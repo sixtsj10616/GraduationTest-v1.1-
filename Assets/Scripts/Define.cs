@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Define : MonoBehaviour {
 
+	public const string initDataPath = "SettingData.plist";
+
     //***           底座          ***//
     public const float initPlatWidth    = 50;
     public const float initPlatLength   = 40;
@@ -38,4 +40,24 @@ public class Define : MonoBehaviour {
     public const string BodyDataList = "BodyDataList";
     public const string PlatformDataList = "PlatformDataList";
 
+
+	public Dictionary<string, object> dicSettingData = new Dictionary<string, object>();
+
+	void Start()
+	{
+		//*** 格式 : 參數名稱(須按照實際class參數命名)，內容為Dic 有三個Key :  max、init、min
+		dicSettingData.Add("platWidth", new Dictionary<string, object> {{ "max", 80 } ,
+																		{ "init", initPlatWidth },
+																		{ "min", 30 }
+																		});
+	}
+
+	
+
+
+	
+
+
+	
 }
+

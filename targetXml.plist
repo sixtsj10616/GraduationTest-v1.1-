@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>testDate</key>
+    <date>2011-09-24T18:31:04Z</date>
+    <key>testInt</key>
+    <integer>-3455</integer>
+    <key>testDouble</key>
+    <real>1.34223</real>
+    <key>testBoolTrue</key>
+    <true />
+    <key>testBoolFalse</key>
+    <false />
+    <key>testString</key>
+    <string>hello there</string>
+    <key>testArray</key>
+    <array>
+      <integer>34</integer>
+      <string>string item in array</string>
+    </array>
+    <key>testArrayLarge</key>
+    <array>
+      <integer>0</integer>
+      <integer>1</integer>
+      <integer>2</integer>
+      <integer>3</integer>
+      <integer>4</integer>
+      <integer>5</integer>
+      <integer>6</integer>
+      <integer>7</integer>
+      <integer>8</integer>
+      <integer>9</integer>
+      <integer>10</integer>
+      <integer>11</integer>
+      <integer>12</integer>
+      <integer>13</integer>
+      <integer>14</integer>
+      <integer>15</integer>
+      <integer>16</integer>
+      <integer>17</integer>
+    </array>
+    <key>PlatWidth</key>
+    <dict>
+      <key>max</key>
+      <string>inner dict item</string>
+      <key>g</key>
+      <string>inner dict item</string>
+      <key>t</key>
+      <string>inner dict item</string>
+    </dict>
+    <key>PlatLengh</key>
+    <dict>
+      <key>max</key>
+      <integer>10</integer>
+      <key>g</key>
+      <string>inner dict item</string>
+      <key>t</key>
+      <string>inner dict item</string>
+    </dict>
+    <key>testDictLarge</key>
+    <dict>
+      <key>00</key>
+      <integer>0</integer>
+      <key>01</key>
+      <integer>1</integer>
+      <key>02</key>
+      <integer>2</integer>
+      <key>03</key>
+      <integer>3</integer>
+      <key>04</key>
+      <integer>4</integer>
+      <key>05</key>
+      <integer>5</integer>
+      <key>06</key>
+      <integer>6</integer>
+      <key>07</key>
+      <integer>7</integer>
+      <key>08</key>
+      <integer>8</integer>
+      <key>09</key>
+      <integer>9</integer>
+      <key>10</key>
+      <integer>10</integer>
+      <key>11</key>
+      <integer>11</integer>
+      <key>12</key>
+      <integer>12</integer>
+      <key>13</key>
+      <integer>13</integer>
+      <key>14</key>
+      <integer>14</integer>
+      <key>15</key>
+      <integer>15</integer>
+      <key>16</key>
+      <integer>16</integer>
+      <key>17</key>
+      <integer>17</integer>
+    </dict>
+  </dict>
+</plist>

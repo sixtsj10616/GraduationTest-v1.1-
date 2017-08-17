@@ -224,6 +224,18 @@ public class DataCenter : Singleton<DataCenter> {
         //print("platWidth : " + objType.GetField("platHeight").GetValue(this));
     }
 
+	public void ReadXml(string fileName)
+	{
+		PlistCS.Plist.readPlist(fileName);
+	}
+
+
+	public void WriteXml(string fileName, Dictionary<string, object> dicFile)
+	{
+		PlistCS.Plist.writeXml(dicFile, fileName);
+		//CheckDictionary((Dictionary<string, object>)Plist.readPlist(targetXmlPath));
+	}
+
 
 
 
