@@ -32,9 +32,9 @@ public class BodyController : MonoBehaviour
 	public float eaveColumnRadius = 0.5f;
 	public float goldColumnRadius = 0.5f;
 	public float columnFundationHeight;//柱礎高度
-    public bool isGoldColumn = true;
-    public bool isFrieze = true;
-    public bool isBalustrade = true;
+	public bool isGoldColumn = true;
+	public bool isFrieze = true;
+	public bool isBalustrade = true;
 
     public List<Vector3> origBotPosList = new List<Vector3>();      //* 初始化時所傳入的底座位置列表
     public List<Vector3> eaveColumnPosList = new List<Vector3>();   //* 簷柱位置列表
@@ -279,11 +279,14 @@ public class BodyController : MonoBehaviour
             if (entranceIndexList.Contains(i)) count++;
             else count += eaveColumnbayNumber;
         }
-		if (goldColumnbayNumber <= 0) goldColumnbayNumber = 1;
-		for (int i = 0, count = 0; i < (int)MainController.Instance.sides; i++)
+		if (isGoldColumn)
 		{
-			goldCornerColumnList.Add(goldColumnList[count]);
-			count += goldColumnbayNumber;
+			if (goldColumnbayNumber <= 0) goldColumnbayNumber = 1;
+			for (int i = 0, count = 0; i < (int)MainController.Instance.sides; i++)
+			{
+				goldCornerColumnList.Add(goldColumnList[count]);
+				count += goldColumnbayNumber;
+			}
 		}
     }
 	 /**

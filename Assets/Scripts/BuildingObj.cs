@@ -50,6 +50,7 @@ public class BuildingObj : MonoBehaviour {
 	public float buildingHeight;                //建築(樓層)高度
 	public EntraneIndexList entraneIndexList = new EntraneIndexList();
 
+	public float rotateAngle;
     /**
      * 初始化
      */
@@ -57,6 +58,7 @@ public class BuildingObj : MonoBehaviour {
 	{
 		this.building=building;
 		this.building.transform.parent = building.transform;
+		this.rotateAngle=rotateAngle;
 		platformCenter=position;
 
 		platform = new GameObject("platform");
@@ -166,16 +168,17 @@ public class BuildingObj : MonoBehaviour {
         //** 重算金柱位置
         if (isReCalculate)
         {
+			Debug.Log("ReCalculateGoldColumn");
             bodyController.goldColumnPosList = bodyController.CalculateGoldColumnPos(bodyController.origBotPosList, entraneIndexList.List, bodyCenter);
         }
         //** 重建金柱
         if (isCreate)
         {
+			Debug.Log("CreateGoldColumn");
             bodyController.goldColumnList = bodyController.CreateRingColumn(this.body, bodyController.goldColumnPosList,
                                                                             bodyController.goldColumnRadius, bodyController.goldColumnRadius,
                                                                             bodyController.goldColumnHeight, bodyController.goldColumnRadius * 1.2f,
                                                                             bodyController.columnFundationHeight, "GoldColumn");
-
         }
         else
         {
@@ -198,6 +201,7 @@ public class BuildingObj : MonoBehaviour {
      */
     public void ResetWindowAndDoorNum()
     {
+		Debug.Log("ResetWindowAndDoorNum");
         for (int iIndex = 0; iIndex < bodyController.windowObjList.Count; iIndex++)
         {
             Destroy(bodyController.windowObjList[iIndex]);
@@ -208,7 +212,7 @@ public class BuildingObj : MonoBehaviour {
         }
         bodyController.windowObjList.Clear();
         bodyController.doorObjList.Clear();
-		bodyController.CreateRingWall(ModelController.Instance.goldColumnModelStruct, bodyController.GetColumnStructPosList(bodyController.goldColumnList), bodyController.goldColumnRadius, bodyController.unitNumberInBay, bodyController.goldColumnbayNumber, bodyController.doorNumber);
+		bodyController.CreateRingWall(ModelController.Instance.goldColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.goldColumnList), bodyController.goldColumnRadius, bodyController.unitNumberInBay, bodyController.goldColumnbayNumber, bodyController.doorNumber);
     }
     /**
      * 重設門楣

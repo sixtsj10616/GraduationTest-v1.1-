@@ -28,6 +28,7 @@ public class MainMenuController : Singleton<MainMenuController>
 
     List<RoofTypeInfo> typeInfoList;
     public int nowRoofTypeIndex = 0;
+
     // Use this for initialization
     void Start()
     {
