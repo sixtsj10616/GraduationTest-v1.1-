@@ -23,9 +23,12 @@ public class MainMenuController : Singleton<MainMenuController>
 {
 
     public GameObject typeMenu;
+	public GameObject floorMenu;
+	public GameObject CTMenu;
+	public GameObject ViewMenu;
     public int TypeMenuCount = 0;
     public Button StateBtn;
-
+	public GameObject FloorBtn;
     List<RoofTypeInfo> typeInfoList;
     public int nowRoofTypeIndex = 0;
     // Use this for initialization
@@ -46,7 +49,16 @@ public class MainMenuController : Singleton<MainMenuController>
     public void ClickRoofTypeBtn()
     {
         typeMenu.SetActive(!typeMenu.activeInHierarchy);
+		floorMenu.SetActive(false);
     }
+	/**
+	* 點擊目前樓層按鈕
+	*/
+	public void ClickFloorTypeBtn()
+	{
+		floorMenu.SetActive(!floorMenu.activeInHierarchy);
+		typeMenu.SetActive(false);
+	}
     /**
      * 設定屋頂型態
      * 點擊選單中屋頂型態按鈕時呼叫
@@ -61,6 +73,49 @@ public class MainMenuController : Singleton<MainMenuController>
         }
         typeMenu.SetActive(!typeMenu.activeInHierarchy);
     }
+	/**
+   * 選擇樓層
+   */
+	public void SelectFloor(int index)
+	{
+		if (MainController.Instance.selectFloor != index)
+		{
+			MainController.Instance.selectFloor=index;
+		}
+		floorMenu.SetActive(!floorMenu.activeInHierarchy);
+	}
+	/**
+	* 創建樓層
+	*/
+	public void AddFloor()
+	{
+		GameObject newBtn = Instantiate(FloorBtn) as GameObject;
+		newBtn.transform.parent=FloorBtn.transform.parent;
+		newBtn.transform.SetSiblingIndex(newBtn.transform.parent.GetChildCount() - 3);
+		newBtn.GetComponentInChildren<Text>().text = (newBtn.transform.parent.GetChildCount()-3).ToString();
+
+		MainController.Instance.CreateNewFloor();
+	}
+	/**
+	* 刪除樓層
+	*/
+	public void DeleteFloor()
+	{
+		if (FloorBtn.transform.parent.GetChildCount()>3)
+		{
+			Destroy(FloorBtn.transform.parent.GetChild(FloorBtn.transform.parent.GetChildCount() - 3).gameObject);
+
+			MainController.Instance.DeleteFloor();
+		}
+	}
+	/**
+	* 設定組合亭型態
+	*/
+	public void SelectCombineTingType()
+	{
+		CTMenu.SetActive(!CTMenu.activeInHierarchy);
+		ViewMenu.SetActive(!ViewMenu.activeInHierarchy);
+	}
     /**
      * 初始化數據，名稱，索引，按鈕被景色，屋頂型態
      * 目前只會用到名稱與屋頂型態

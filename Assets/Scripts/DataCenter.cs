@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.IO;
 
 /**
  * 建築資訊
@@ -283,6 +284,26 @@ public class DataCenter : Singleton<DataCenter> {
 	}
 
 
+	public class JsonHelper
+	{
+		public void SetJson(BuildingObj buildingObj)
+		{
+			Wrapper wrapper = new Wrapper(buildingObj);
+			string json2 = JsonUtility.ToJson(wrapper);
+			StreamWriter fileWrite = new StreamWriter(Application.dataPath + "/Resources/myPlayer.json");
+			fileWrite.Write(json2);
+			fileWrite.Close();
+		}
+		[Serializable]
+		public class Wrapper
+		{
+			public Vector3[] array;
+			public Wrapper(BuildingObj buildingObj)
+			{
+				array = buildingObj.GetComponent<BodyController>().eaveColumnPosList.ToArray();
+			}
+		}
+	}
 
 
 
