@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-
+using UnityEngine.UI;
 namespace UnityEngine.UI.Extensions
 {
 	[AddComponentMenu("UI/Extensions/Primitives/UI Polygon")]
@@ -18,8 +18,11 @@ namespace UnityEngine.UI.Extensions
 		public float rotation = 0;
 		[Range(0, 1)]
 		public float[] VerticesDistances = new float[3];
+
+		GameObject selectBtn;
 		public List<Vector2> VerticesPos = new List<Vector2>();
 		public List<GameObject> btnList=new List<GameObject>();
+		public List<int> btnDisableIndexList = new List<int>();
 		private float size = 0;
 		private bool setBtnUpdate = false;
 		public int id;
@@ -72,6 +75,7 @@ namespace UnityEngine.UI.Extensions
 			{
 				CreateAllBtn();
 				setBtnUpdate = false;
+				Debug.Log("Update");
 			}
 		}
 		void Start()
@@ -104,125 +108,91 @@ namespace UnityEngine.UI.Extensions
 		}
 		public void CreateAllBtn()
 		{
-			ClearAllBtn();
+			for (int i = 0; i < btnList.Count; i++)
+			{
+				btnList[i].GetComponent<Button>().onClick.RemoveAllListeners();
+				Destroy(btnList[i].gameObject);
+			}
 			btnList.Clear();
-			Debug.Log("CTMenuVC.Instance.IconList.Count" + CTMenuVC.Instance.IconList.Count);
+			List<Vector3> offsetPosList=new List<Vector3>();
+			//選擇屋頂狀態的icon
+			GameObject newSelectBtn = Instantiate(Resources.Load("UI/IconButton")) as GameObject;
+			newSelectBtn.transform.position = transform.position;
+			newSelectBtn.transform.SetParent(this.gameObject.transform);
+			selectBtn=newSelectBtn;
+			UnityEngine.Events.UnityAction actionSelect = () => { MainController.Instance.SelectBuilding(id); };
+			newSelectBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+			newSelectBtn.GetComponent<Button>().onClick.AddListener(
+				actionSelect
+
+			);
+			//Icon周圍邊對齊與脊對齊的button
 			for (int i = 0; i < VerticesPos.Count - 1; i++)
 			{
-
 				GameObject newButton = Instantiate(Resources.Load("UI/IconButton")) as GameObject;
-				//newButton.transform.position = VerticesPos[i];
-				newButton.transform.position = (VerticesPos[i] + VerticesPos[(i + 1) % (VerticesPos.Count - 1)])/2.0f;
-				Vector3 offset = ((VerticesPos[i] + VerticesPos[(i + 1) % (VerticesPos.Count - 1)]) / 2.0f).normalized * Vector2.Distance(newButton.transform.localPosition, Vector2.zero) * 0.5f;
+				newButton.transform.position = VerticesPos[i];
+				Vector3 offset = (VerticesPos[i]).normalized * Vector2.Distance(newButton.transform.localPosition, Vector2.zero) * 0.5f;
 				newButton.transform.SetParent(this.gameObject.transform, false);
-				newButton.GetComponent<Button>().onClick.AddListener(delegate { transform.parent.GetComponent<CTMenuVC>().CreateTingIcon(newButton.GetComponent<Button>().transform.position + offset, (int)MainController.Instance.sides, rotation); });
+				offsetPosList.Add(newButton.transform.position + offset);
 				btnList.Add(newButton);
+
 				GameObject newButtonA = Instantiate(Resources.Load("UI/IconButton")) as GameObject;
-				newButtonA.transform.position = VerticesPos[i];
-				Vector3 offsetA = (VerticesPos[i]).normalized * Vector2.Distance(newButtonA.transform.localPosition, Vector2.zero) * 0.5f;
+				newButtonA.transform.position = (VerticesPos[i] + VerticesPos[(i + 1) % (VerticesPos.Count - 1)]) / 2.0f;
+				Vector3 offsetA = ((VerticesPos[i] + VerticesPos[(i + 1) % (VerticesPos.Count - 1)]) / 2.0f).normalized * Vector2.Distance(newButton.transform.localPosition, Vector2.zero) * 0.5f;
 				newButtonA.transform.SetParent(this.gameObject.transform, false);
-				newButtonA.GetComponent<Button>().onClick.AddListener(delegate { transform.parent.GetComponent<CTMenuVC>().CreateTingIcon(newButtonA.GetComponent<Button>().transform.position + offsetA, (int)MainController.Instance.sides,rotation); });
+				offsetPosList.Add(newButtonA.transform.position + offsetA);
 				btnList.Add(newButtonA);
-/*
+			}
+			//Lambdas現象
+			for (int i = 0; i < btnList.Count; i++)
+			{
+				Button but = btnList[i].GetComponent<Button>();
+				Vector3 pos=offsetPosList[i];
+				CTMenuVC thisScript = transform.parent.GetComponent<CTMenuVC>();
+				int btnId = i;
+				int btnIdA = i;
+				UnityEngine.Events.UnityAction action = () => { thisScript.CreateTingIcon(pos, sides, rotation, btnId);};
+				UnityEngine.Events.UnityAction actionA = () => { SetBtnDisableIndex(btnIdA); };
+				but.onClick.RemoveAllListeners();
+				but.onClick.AddListener(
 
-				if(i==0)
+					action
+
+				);
+				but.onClick.AddListener(
+
+					actionA
+
+				);
+				if (i == 0)
 				{
-					var colors = newButton.GetComponent<Button>().colors;
-					  colors.normalColor = Color.blue;
-				  newButton.GetComponent<Button> ().colors = colors;
+					var colors = but.colors;
+					colors.normalColor = Color.blue;
+					but.colors = colors;
 				}
-				if (i == VerticesPos.Count - 2)
+				if (i == 2)
 				{
-					var colors = newButton.GetComponent<Button>().colors;
+					var colors = but.colors;
 					colors.normalColor = Color.red;
-					newButton.GetComponent<Button>().colors = colors;
-				}*/
-			}
-			CheckBtnActive() ;
-		}
-		void CheckBtnActive() 
-		{
-			for(int i=0;i<btnList.Count;i++)
-			{
-				if(btnList[i]==null)continue;
-				GameObject newButton =btnList[i];
-				int insideIconIndex = isInside(newButton.GetComponent<Button>());
-				if (insideIconIndex != -1)
-				{
-					//Debug.Log("id: " + id + " i: " + i + " insideIconIndex" + insideIconIndex);
-					newButton.SetActive(false);
-					if (i % 2 == 0)
-					{
-						if (btnList[(i + 1) % btnList.Count] != null) btnList[(i + 1) % btnList.Count].SetActive(false);
-						if (btnList[(i +3 ) % btnList.Count] != null) btnList[(i +3) % btnList.Count].SetActive(false);
-					}
-					else		
-					{
-						if (btnList[(i - 1 + btnList.Count) % btnList.Count] != null) btnList[(i - 1 + btnList.Count) % btnList.Count].SetActive(false);
-						if (btnList[(i - 3 + btnList.Count) % btnList.Count] != null) btnList[(i - 3 + btnList.Count) % btnList.Count].SetActive(false);
-					}
+					but.colors = colors;
 				}
 			}
+			ChectBtnActive();
 		}
-		/**
-* 檢查button是否落在其他的icon區域內
-*/
-		bool pointInPolygon(int side, Vector2 point, List<Vector2> p)
-		{
-			bool bInside = false;
-			for (int i = 0; i < side; i++)
+		public void ChectBtnActive() 
+		{ 
+			for(int i=0;i<btnDisableIndexList.Count;i++)
 			{
-				//Debug.Log(" p[" + i + "].x:" + p[i].x + " p[" + i + "].y:" + p[i].y);
-				if (Cross(point.x, point.y, p[i].x, p[i].y, p[(i + 1) % side].x, p[(i + 1) % side].y))
-					bInside = !bInside;
+				if (btnDisableIndexList[i] < btnList.Count)
+					if (btnList[btnDisableIndexList[i]] != null) btnList[btnDisableIndexList[i]].SetActive(false);
 			}
-			return (bInside);
 		}
-		bool Cross(float x, float y, float x1, float y1, float x2, float y2)
+		public void SetBtnDisableIndex(int btnId) 
 		{
-			bool bCross;
-
-			if (((y < y1) == (y < y2)) || ((x >= x1) && (x >= x2)))
-			{
-				/* Side entirely above, below or entirely to left of point */
-				bCross = false;
-			}
-			else if ((x < x1) && (x < x2))
-			{
-				/* Side to right of point, but not entirely above or below */
-				bCross = true;
-			}
-			else if (x1 < x2)
-			{
-				/* Side not entirely above or below point AND              */
-				/* Side not entirely to left or right                      */
-				bCross = x < (x1 + (y - y1) * (x2 - x1) / (y2 - y1));
-			}
-			else
-			{
-				/* Same as above                                           */
-				bCross = x < (x2 + (y - y2) * (x1 - x2) / (y1 - y2));
-			}
-
-			return (bCross);
-		}  /* End of Cross */
-		public int isInside(Button button)
-		{
-			int inside = -1;
-			for (int i = 0; i < CTMenuVC.Instance.IconList.Count; i++)
-			{
-				if(id==i)continue;
-				int veticesSize = CTMenuVC.Instance.IconList[i].VerticesPos.Count - 1;
-				List<Vector2> wordPosList=new List<Vector2>();
-				for(int j=0;j<veticesSize;j++)
-				{
-					Vector2 pos=CTMenuVC.Instance.IconList[i].transform.position;
-					wordPosList.Add(CTMenuVC.Instance.IconList[i].VerticesPos[j] + pos);
-				}
-				if (pointInPolygon(veticesSize, button.transform.position, wordPosList)) inside = i;
-			}
-
-			return inside;
+			int size=sides*2;
+			btnDisableIndexList.Add(btnId);
+			btnDisableIndexList.Add((btnId + 1) % size);
+			btnDisableIndexList.Add((btnId - 1 + size) % size);
 		}
 		void ClearAllBtn()
 		{

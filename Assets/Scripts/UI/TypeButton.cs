@@ -15,5 +15,16 @@ public class TypeButton : MonoBehaviour {
     {
         MainMenuController.Instance.SelectRoofType(transform.GetSiblingIndex());
     }
-
+	public void OnButtonClick2SelectFloor()
+	{
+		MainMenuController.Instance.SelectFloor(transform.GetSiblingIndex());
+	}
+	public void OnButtonClick2AddFloor()
+	{
+		MainMenuController.Instance.AddFloor();
+	}
+	public void OnButtonClick2DeleteFloor()
+	{
+		MainMenuController.Instance.DeleteFloor();
+	}
 }
