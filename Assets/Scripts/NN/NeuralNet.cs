@@ -15,6 +15,66 @@ namespace NeuralNetwork
 
 		private static readonly System.Random Random = new System.Random();
 
+        /**
+         * 承翰給的
+         */
+    //     public NeuralNet nnCreater(int inputLayerSize, int hiddenLayerSize, int outputLayerSize, string wJson, string bJson)
+    //     {
+    //        NeuralNet nn = new NeuralNet(inputLayerSize, hiddenLayerSize, outputLayerSize);
+
+    //         List<object> Model_Weights = MiniJSON.Json.Deserialize(wJson) as List<object>;
+    //         List<object> Model_Biases = MiniJSON.Json.Deserialize(bJson) as List<object>;
+
+    //         List<object> in_hidden_weights = Model_Weights[0] as List<object>;
+    //         List<object> in_hidden_biases = Model_Biases[0] as List<object>;
+
+    //        for (int i = 0; i < nn.InputLayer.Count; i++)
+    //        {
+    //             Neuron input = nn.InputLayer[i];
+    //            List<object> row = in_hidden_weights[i] as List<object>;
+    //            for (int j = 0; j < nn.HiddenLayer.Count; j++)
+    //            {
+    //                Neuron hidden = nn.HiddenLayer[j];
+    //                hidden.Bias = Convert.ToDouble(in_hidden_biases[j]);
+
+    //                foreach (Synapse syn in input.OutputSynapses)
+    //                {
+    //                    if (syn.OutputNeuron == hidden)
+    //                    {
+    //                        syn.Weight = Convert.ToDouble(row[j]);
+    //                        break;
+    //                    }
+    //                }
+    //            }
+    //        }
+
+    //        List<object> hidden_output_weights = Model_Weights[1] as List<object>;
+    //        List<object> hidden_output_biases = Model_Biases[1] as List<object>;
+
+    //        for (int i = 0; i < nn.HiddenLayer.Count; i++)
+    //        {
+    //            Neuron hidden = nn.HiddenLayer[i];
+    //             List<object> row = hidden_output_weights[i] as List<object>;
+
+    //        for (int j = 0; j < nn.OutputLayer.Count; j++)
+    //        {
+    //            Neuron output = nn.OutputLayer[j];
+    //            output.Bias = Convert.ToSingle(hidden_output_biases[j]);
+
+    //            foreach (Synapse syn in hidden.OutputSynapses)
+    //            {
+    //                if (syn.OutputNeuron == output)
+    //                {
+    //                    syn.Weight = Convert.ToSingle(row[j]);
+    //                    break;
+    //                }
+    //            }
+    //        }
+    //    }
+    //    return nn;
+    //}
+
+
 		public NeuralNet(int inputSize, int hiddenSize, int outputSize, double? learnRate = null, double? momentum = null)
 		{
 			LearnRate = learnRate ?? .4;

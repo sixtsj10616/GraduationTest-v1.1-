@@ -206,8 +206,9 @@ public class MainController : Singleton<MainController>
 
 		}
 		else
-			AllBuildings.Add(AddBuilding(buildingCenter, 0));
-
+        {
+            AllBuildings.Add(AddBuilding(buildingCenter, 0));
+        }
 		Buildings=AllBuildings[selectBuildingsIndex];
         //OnPlamformSliderChange plamMenuDelegate = (Slider slider, float value) => UpdatePlameSliderInfo(slider, value);
 
@@ -542,6 +543,11 @@ public class MainController : Singleton<MainController>
         nowBuilding.roofController.mainRidgeHeightOffset = Random.Range(-3,3);
         nowBuilding.ResetRoofFunction();
     }
+
+    /**
+     * 重製整個建築
+     * 由這邊可以調整建築要重製哪些部分，目前只有屋身屋頂
+     */
     public void UpdateALL(List<Dictionary<string, List<DataInfo>>> DataList)
     {
         DataCenter.Instance.ArrayDataToBuildingDataMethod3(DataList);
@@ -551,10 +557,9 @@ public class MainController : Singleton<MainController>
             PlatformController platform = nowBuilding.platformController;
 
             //nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, platform.platHeight, platform.isStair);
-            //nowBuilding.ResetBodyFunction();
+            nowBuilding.ResetBodyFunction();
             nowBuilding.ResetRoofFunction();
         }
-
     }
     /**
      * 柱子重作暫用

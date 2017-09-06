@@ -119,43 +119,45 @@ public class DataCenter : Singleton<DataCenter> {
             platDataList.Add(new DataInfo("isBorder",
                                             new Vector3(0, Convert.ToInt32(nowFloor.platformController.isBorder), 1)));
 
-            bodyDataList.Add(new DataInfo("eaveColumnHeight",
-                                            new Vector3(0, nowFloor.bodyController.eaveColumnHeight,10)));
-            bodyDataList.Add(new DataInfo("goldColumnbayNumber",
-                                            new Vector3(0, nowFloor.bodyController.goldColumnbayNumber, 10)));
-            bodyDataList.Add(new DataInfo("eaveColumnbayNumber",
-                                           new Vector3(0, nowFloor.bodyController.eaveColumnbayNumber, 10)));
-            bodyDataList.Add(new DataInfo("unitNumberInBay",
-                                            new Vector3(0, nowFloor.bodyController.unitNumberInBay, 10)));
-            bodyDataList.Add(new DataInfo("doorNumber",
-                                            new Vector3(0, nowFloor.bodyController.doorNumber, 10)));
-            bodyDataList.Add(new DataInfo("eaveColumnRadius",
-                                            new Vector3(0, nowFloor.bodyController.eaveColumnRadius, 10)));
-            bodyDataList.Add(new DataInfo("goldColumnRadius",
-                                            new Vector3(0, nowFloor.bodyController.goldColumnRadius, 10)));
+            //bodyDataList.Add(new DataInfo("eaveColumnHeight",
+            //                                new Vector3(0, nowFloor.bodyController.eaveColumnHeight,10)));
+            //bodyDataList.Add(new DataInfo("goldColumnbayNumber",
+            //                                new Vector3(0, nowFloor.bodyController.goldColumnbayNumber, 10)));
+            //bodyDataList.Add(new DataInfo("eaveColumnbayNumber",
+            //                               new Vector3(0, nowFloor.bodyController.eaveColumnbayNumber, 10)));
+            //bodyDataList.Add(new DataInfo("unitNumberInBay",
+            //                                new Vector3(0, nowFloor.bodyController.unitNumberInBay, 10)));
+            //bodyDataList.Add(new DataInfo("doorNumber",
+            //                                new Vector3(0, nowFloor.bodyController.doorNumber, 10)));
+            //bodyDataList.Add(new DataInfo("eaveColumnRadius",
+            //                                new Vector3(0, nowFloor.bodyController.eaveColumnRadius, 10)));
+            //bodyDataList.Add(new DataInfo("goldColumnRadius",
+            //                                new Vector3(0, nowFloor.bodyController.goldColumnRadius, 10)));
+            bodyDataList.Add(new DataInfo("eaveColOffset",
+                                            new Vector3(-4, nowFloor.bodyController.eaveColOffset, 4)));
             bodyDataList.Add(new DataInfo("eaveColRadInflate",
-                                            new Vector3(0, nowFloor.bodyController.eaveColRadInflate, 4)));
-            bodyDataList.Add(new DataInfo("eaveColTopOffset",
-                                           new Vector3(0, nowFloor.bodyController.eaveColTopOffset, 8)));
-            bodyDataList.Add(new DataInfo("eaveColBotOffset",
-                                           new Vector3(0, nowFloor.bodyController.eaveColBotOffset, 8)));
-            bodyDataList.Add(new DataInfo("isGoldColumn",
-                                             new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isGoldColumn), 1)));
-            bodyDataList.Add(new DataInfo("isFrieze",
-                                             new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isFrieze), 1)));
-            bodyDataList.Add(new DataInfo("isBalustrade",
-                                             new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isBalustrade), 1)));
+                                            new Vector3(0.5f, nowFloor.bodyController.eaveColRadInflate, 3)));
+            //bodyDataList.Add(new DataInfo("eaveColTopOffset",
+            //                               new Vector3(0, nowFloor.bodyController.eaveColTopOffset, 8)));
+            //bodyDataList.Add(new DataInfo("eaveColBotOffset",
+            //                               new Vector3(0, nowFloor.bodyController.eaveColBotOffset, 8)));
+            //bodyDataList.Add(new DataInfo("isGoldColumn",
+            //                                 new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isGoldColumn), 1)));
+            //bodyDataList.Add(new DataInfo("isFrieze",
+            //                                 new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isFrieze), 1)));
+            //bodyDataList.Add(new DataInfo("isBalustrade",
+            //                                 new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isBalustrade), 1)));
 
             roofDataList.Add(new DataInfo("allJijaHeight",
-                                           new Vector3(8, nowFloor.roofController.allJijaHeight, 20)));
+                                           new Vector3(8, nowFloor.roofController.allJijaHeight, 18)));
             roofDataList.Add(new DataInfo("mainRidgeHeightOffset",
                                            new Vector3(-3, nowFloor.roofController.mainRidgeHeightOffset, 3)));
             roofDataList.Add(new DataInfo("flyEaveHeightOffset",
                                            new Vector3(-3, nowFloor.roofController.flyEaveHeightOffset, 3)));
-            roofDataList.Add(new DataInfo("roofSurfaceHeightOffset",
-                                           new Vector3(-3, nowFloor.roofController.roofSurfaceHeightOffset, 3)));
+            //roofDataList.Add(new DataInfo("roofSurfaceHeightOffset",
+            //                               new Vector3(-3, nowFloor.roofController.roofSurfaceHeightOffset, 3)));
             roofDataList.Add(new DataInfo("eaveCurveHeightOffset",
-                                           new Vector3(-3, nowFloor.roofController.eaveCurveHeightOffset, 3)));
+                                           new Vector3(-3, nowFloor.roofController.eaveCurveHeightOffset, 1)));
 
             dicData.Add(Define.PlatformDataList, platDataList);
             dicData.Add(Define.BodyDataList, bodyDataList);
@@ -194,7 +196,20 @@ public class DataCenter : Singleton<DataCenter> {
                 Type objType = nowBuilding.bodyController.GetType();
                 try
                 {
-                    objType.GetField(bodyDataList[i].Name).SetValue(nowBuilding.bodyController, bodyDataList[i].Value.y);
+                    Type tryType = objType.GetField(bodyDataList[i].Name).FieldType;
+                    //if (objType.GetField(bodyDataList[i].Name).GetType() == typeof(int))
+                    if (tryType == typeof(int))
+                    {
+                        objType.GetField(bodyDataList[i].Name).SetValue(nowBuilding.bodyController, (int)bodyDataList[i].Value.y);
+                    }
+                    else if (tryType == typeof(float))
+                    {
+                        objType.GetField(bodyDataList[i].Name).SetValue(nowBuilding.bodyController, bodyDataList[i].Value.y);
+                    }
+                    else
+                    {
+                        objType.GetField(bodyDataList[i].Name).SetValue(nowBuilding.bodyController, bodyDataList[i].Value.y);
+                    }
                 }
                 catch
                 {
@@ -223,12 +238,43 @@ public class DataCenter : Singleton<DataCenter> {
         //FieldInfo[] tFields = objType.GetFields();
         //print("platWidth : " + objType.GetField("platHeight").GetValue(this));
     }
+    /**
+     * 將初步得到的檔案資料化為建築資料
+     * 目前讀出來初步化簡的格式為 List<object>
+     * 需要轉化成 List<Dictionary<string, List<DataInfo>>>
+     */
+    public List<Dictionary<string, List<DataInfo>>> changeFileDataToBuildingData(List<object> fileData ,int iDataIndex)
+    {
+        List<object> data = fileData[iDataIndex] as List<object>;
+        List<Dictionary<string, List<DataInfo>>> newDataList = new List<Dictionary<string, List<DataInfo>>>();
+        Dictionary<string, List<DataInfo>> dicData = new Dictionary<string, List<DataInfo>>();
+        string[] aryDataListName = Define.Instance.aryDataListName;         //** 建築物部位名稱(屋頂、屋身、基座)
+        int iDataCount = 0;                                                 //** 目前在data中的參數索引
+        for (int iIndex = 0; iIndex < aryDataListName.Length; iIndex++)
+        {
+            string[] arySetDataName = Define.Instance.queryDataNameArrayByName(aryDataListName[iIndex]);
+            List<DataInfo> SetDataList = new List<DataInfo>();
 
-	public void ReadXml(string fileName)
+            for (int i = 0; i <arySetDataName.Length; i ++)
+            {
+                string strName = arySetDataName[i];
+                DataInfo dicSettingData = Define.Instance.getSetData(strName);
+                double value = Convert.ToDouble(data[iDataCount]);
+                Vector3 v3Data = new Vector3(dicSettingData.Value.x, (float)value, dicSettingData.Value.z);
+                SetDataList.Add(new DataInfo(strName, v3Data));
+                iDataCount++;
+            }
+            dicData.Add(aryDataListName[iIndex], SetDataList);
+        }
+        newDataList.Add(dicData);
+        return newDataList;
+    }
+
+
+    public void ReadXml(string fileName)
 	{
 		PlistCS.Plist.readPlist(fileName);
 	}
-
 
 	public void WriteXml(string fileName, Dictionary<string, object> dicFile)
 	{

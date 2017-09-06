@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,25 +12,24 @@ public class StyleMainVC : Singleton<StyleMainVC> {
     public GameObject ResultView;
     public GameObject PreView;
     public GameObject Alert;
-    public List<List<Dictionary<string, List<DataInfo>>>> BuildingsInfo = new List<List<Dictionary<string, List<DataInfo>>>>();
-    public List<List<Dictionary<string, List<DataInfo>>>> allBuildingsInfo = new List<List<Dictionary<string, List<DataInfo>>>>();
-    public List<List<Dictionary<string, List<DataInfo>>>> resultBuildingsInfo = new List<List<Dictionary<string, List<DataInfo>>>>();
+    public GameObject SelectPanel;
+    public GameObject ResultPanel;
+    public List<List<Dictionary<string, List<DataInfo>>>> BuildingsInfo = new List<List<Dictionary<string, List<DataInfo>>>>();         //** 當前選擇視窗上的 
+    public List<List<Dictionary<string, List<DataInfo>>>> allBuildingsInfo = new List<List<Dictionary<string, List<DataInfo>>>>();      //** 全部幾輪的
+    public List<List<Dictionary<string, List<DataInfo>>>> resultBuildingsInfo = new List<List<Dictionary<string, List<DataInfo>>>>();   //** 結果視窗上的
     public List<int> ScoreList = new List<int>();
     public Button passBtn;
     public Button nextBtn;
+    public Button RefreshBtn;
 
     private List< Texture2D > PicList = new List<Texture2D>();
     private List<Texture2D> ResultPicList = new List<Texture2D>();
     private List<int> SelectOrderList = new List<int>();
     private RenderTexture PreViewTexture;
-    private int nowSelect = -1;
-    private bool bTest = true;
-    private bool isSelectPic = true;
-
-    //*** !tmp
-    public List<Vector2> tmpCulsInfo = new List<Vector2>();
-    public List<Vector2> allCulsInfo = new List<Vector2>();
-    public List<Vector2> resultCulsInfo = new List<Vector2>();
+    private bool isSelectPic = true;            //** 是否還在選擇喜歡的風格照片
+    private bool isLoadFile = true;             //** 是否由讀檔開始
+    private float fTrainThreshold = 0.9f;
+    private string strFileName = "ResultData.json";     //** ResultData_Avg、ResultData
     NNTest nn;
 
     // Use this for initialization
@@ -44,41 +44,63 @@ public class StyleMainVC : Singleton<StyleMainVC> {
 
     /**
      * 初始化建築資料 (目前給MainController呼叫)
-     * 將目前的Main中的建築物資訊存入 BuildingsInfo，並依照剩下的格數由剛才的建築變異資訊
+     * 將目前的Main中的建築物資訊存入 BuildingsInfo，並依照剩下的格數產出建築變異資訊
      * 完成後開始拍照
      */
     public void initBuildingsInfo()
     {
-        if (!bTest)
+        if (isLoadFile)
+        {
+            string strFileText = "";
+            try
+            {
+                strFileText = File.ReadAllText(Application.dataPath + "/Resources/"+ strFileName);
+            }
+            catch
+            {
+                print("!!! The file could not be read or find");
+            }
+            var dict = MiniJSON.Json.Deserialize(strFileText) as Dictionary<string, object>;
+            List< object > listData = (List<object>)dict["data"] ;
+
+            for (int i = 0; i < listData.Count; i++)
+            {
+                //DataCenter.Instance.changeFileDataToBuildingData(listData, i);
+                BuildingsInfo.Add(DataCenter.Instance.changeFileDataToBuildingData(listData, i));
+            }
+            checkSelectViewDone();
+        }
+        else
         {
             BuildingsInfo.Add(DataCenter.Instance.BuildingDataToArrayMethod3(MainController.Instance.Buildings));
             for (int iIndex = 1; iIndex < SelectView.transform.childCount; iIndex++)
             {
-                BuildingsInfo.Add(EvolutionCenter.Instance.MutateData(BuildingsInfo[0], 0.5f, 0.0f));
+                //BuildingsInfo.Add(EvolutionCenter.Instance.MutateData(BuildingsInfo[0], 0.5f, 0.0f));
+                BuildingsInfo.Add(EvolutionCenter.Instance.RamdomMutateData(1.0f, 1.0f));
             }
             print("StyleMainVC initBuildingsInfo OK!!");
             initSelectView();  //*** 目前由MainController呼叫，此時已有一棟建築所以直接拍照
         }
-        else
-        {
-            //*** !!暫用  柱子***//
-            tmpCulsInfo.Add(MainController.Instance.tmpCulInfo);
-            for (int iIndex = 1; iIndex < SelectView.transform.childCount; iIndex++)
-            {
-                tmpCulsInfo.Add(EvolutionCenter.Instance.MutateData(tmpCulsInfo[0], 0.5f, 0.0f));
-            }
-            initSelectView();
-        }
+        
     }
     /**
-     * 開始初始化九宮格資料
+     * 開始初始化九宮格要顯示的資料
      * 拍照
      */
     void initSelectView()
     {
         PicCamera.GetComponent<TakePic>().StartScreenshot();
     }
-
+    /**
+     * 開始初始化九宮格資料
+     */
+    void initSelectData(int iStartNum)
+    {
+        for (int iIndex = iStartNum; iIndex < SelectView.transform.childCount; iIndex++)
+        {
+            BuildingsInfo.Add(EvolutionCenter.Instance.RamdomMutateData(1.0f, 1.0f));
+        }
+    }
     /**
      * 當照片處理好 (給TakePic呼叫用)
      * 將照片存到一個新的 Texture2D 後存入List中
@@ -105,45 +127,41 @@ public class StyleMainVC : Singleton<StyleMainVC> {
     public void onNNDone()
     {
         print("NN Done");
-        if (ResultView.activeInHierarchy == false)
+        //if (ResultView.activeInHierarchy == false)
+        if (ResultPanel.activeInHierarchy == false)
         {
-            ResultView.SetActive(true);
-            PreView.SetActive(false);
-
-            resultCulsInfo.Clear();
-            while (resultCulsInfo.Count < ResultView.transform.childCount)
+            ResultPanel.SetActive(true);
+            SelectPanel.SetActive(false);
+            //PreView.SetActive(false);
+            RefreshBtn.transform.gameObject.SetActive(true);
+            
+            //*** ----------------------------------------------
+            //*** 這便要能直接依照設定黨的最大最小值產出建築資訊
+            //*** ----------------------------------------------
+            resultBuildingsInfo.Clear();
+            while (resultBuildingsInfo.Count < ResultView.transform.childCount)
             {
-                Vector2 newData = EvolutionCenter.Instance.MutateData(new Vector2(2.0f, 1.0f), 0.5f, 0.0f);
-                double result = nn.tryData(new Vector2((newData.x - 0.5f) / 3, 1.0f));
-                if (result > 0.7)
+                List<Dictionary<string, List<DataInfo>>> newData = EvolutionCenter.Instance.RamdomMutateData(1.0f, 1.0f);
+                double result = nn.tryData(newData);
+                if (result > fTrainThreshold)
                 {
-                    resultCulsInfo.Add(newData);
-                }
-                else
-                {
-
+                    resultBuildingsInfo.Add(newData);
                 }
             }
+                
             isSelectPic = false;
             checkResultViewDone();
         }
     }
 
+    
     /**
      * 測試用按鈕事件
      */
-    public void OnTestNNResult(float fValue)
+    public void OnTestNNResult()
     {
-        double result = nn.tryData(new Vector2((fValue - 0.5f)/3, 1.0f));
-        if (result > 0.7)
-        {
-            print("這是我要的 nn result : " + result);
-        }
-        else
-        {
-            print("不要的 nn result : " + result);
-        }
-        
+        EvolutionCenter.Instance.saveRamdomData();
+        //EvolutionCenter.Instance.createAverageDistributedData(10);
     }
     /**
      * 點擊Select Cell
@@ -151,7 +169,9 @@ public class StyleMainVC : Singleton<StyleMainVC> {
     public void OnClickSelectCell(GameObject cell)
     {
         print("OnClickSelectCell : " + cell.transform.GetSiblingIndex());
-        MainController.Instance.UpdateTmpCul(tmpCulsInfo[cell.transform.GetSiblingIndex()]);
+        //MainController.Instance.UpdateTmpCul(tmpCulsInfo[cell.transform.GetSiblingIndex()]);
+        List < Dictionary<string, List<DataInfo>> > selectInfo = BuildingsInfo[cell.transform.GetSiblingIndex()];
+        MainController.Instance.UpdateALL(selectInfo);
 
         int iSelOrder = checkIfSelect(cell.transform.GetSiblingIndex());
         if (iSelOrder == -1)
@@ -164,7 +184,7 @@ public class StyleMainVC : Singleton<StyleMainVC> {
             SelectOrderList.RemoveAt(checkIfSelect(cell.transform.GetSiblingIndex()));
             resetOrderNum();
         }
-
+        //** 原先GA進化邏輯
         //List<Dictionary<string, List<DataInfo>>> selectInfo = BuildingsInfo[cell.transform.GetSiblingIndex()];
         //if (nowSelect != cell.transform.GetSiblingIndex())
         //{
@@ -200,20 +220,23 @@ public class StyleMainVC : Singleton<StyleMainVC> {
         return -1;              //** 沒找到就回傳-1
     }
 
-    /***/
+    /**
+     * 略過此輪
+     */
     public void OnClickPassBtn()
     {
-        PicList.Clear();
-        tmpCulsInfo.Clear();
+        PicList.Clear();  
         SelectOrderList.Clear();
+        
         //BuildingsInfo.Clear();
         for (int iIndex = 0; iIndex < SelectView.transform.childCount; iIndex++)
-        {
-            tmpCulsInfo.Add(EvolutionCenter.Instance.MutateData(new Vector2(2.0f,1.0f), 0.5f, 0.0f));
+        {   
+            BuildingsInfo.Add(EvolutionCenter.Instance.RamdomMutateData(1.0f, 1.0f));
         }
+        BuildingsInfo.RemoveRange(0, SelectView.transform.childCount);
+        
         checkSelectViewDone();
         resetOrderNum();
-        
     }
 
     /**
@@ -238,8 +261,45 @@ public class StyleMainVC : Singleton<StyleMainVC> {
         {
             saveSelesctViewInfo();
         }
-        nn = transform.GetComponent<NNTest>();
-        nn.startTrain(allCulsInfo, ScoreList);
+        nn = transform.GetComponent<NNTest>();   
+        nn.startTrain(allBuildingsInfo, ScoreList);
+        
+    }
+
+    public void OnClickRestartBtn()
+    {
+        PicList.Clear();
+        ScoreList.Clear();
+        ResultPicList.Clear();       
+        SelectOrderList.Clear();
+        BuildingsInfo.Clear();
+        allBuildingsInfo.Clear();
+        resultBuildingsInfo.Clear();
+        ResultPanel.SetActive(false);
+        SelectPanel.SetActive(true);
+        isSelectPic = true;
+
+        initSelectData(0);
+        checkSelectViewDone();
+        resetOrderNum();
+    }
+
+    public void reloadResult()
+    {
+        resultBuildingsInfo.Clear();
+        ResultPicList.Clear();
+        while (resultBuildingsInfo.Count < ResultView.transform.childCount)
+        {
+            List<Dictionary<string, List<DataInfo>>> newData = EvolutionCenter.Instance.RamdomMutateData(1.0f, 1.0f);
+            double result = nn.tryData(newData);
+            if (result > fTrainThreshold)
+            {
+                resultBuildingsInfo.Add(newData);
+            }
+        }
+
+        checkResultViewDone();
+        print(" Reload Result Done !!!");
     }
 
     /**
@@ -247,12 +307,13 @@ public class StyleMainVC : Singleton<StyleMainVC> {
      * 有被選的格子依照順序給予分數，沒選的格子一率零分
      */
     void saveSelesctViewInfo()
-    {
-        for (int iIndex = 0; iIndex < tmpCulsInfo.Count; iIndex++)
+    {    
+        for (int iIndex = 0; iIndex < SelectView.transform.childCount; iIndex++)
         {
             int selectOrder = checkIfSelect(iIndex);
-            allCulsInfo.Add(tmpCulsInfo[iIndex]);
-
+            
+            allBuildingsInfo.Add(BuildingsInfo[iIndex]);
+            
             if (selectOrder != -1)
             {
                 ScoreList.Add(100 - selectOrder * 5);
@@ -304,19 +365,10 @@ public class StyleMainVC : Singleton<StyleMainVC> {
         {
             //EvolutionCenter.Instance.MutateData(BuildingsInfo[0], 0.5f, 0.0f);
             //DataCenter.Instance.BuildingDataToArrayMethod3(BuildingsInfo);
-
             //MainController.Instance.tmpUpdateRoof();
-            if (!bTest)
-            {
-                MainController.Instance.UpdateALL(BuildingsInfo[PicList.Count]);
-                PicCamera.GetComponent<TakePic>().StartScreenshot();
-            }
-            else
-            {
-                MainController.Instance.UpdateTmpCul(tmpCulsInfo[PicList.Count]);
-                PicCamera.GetComponent<TakePic>().StartScreenshot();
-            }
-            
+          
+            MainController.Instance.UpdateALL(BuildingsInfo[PicList.Count]);
+            PicCamera.GetComponent<TakePic>().StartScreenshot();
         }
         else
         {
@@ -335,9 +387,9 @@ public class StyleMainVC : Singleton<StyleMainVC> {
      */
     private void checkResultViewDone()
     {
-        if (ResultPicList.Count != SelectView.transform.childCount)
+        if (ResultPicList.Count != ResultView.transform.childCount)
         {
-            MainController.Instance.UpdateTmpCul(resultCulsInfo[ResultPicList.Count]);
+            MainController.Instance.UpdateALL(resultBuildingsInfo[ResultPicList.Count]);
             PicCamera.GetComponent<TakePic>().StartScreenshot();
         }
         else
@@ -353,7 +405,7 @@ public class StyleMainVC : Singleton<StyleMainVC> {
     */
     private void reloadSelectView()
     {
-        for (int iIndex = 0; iIndex < 9; iIndex++)
+        for (int iIndex = 0; iIndex < SelectView.transform.childCount; iIndex++)
         {
             SelectView.transform.GetChild(iIndex).GetComponent<RawImage>().texture = PicList[iIndex];
         }

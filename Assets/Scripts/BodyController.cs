@@ -28,6 +28,7 @@ public class BodyController : MonoBehaviour
 	public int eaveColumnbayNumber = 1;
 	public int unitNumberInBay = 2;                 //間內有幾個單位(如:一間內有幾個門+窗)
     public int doorNumber =1;                       //門的數量(若間為奇數 則門為單扇 / 偶數 則門為雙扇)
+    public int eaveColOffset = 0;                   //* 簷柱的位移 ( 0:為一般 ，> 0 表簷柱上方位移 ，0 < 表簷柱下方位移)，完成後可砍掉下面兩個參數
     public float eaveColTopOffset = 0.0f;           //* 簷柱上方位移
     public float eaveColBotOffset = 0.0f;           //* 簷柱下方位移
     public float eaveColumnHeight;
@@ -35,7 +36,7 @@ public class BodyController : MonoBehaviour
 	public float goldColumnHeight;
 	public float eaveColumnRadius = 0.5f;
 	public float goldColumnRadius = 0.5f;
-    public float eaveColRadInflate = 3.0f;          //* 簷柱膨脹值
+    public float eaveColRadInflate = 1.0f;          //* 簷柱膨脹值
 	public float columnFundationHeight;//柱礎高度
     public bool isGoldColumn = true;
     public bool isFrieze = true;
@@ -221,8 +222,21 @@ public class BodyController : MonoBehaviour
 	{
         GameObject col = new GameObject(name);
         ColumnStruct columnStruct = new ColumnStruct();
-        Vector3 topPos = AdjustPostionToCenterOffset(pos + (height / 2.0f) * Vector3.up , eaveColTopOffset);
-        Vector3 bottomPos = AdjustPostionToCenterOffset(pos - (height / 2.0f - fundationHeight) * Vector3.up , eaveColBotOffset);
+        //Vector3 topPos = AdjustPostionToCenterOffset(pos + (height / 2.0f) * Vector3.up , eaveColTopOffset);
+        //Vector3 bottomPos = AdjustPostionToCenterOffset(pos - (height / 2.0f - fundationHeight) * Vector3.up , eaveColBotOffset);
+        Vector3 topPos = pos + (height / 2.0f) * Vector3.up;
+        Vector3 bottomPos = pos - (height / 2.0f - fundationHeight) * Vector3.up;
+        if (this.eaveColOffset != 0)
+        {
+            if (eaveColOffset > 0)
+            {
+                topPos = AdjustPostionToCenterOffset(topPos , eaveColOffset);
+            }
+            else
+            {
+                bottomPos = AdjustPostionToCenterOffset(bottomPos, -eaveColOffset);
+            }
+        }
 
         //print("orig pos :" + (pos + (height / 2.0f) * Vector3.up));
         //print("topPos :" + topPos);
@@ -248,8 +262,15 @@ public class BodyController : MonoBehaviour
 		//fun.transform.position = pos - new Vector3(0, height / 2.0f, 0);
 		fun.transform.parent = col.transform;
 		fun.AddComponent<CylinderMesh>();
-		topPos = AdjustPostionToCenterOffset(pos + (fundationHeight) * Vector3.up - (height / 2.0f) * Vector3.up , eaveColBotOffset);
-		bottomPos = AdjustPostionToCenterOffset(pos - (height / 2.0f) * Vector3.up , eaveColBotOffset);
+		//topPos = AdjustPostionToCenterOffset(pos + (fundationHeight) * Vector3.up - (height / 2.0f) * Vector3.up , eaveColBotOffset);
+		//bottomPos = AdjustPostionToCenterOffset(pos - (height / 2.0f) * Vector3.up , eaveColBotOffset);
+        topPos = pos + (fundationHeight) * Vector3.up - (height / 2.0f) * Vector3.up;
+        bottomPos = pos - (height / 2.0f) * Vector3.up;
+        if (eaveColOffset < 0)
+        {
+            topPos = AdjustPostionToCenterOffset(topPos , -eaveColOffset);
+            bottomPos = AdjustPostionToCenterOffset(bottomPos , -eaveColOffset);
+        }
 
         fun.GetComponent<CylinderMesh>().CylinderInitSetting(pos - new Vector3(0, height / 2.0f, 0), topPos, bottomPos, fundationRadius, fundationRadius);
         fun.GetComponent<CylinderMesh>().SetMesh();
