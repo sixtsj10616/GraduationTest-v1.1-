@@ -112,11 +112,6 @@ public class MainController : Singleton<MainController>
 				DeleteFloor();
 			}
 		}
-		else if (Input.GetKeyDown(KeyCode.Z))
-		{
-			DataCenter.JsonHelper json= new DataCenter.JsonHelper();
-			json.SetJson(Buildings[selectBuildingsIndex]);
-		}
 	}
 	public List<BuildingObj> AddBuilding(Vector3 pos, float rotateAngle)
 	{
@@ -190,7 +185,7 @@ public class MainController : Singleton<MainController>
 		initAllJijaHeight_DownStair = initAllJijaHeight_TopStair / 8.0f;
 		//?????這著值不能亂取
 		initMainRidgeHeightOffset_DownStair = initMainRidgeHeightOffset_TopStair * (1.0f - floorScaleRatio) / (initAllJijaHeight_TopStair / initAllJijaHeight_DownStair);
-        if (StyleMainVC.activeInHierarchy || MainUI.activeInHierarchy)
+        if (StyleMainVC.activeInHierarchy && MainUI.activeInHierarchy)
         {
             AllBuildings.Add(AddBuilding(buildingCenter, 0));
             Buildings = AllBuildings[selectBuildingsIndex];

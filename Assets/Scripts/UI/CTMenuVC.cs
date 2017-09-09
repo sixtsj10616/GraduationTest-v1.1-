@@ -13,6 +13,7 @@ public class CTMenuVC : Singleton<CTMenuVC>
 		initIConRotateAngle = 180.0f-360.0f / (int)MainController.Instance.sides/2;
 
 		CreateTingIcon(this.transform.position, (int)MainController.Instance.sides, initIConRotateAngle);
+
 	}
 
 	public void CreateTingIcon(Vector2 pos, int sides,float rotateAngle,int id=-1) 
@@ -45,7 +46,7 @@ public class CTMenuVC : Singleton<CTMenuVC>
 
 
 		//**************************************Model*****************************************
-		float scale=0.7f;
+		float scale=0.4f;
 
 		Vector3 posInWorld = (new Vector3(pos.x - IconList[0].transform.position.x, 0, pos.y - IconList[0].transform.position.y)) * scale + MainController.Instance.buildingCenter;
 		MainController.Instance.AddBuilding(posInWorld, (-uIPolygon.rotation + initIConRotateAngle) % 360);

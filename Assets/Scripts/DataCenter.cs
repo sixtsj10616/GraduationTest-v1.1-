@@ -239,6 +239,8 @@ public class DataCenter : Singleton<DataCenter> {
         //FieldInfo[] tFields = objType.GetFields();
         //print("platWidth : " + objType.GetField("platHeight").GetValue(this));
     }
+
+
     /**
      * 將初步得到的檔案資料化為建築資料
      * 目前讀出來初步化簡的格式為 List<object>
@@ -284,7 +286,7 @@ public class DataCenter : Singleton<DataCenter> {
 	}
 
 
-	public class JsonHelper
+	public class JsonCreator
 	{
 		public void SetJson(BuildingObj buildingObj)
 		{
@@ -295,13 +297,38 @@ public class DataCenter : Singleton<DataCenter> {
 			fileWrite.Close();
 		}
 		[Serializable]
+		public class TestA
+		{
+			Wrapper[] testAInfoArray;
+			public TestA(List<BuildingObj> buildingObjList) 
+			{
+				List<Wrapper> testAInfo = new List<Wrapper>();
+				for(int i=0;i<buildingObjList.Count;i++)
+				{
+					Wrapper newTestB = new Wrapper(buildingObjList[i]);
+					testAInfo.Add(newTestB);
+				}
+				testAInfoArray = testAInfo.ToArray();
+			}
+		}
+		[Serializable]
 		public class Wrapper
 		{
-			public Vector3[] array;
+			public List<Vector3>array;
+			public Dictionary<string, object> dicArray = new Dictionary<string, object>();
+			public List<List<Vector3>> listttt =new List<List<Vector3>>();
 			public Wrapper(BuildingObj buildingObj)
 			{
-				array = buildingObj.GetComponent<BodyController>().eaveColumnPosList.ToArray();
+				array = buildingObj.GetComponent<BodyController>().eaveColumnPosList;
+				dicArray.Add("zzz", array);
+				for(int i=0;i<3;i++)
+				{
+					List<Vector3> listZZZ=new List<Vector3>();
+					listZZZ = new List<Vector3>(buildingObj.GetComponent<BodyController>().eaveColumnPosList);
+					listttt.Add(listZZZ);
+				}
 			}
+			
 		}
 	}
 

@@ -48,7 +48,7 @@ public class MainMenuController : Singleton<MainMenuController>
      */
     public void ClickRoofTypeBtn()
     {
-        typeMenu.SetActive(!typeMenu.activeInHierarchy);
+		typeMenu.SetActive(!typeMenu.activeInHierarchy);
 		floorMenu.SetActive(false);
     }
 	/**
@@ -71,7 +71,7 @@ public class MainMenuController : Singleton<MainMenuController>
             StateBtn.GetComponentInChildren<Text>().text = typeInfoList[index].name;
             nowRoofTypeIndex = index;
         }
-        typeMenu.SetActive(!typeMenu.activeInHierarchy);
+        typeMenu.SetActive(true);
     }
 	/**
    * 選擇樓層
@@ -82,7 +82,7 @@ public class MainMenuController : Singleton<MainMenuController>
 		{
 			MainController.Instance.selectFloor=index;
 		}
-		floorMenu.SetActive(!floorMenu.activeInHierarchy);
+		floorMenu.SetActive(true);
 	}
 	/**
 	* 創建樓層
@@ -111,10 +111,13 @@ public class MainMenuController : Singleton<MainMenuController>
 	/**
 	* 設定組合亭型態
 	*/
-	public void SelectCombineTingType()
+	public void ClickCombinedTingTypeBtn()
 	{
 		CTMenu.SetActive(!CTMenu.activeInHierarchy);
 		ViewMenu.SetActive(!ViewMenu.activeInHierarchy);
+
+		typeMenu.SetActive(false);
+		floorMenu.SetActive(false);
 	}
     /**
      * 初始化數據，名稱，索引，按鈕被景色，屋頂型態
