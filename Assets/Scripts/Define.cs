@@ -57,8 +57,8 @@ public class Define : Singleton<Define>
     public const string PlatformDataList = "PlatformDataList";
     //public enum DataListName {Roof = 0 , Body, Plat };        //*** 當初應該用這種方式
     public string[] aryDataListName = new string[] { "RoofDataList", "BodyDataList", "PlatformDataList" };
-    public string[] aryRoofDataName = new string[] { "allJijaHeight", "mainRidgeHeightOffset", "flyEaveHeightOffset", "eaveCurveHeightOffset" };
-    public string[] aryBodyDataName = new string[] { "eaveColRadInflate", "eaveColOffset" };
+    public string[] aryRoofDataName = new string[] { "allJijaHeight", "mainRidgeHeightOffset", "flyEaveHeightOffset", "eaveCurveHeightOffset" , "roofSurfaceHeightOffset" };
+    public string[] aryBodyDataName = new string[] { "eaveColRadInflate", "eaveColOffset", "eaveColumnHeight" };
     public string[] aryPlatDataName = new string[] { };
 
     public Dictionary<string, object> dicSettingData = new Dictionary<string, object>();
@@ -136,11 +136,16 @@ public class Define : Singleton<Define>
                                         new Vector3(-3, -1, 1)));
         dicSetData.Add("allJijaHeight", new DataInfo("allJijaHeight",
                                         new Vector3(8, 13, 18)));
+        dicSetData.Add("roofSurfaceHeightOffset", new DataInfo("roofSurfaceHeightOffset",
+                                        new Vector3(-2, -1, 2)));
+
 
         dicSetData.Add("eaveColRadInflate", new DataInfo("eaveColRadInflate",
                                         new Vector3(0.5f, 1, 3)));
         dicSetData.Add("eaveColOffset", new DataInfo("eaveColOffset",           //*** 此參數目前沒有，若小於0就代表柱子底部內縮
                                         new Vector3(-4, 0, 4)));                //*** 若大於0就代表柱子頂部內縮，感覺還是要有用比例，
+        dicSetData.Add("eaveColumnHeight", new DataInfo("eaveColumnHeight",
+                                       new Vector3(7.5f, 11, 22)));
         //data.Add("面寬", new DataInfo("面寬",
         //                                new Vector3(25, 30, 55)));
         //data.Add("進深", new DataInfo("進深",
@@ -152,7 +157,7 @@ public class Define : Singleton<Define>
 
      
     }
-
+    //*** 可砍
     public Dictionary<string, object> getSettingData(string dataName)
     {
         return dicSettingData[dataName] as Dictionary<string, object>;

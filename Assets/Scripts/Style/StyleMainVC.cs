@@ -27,7 +27,7 @@ public class StyleMainVC : Singleton<StyleMainVC> {
     private List<int> SelectOrderList = new List<int>();
     private RenderTexture PreViewTexture;
     private bool isSelectPic = true;            //** 是否還在選擇喜歡的風格照片
-    private bool isLoadFile = true;             //** 是否由讀檔開始
+    private bool isLoadFile = false;             //** 是否由讀檔開始
     private float fTrainThreshold = 0.9f;
     private string strFileName = "ResultData.json";     //** ResultData_Avg、ResultData
     NNTest nn;

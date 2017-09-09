@@ -16,7 +16,7 @@ public class NNTest : MonoBehaviour {
     // Use this for initialization
     void Start ()
     {
-        net = new NeuralNet(6, 7, 1);
+        net = new NeuralNet(8, 9, 1);
         dataSets = new List<DataSet>();
     }
 	

@@ -32,6 +32,8 @@ public class BodyController : MonoBehaviour
     public float eaveColTopOffset = 0.0f;           //* 簷柱上方位移
     public float eaveColBotOffset = 0.0f;           //* 簷柱下方位移
     public float eaveColumnHeight;
+    public float bodyWidth;                         //** 面寬
+    public float bodyDepth;                         //** 進深
 
 	public float goldColumnHeight;
 	public float eaveColumnRadius = 0.5f;
@@ -101,7 +103,7 @@ public class BodyController : MonoBehaviour
 		//goldColumnRatio2platformOffset = ((MainController.Instance.Buildings.Count == 0) ? (eaveColumnRatio2platformOffset * 2) : parentObj.bodyController.eaveColumnRadius * 3);
 		eaveColumnRatio2platformOffset = (platformFrontWidth * 0.1f);
 		goldColumnRatio2platformOffset = (eaveColumnRatio2platformOffset * 2);
-		Debug.Log("eaveColumnRatio2platformOffset" + eaveColumnRatio2platformOffset);
+		//Debug.Log("eaveColumnRatio2platformOffset" + eaveColumnRatio2platformOffset);
 		parentObj.bodyCenter = parentObj.platformCenter + (platformHeight / 2.0f + eaveColumnHeight / 2.0f) * Vector3.up;
 
 		//**************************************************************************************

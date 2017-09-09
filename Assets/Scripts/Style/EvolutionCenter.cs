@@ -93,6 +93,15 @@ public class EvolutionCenter : Singleton<EvolutionCenter>
         {
             print("In RamdomMutateData can't GET ** eaveColOffset ** value");
         }
+        if (Define.Instance.getSetData("eaveColumnHeight") != null)
+        {
+            DataInfo dicSettingData = Define.Instance.getSetData("eaveColumnHeight");
+            bodyDataList.Add(new DataInfo("eaveColumnHeight", Mutate(dicSettingData.Value, intensity)));
+        }
+        else
+        {
+            print("In RamdomMutateData can't GET ** eaveColumnHeight ** value");
+        }
 
         //** 屋頂 **//
         if (Define.Instance.getSetData("allJijaHeight") != null)
@@ -130,6 +139,15 @@ public class EvolutionCenter : Singleton<EvolutionCenter>
         else
         {
             print("In RamdomMutateData can't GET ** eaveCurveHeightOffset ** value");
+        }
+        if (Define.Instance.getSetData("roofSurfaceHeightOffset") != null)
+        {
+            DataInfo dicSettingData = Define.Instance.getSetData("roofSurfaceHeightOffset");
+            roofDataList.Add(new DataInfo("roofSurfaceHeightOffset", Mutate(dicSettingData.Value, intensity)));
+        }
+        else
+        {
+            print("In RamdomMutateData can't GET ** roofSurfaceHeightOffset ** value");
         }
 
         dicData.Add(Define.PlatformDataList, platDataList);

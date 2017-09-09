@@ -1,8 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class FreeCamera : MonoBehaviour
 {
+    public enum specialPos {StylePreview = 0,Other};                //** 2017/09/07 為了起始位置與旋轉角度
+    public specialPos startType = specialPos.StylePreview;
+    public List<Vector3> startPos = new List<Vector3>() { new Vector3(28,32.7f,-31.9f) };
+    public List<Vector3> startRota = new List<Vector3>() { new Vector3(30, -42, 0) };
+
     public float MovementSpeed = .1f;
     public float RotationKeySpeed = .3f;
     public bool EnableMovement = true;
@@ -28,8 +34,17 @@ public class FreeCamera : MonoBehaviour
     void Start()
     {
         lastMousePosition = Input.mousePosition;
-        newRotation = Vector3.zero;
-        targetPosition = transform.position;
+        if (startType == specialPos.StylePreview)
+        {
+            targetPosition = startPos[(int)specialPos.StylePreview];
+            newRotation = startRota[(int)specialPos.StylePreview];
+        }
+        else
+        {
+            targetPosition = transform.position;
+            newRotation = Vector3.zero;    
+        }
+        
     }
 
 	void Update()

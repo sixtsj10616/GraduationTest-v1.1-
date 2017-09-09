@@ -81,42 +81,44 @@ public class MainController : Singleton<MainController>
 	public float initMainRidgeHeightOffset_DownStair;
 
 
+	public Vector3 buildingCenter = Vector3.zero;
+	public float floorScaleRatio = 0.9f;
+	public int buildingCount = 0;
+	// Use this for initialization
 
-    public Vector3 buildingCenter = Vector3.zero;
-    public float floorScaleRatio=0.9f;
-    public int buildingCount = 0;
-    // Use this for initialization
-
-    public GameObject StyleMainVC;
-    public Vector2 tmpCulInfo = new Vector2();
-    public GameObject tmpUseCul;
-
-    private void Awake()
-    {
-        InitFunction();
-        //** 假如是風格化畫面，則初始化風格的建築們資訊
-        if (StyleMainVC.activeInHierarchy)
-        {
-            StyleMainVC.GetComponent<StyleMainVC>().initBuildingsInfo();
-        }
-    }
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            print("A key was pressed");
-            CreateNewFloor();
-        }
-        else if (Input.GetKeyDown(KeyCode.D))
-        {
-            print("D key was pressed");
-            if ( (Buildings.Count> 1 )&& (selectFloor < Buildings.Count))
-            { 
-                DeleteFloor();
-            }
-        }
-    }
-	List<BuildingObj> AddBuilding(Vector3 pos, float rotateAngle) 
+	public GameObject StyleMainVC;
+    public GameObject MainUI;
+	
+	private void Awake()
+	{
+		InitFunction();
+		if (StyleMainVC.activeInHierarchy)
+		{
+			StyleMainVC.GetComponent<StyleMainVC>().initBuildingsInfo();
+		}
+	}
+	private void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.A))
+		{
+			print("A key was pressed");
+			CreateNewFloor();
+		}
+		else if (Input.GetKeyDown(KeyCode.D))
+		{
+			print("D key was pressed");
+			if ((Buildings.Count > 1) && (selectFloor < Buildings.Count))
+			{
+				DeleteFloor();
+			}
+		}
+		else if (Input.GetKeyDown(KeyCode.Z))
+		{
+			DataCenter.JsonHelper json= new DataCenter.JsonHelper();
+			json.SetJson(Buildings[selectBuildingsIndex]);
+		}
+	}
+	public List<BuildingObj> AddBuilding(Vector3 pos, float rotateAngle)
 	{
 		List<BuildingObj> buildings = new List<BuildingObj>();
 		GameObject building = new GameObject("building" + buildingCount++);
@@ -188,99 +190,23 @@ public class MainController : Singleton<MainController>
 		initAllJijaHeight_DownStair = initAllJijaHeight_TopStair / 8.0f;
 		//?????這著值不能亂取
 		initMainRidgeHeightOffset_DownStair = initMainRidgeHeightOffset_TopStair * (1.0f - floorScaleRatio) / (initAllJijaHeight_TopStair / initAllJijaHeight_DownStair);
-        
-     	if (buildingType == BuildingType.CombinTing)
-		{
-			float rotateAngle = 0;
-			Vector3 LTingCenter = Vector3.zero;
-			List<BuildingObj> LTing = AddBuilding(LTingCenter, 0);
-			AllBuildings.Add(LTing);
-
-			//脊對齊
-			#region RidgeAlign
-			//Vector3 RTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0];
-			//Vector3 MTingCenter = LTing.GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1];
-			#endregion
-			//邊對齊
-			#region EdgeAlign
-			Vector3 RTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1]) / 2;
-			Vector3 MTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3]) / 2;
-			Vector3 GTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[1] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[2]) / 2;
-		
-			Vector3 HTingCenter = (LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[3] + LTing[0].GetComponent<BuildingObj>().platformController.platFormStruct.topPointPosList[0]) / 2;
-
-			#endregion
-			RTingCenter.y = 0;
-			MTingCenter.y = 0;
-			GTingCenter.y = 0;
-			HTingCenter.y = 0;
-
-			//每一個形狀需要的間距不同
-			//RTingCenter += (RTingCenter - LTingCenter).normalized * 20;
-			//預設旋轉角度
-			if (((int)MainController.Instance.sides % 2) == 0)
-			{
-				if ((int)MainController.Instance.sides == 4)
-					rotateAngle = 0;
-				else
-					rotateAngle = 360.0f / (int)MainController.Instance.sides;
-			}
-			else
-			{
-				rotateAngle = 360.0f / (int)MainController.Instance.sides / 2;
-			}
-			ShowPos(LTingCenter, this.gameObject, Color.red, 10);
-			ShowPos(RTingCenter, this.gameObject, Color.blue, 10);
-			ShowPos(MTingCenter, this.gameObject, Color.yellow, 10);
-			List<BuildingObj> RTing = AddBuilding(RTingCenter, rotateAngle);
-			AllBuildings.Add(RTing);
-			List<BuildingObj> MTing = AddBuilding(MTingCenter, rotateAngle);
-			AllBuildings.Add(MTing);
-			List<BuildingObj> GTing = AddBuilding(GTingCenter, rotateAngle);
-			AllBuildings.Add(GTing);
-			List<BuildingObj> HTing = AddBuilding(HTingCenter, rotateAngle);
-			AllBuildings.Add(HTing);
-			{
-				GameObject combinTing = new GameObject("CombinTing");
-				CombineTing combineTingCtrl = combinTing.AddComponent<CombineTing>();
-				LTing[0].transform.parent = combinTing.transform;
-				RTing[0].transform.parent = combinTing.transform;
-				MTing[0].transform.parent = combinTing.transform;
-				GTing[0].transform.parent = combinTing.transform;
-				HTing[0].transform.parent = combinTing.transform;
-				combineTingCtrl.InitFunction(LTing[0].GetComponent<BuildingObj>(), RTing[0].GetComponent<BuildingObj>(), MTing[0].GetComponent<BuildingObj>(), GTing[0].GetComponent<BuildingObj>(), HTing[0].GetComponent<BuildingObj>());
-				//combineTingCtrl.InitFunction(LTing.GetComponent<BuildingObj>(), RTing.GetComponent<BuildingObj>());
-
-				//** 摧毀原先兩亭的body
-				Destroy(LTing[0].GetComponent<BuildingObj>().body);
-				Destroy(RTing[0].GetComponent<BuildingObj>().body);
-				Destroy(MTing[0].GetComponent<BuildingObj>().body);
-				Destroy(GTing[0].GetComponent<BuildingObj>().body);
-				Destroy(HTing[0].GetComponent<BuildingObj>().body);
-			}
-
-		}
-		else
+        if (StyleMainVC.activeInHierarchy || MainUI.activeInHierarchy)
         {
             AllBuildings.Add(AddBuilding(buildingCenter, 0));
+            Buildings = AllBuildings[selectBuildingsIndex];
         }
-		Buildings=AllBuildings[selectBuildingsIndex];
-        //OnPlamformSliderChange plamMenuDelegate = (Slider slider, float value) => UpdatePlameSliderInfo(slider, value);
+        else
+        {
 
-        //else   //** !!暫用!! ** 為了只出現柱子
-        //{
-
-        //    this.tmpCulInfo = new Vector2(2.0f, 1.0f);
-        //    this.tmpUseCul = CreatTmpCul(this.tmpCulInfo);
-        //}	
+        }
+		//Buildings=AllBuildings[selectBuildingsIndex];
+		//OnPlamformSliderChange plamMenuDelegate = (Slider slider, float value) => UpdatePlameSliderInfo(slider, value);
 	}
-
 	public void SelectBuilding(int id) 
 	{
 		selectBuildingsIndex=id;
 		Buildings=AllBuildings[selectBuildingsIndex];
 	}
-
 	/**
 	 * 新增樓層
 	 */
@@ -432,238 +358,6 @@ public class MainController : Singleton<MainController>
 			Buildings.RemoveAt(selectFloor);
 			selectFloor--;
 		}
-    }
-
-    /**
-     * 更新基座 
-     */
-    public void UpdatePlameSliderInfo(Slider slider)
-    {
-       // print(slider.name + " : "+slider.value);
-        PlatformController platform = Buildings[selectFloor].platformController;
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        float moveOffset;
-        switch (slider.name)
-        {
-            case PlamformHandler.WidthSlider_NAME:
-                nowBuilding.ResetPlatformFunction(platform.platLength, Define.initPlatWidth * slider.value , platform.platHeight, platform.isStair);
-                break;
-            case PlamformHandler.DepthSlider_NAME:
-                nowBuilding.ResetPlatformFunction(Define.initPlatLength * slider.value, platform.platWidth, platform.platHeight, platform.isStair);
-                break;
-            case PlamformHandler.HeightSlider_NAME:
-                moveOffset = Define.initPlatHeight * slider.value - platform.platHeight;
-                //Vector3 v = new Vector3(0.0f, 0.01234f, 0.0f);
-                //print("moveOffset : "+ moveOffset+ "  v = "+v);
-                nowBuilding.MoveBuildingBody(new Vector3(0, moveOffset, 0));
-                nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
-                nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, Define.initPlatHeight * slider.value, platform.isStair);
-                break;
-            case PlamformHandler.StairNumSlider_NAME:
-
-                break;
-            case PlamformHandler.StairLengthSlider_NAME:
-                nowBuilding.ResetStair(slider.value, platform.stairWidth);  //***參數未設定好
-                break;
-            case PlamformHandler.StairWidthSlider_NAME:
-                nowBuilding.ResetStair(platform.stairLength, slider.value);  //***參數未設定好
-                break;
-
-            default:
-                print("!!! Can't Find Slider Name !!!");
-                break;
-        }
-    }
-    public void UpdatePlameToggleInfo(Toggle toggle)
-    {
-        PlatformController platform = Buildings[selectFloor].platformController;
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        switch (toggle.name)
-        {
-            case PlamformHandler.StairToggle_NAME:
-                nowBuilding.platformController.StartCreateStair(toggle.isOn);
-                break;
-            case PlamformHandler.BorderToggle_NAME:
-                nowBuilding.platformController.StartCreateBorder(toggle.isOn);
-                break;
-            default:
-                print("!!! Can't Find Toggle Name !!!");
-                break;
-        }
-    }
-
-    /**
-     * 更新屋身
-     */
-    public void UpdateBodySliderInfo(Slider slider)
-    {
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        switch (slider.name)
-        {
-            case BodyMenuHandler.ColumeHeightSlider_NAME:
-                float moveOffset = slider.value - nowBuilding.bodyController.eaveColumnHeight;
-                nowBuilding.bodyController.eaveColumnHeight = slider.value;
-                nowBuilding.bodyController.goldColumnHeight = slider.value;
-                nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
-                nowBuilding.ResetBodyFunction();
-                break;
-            case BodyMenuHandler.GoldColNumSlider_NAME:
-                nowBuilding.bodyController.goldColumnbayNumber = (int)slider.value;
-                nowBuilding.DeleteGoldColumn();
-                nowBuilding.ResetGoldColumn(true,true);
-                nowBuilding.ResetWindowAndDoorNum();
-                break;
-            case BodyMenuHandler.WindowNumSlider_NAME:
-                nowBuilding.bodyController.unitNumberInBay = (int)slider.value;
-                nowBuilding.ResetWindowAndDoorNum();
-                break;
-            case BodyMenuHandler.DoorNumSlider_NAME:
-                nowBuilding.bodyController.doorNumber = (int)slider.value;
-                nowBuilding.ResetWindowAndDoorNum();
-                break;
-            case BodyMenuHandler.BodyWidthSlider_NAME:
-                nowBuilding.AdjustBodyWidth(slider.value);
-                nowBuilding.ResetBodyFunction();
-                //nowBuilding.ResetRoofFunction();
-                break;
-            case BodyMenuHandler.BodyLengthSlider_NAME:
-                nowBuilding.AdjustBodyLength(slider.value);
-                nowBuilding.ResetBodyFunction();
-                //nowBuilding.ResetRoofFunction();
-                break;
-        }
-    }
-    public void UpdateBodyToggleInfo(Toggle toggle)
-    {
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        switch (toggle.name)
-        {
-            case BodyMenuHandler.GoldColToggle_NAME:
-                nowBuilding.ResetGoldColumn(toggle.isOn, false);
-                nowBuilding.ResetWindowAndDoorNum();
-                break;
-            case BodyMenuHandler.FriezeToggle_NAME:
-                nowBuilding.ResetFrieze(toggle.isOn);
-                break;
-            case BodyMenuHandler.BalustradeToggle_NAME:
-                nowBuilding.ResetBalustrade(toggle.isOn);
-                break;
-
-            default:
-                print("!!! Can't Find Toggle Name !!!");
-                break;
-        }
-    }
-
-    /**
-     * 更新屋頂
-     */
-    public void UpdateRoofSliderInfo(Slider slider)
-    {
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        switch (slider.name)
-        {
-            case RoofMenuHandler.JijaHeightSlider_NAME:
-                nowBuilding.roofController.allJijaHeight = slider.value;
-                nowBuilding.ResetRoofFunction();
-                break;
-            case RoofMenuHandler.SurfaceSlider_NAME:
-                nowBuilding.roofController.roofSurfaceHeightOffset = slider.value;
-                nowBuilding.ResetRoofFunction();
-                break;
-            case RoofMenuHandler.EaveSlider_NAME:
-                nowBuilding.roofController.eaveCurveHeightOffset = slider.value;
-                nowBuilding.ResetRoofFunction();
-                break;
-            case RoofMenuHandler.RidgeSlider_NAME:
-                nowBuilding.roofController.mainRidgeHeightOffset = slider.value;
-                nowBuilding.ResetRoofFunction();
-                break;
-            case RoofMenuHandler.WingAngleSlider_NAME:
-                nowBuilding.roofController.flyEaveHeightOffset = slider.value;
-                nowBuilding.ResetRoofFunction();
-                break;
-            default:
-                break;
-        }
-
-    }
-    public void UpdateRoofOnSliderPointUp(Slider slider)
-    {
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        nowBuilding.ResetRoofFunction();
-    }
-    public void UpdateRoofToggleInfo(Toggle toggle)
-    {
-
-    }
-    /**
-     * 
-     */
-    public void tmpUpdateRoof()
-    {
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        nowBuilding.roofController.mainRidgeHeightOffset = Random.Range(-3,3);
-        nowBuilding.ResetRoofFunction();
-    }
-
-    /**
-     * 重製整個建築
-     * 由這邊可以調整建築要重製哪些部分，目前只有屋身屋頂
-     */
-    public void UpdateALL(List<Dictionary<string, List<DataInfo>>> DataList)
-    {
-        DataCenter.Instance.ArrayDataToBuildingDataMethod3(DataList);
-        for (int iIndex = 0; iIndex < Buildings.Count; iIndex++)
-        {
-            BuildingObj nowBuilding = Buildings[iIndex];
-            PlatformController platform = nowBuilding.platformController;
-
-            //nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, platform.platHeight, platform.isStair);
-            nowBuilding.ResetBodyFunction();
-            nowBuilding.ResetRoofFunction();
-        }
-    }
-    /**
-     * 柱子重作暫用
-     */
-    public void UpdateTmpCul(Vector2 vec2Data)
-    {
-        Destroy(this.tmpUseCul);
-        this.tmpCulInfo = vec2Data;
-        this.tmpUseCul = CreatTmpCul(this.tmpCulInfo);
-       
-        
-    }
-    public GameObject CreatTmpCul(Vector2 vec2Data)
-    {
-        GameObject tmpCul = new GameObject("tmpCul");
-        List<float> ColRadList;
-
-        tmpCul.AddComponent<BodyController>();
-        tmpCul.GetComponent<BodyController>().eaveColumnHeight = 11.0f;
-        ColRadList = tmpCul.GetComponent<BodyController>().CalculateColumeRadiusInflateList(vec2Data.x, vec2Data.y, Define.initColRadSegment);
-        tmpCul.GetComponent<BodyController>().CreateColumn(tmpCul,
-                                                            Vector3.zero,
-                                                            2, 2, 11, 3, 1,
-                                                            "tmpColumn",
-                                                            ColRadList);
-        return tmpCul;
-    }
-
-    /**
-     * UI
-     */
-    public void OnRoofTypeBtnClick(RoofType roofType)
-    {
-	print("!!!!"+roofType.ToString());
-        BuildingObj nowBuilding = Buildings[selectFloor];
-        nowBuilding.roofController.roofType = roofType;
-        nowBuilding.ResetRoofFunction();
-    }
-
-    /**
-=======
 	}
 
 	/**
@@ -830,7 +524,7 @@ public class MainController : Singleton<MainController>
 
 	}
 	/**
-	 * 
+	 * 更新整體
 	 */
 	public void tmpUpdateRoof()
 	{
@@ -847,7 +541,7 @@ public class MainController : Singleton<MainController>
 			PlatformController platform = nowBuilding.platformController;
 
 			//nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, platform.platHeight, platform.isStair);
-			//nowBuilding.ResetBodyFunction();
+			nowBuilding.ResetBodyFunction();
 			nowBuilding.ResetRoofFunction();
 		}
 
@@ -864,7 +558,6 @@ public class MainController : Singleton<MainController>
 	}
 
 	/**
->>>>>>> origin/master
 	 * 顯示觀察用的點
 	 */
 	static public void ShowPos(Vector3 pos, GameObject parent, Color color, float localScale = 0.2f)

@@ -57,7 +57,7 @@ public class DataCenter : Singleton<DataCenter> {
      * 2.用個二維list  List<List<vector3>>，將其變數最小最大值放在X、Z，而 Y 放參數值
      * 3.用個 Dic 
      */
-    void BuildingDataToArray(List<BuildingObj> Buildings)
+    void BuildingDataToArray(List<BuildingObj> Buildings)           //*** 方法一:這個廢棄
     {
         List<List<float>> DataList = new List<List<float>>();
         for (int iIndex = 0; iIndex < Buildings.Count; iIndex++)
@@ -96,7 +96,7 @@ public class DataCenter : Singleton<DataCenter> {
     /**
      * 每個樓層皆用一個Dic ，內部分為屋頂屋身基座三個部分(皆為List)，最後再放入List中
      */
-    public List<Dictionary<string, List<DataInfo>>> BuildingDataToArrayMethod3(List<BuildingObj> Buildings)
+    public List<Dictionary<string, List<DataInfo>>> BuildingDataToArrayMethod3(List<BuildingObj> Buildings)     //*** 方法三:目前
     {
         List<Dictionary<string, List<DataInfo>>> DataList = new List<Dictionary<string, List<DataInfo>>>();
         
@@ -120,8 +120,7 @@ public class DataCenter : Singleton<DataCenter> {
             platDataList.Add(new DataInfo("isBorder",
                                             new Vector3(0, Convert.ToInt32(nowFloor.platformController.isBorder), 1)));
 
-            //bodyDataList.Add(new DataInfo("eaveColumnHeight",
-            //                                new Vector3(0, nowFloor.bodyController.eaveColumnHeight,10)));
+            
             //bodyDataList.Add(new DataInfo("goldColumnbayNumber",
             //                                new Vector3(0, nowFloor.bodyController.goldColumnbayNumber, 10)));
             //bodyDataList.Add(new DataInfo("eaveColumnbayNumber",
@@ -138,6 +137,8 @@ public class DataCenter : Singleton<DataCenter> {
                                             new Vector3(-4, nowFloor.bodyController.eaveColOffset, 4)));
             bodyDataList.Add(new DataInfo("eaveColRadInflate",
                                             new Vector3(0.5f, nowFloor.bodyController.eaveColRadInflate, 3)));
+            bodyDataList.Add(new DataInfo("eaveColumnHeight",
+                                            new Vector3(7.5f, nowFloor.bodyController.eaveColumnHeight, 22)));
             //bodyDataList.Add(new DataInfo("eaveColTopOffset",
             //                               new Vector3(0, nowFloor.bodyController.eaveColTopOffset, 8)));
             //bodyDataList.Add(new DataInfo("eaveColBotOffset",
@@ -154,11 +155,11 @@ public class DataCenter : Singleton<DataCenter> {
             roofDataList.Add(new DataInfo("mainRidgeHeightOffset",
                                            new Vector3(-3, nowFloor.roofController.mainRidgeHeightOffset, 3)));
             roofDataList.Add(new DataInfo("flyEaveHeightOffset",
-                                           new Vector3(-3, nowFloor.roofController.flyEaveHeightOffset, 3)));
-            //roofDataList.Add(new DataInfo("roofSurfaceHeightOffset",
-            //                               new Vector3(-3, nowFloor.roofController.roofSurfaceHeightOffset, 3)));
+                                           new Vector3(-3, nowFloor.roofController.flyEaveHeightOffset, 3))); 
             roofDataList.Add(new DataInfo("eaveCurveHeightOffset",
                                            new Vector3(-3, nowFloor.roofController.eaveCurveHeightOffset, 1)));
+            roofDataList.Add(new DataInfo("roofSurfaceHeightOffset",
+                                           new Vector3(-2, nowFloor.roofController.roofSurfaceHeightOffset, 2)));
 
             dicData.Add(Define.PlatformDataList, platDataList);
             dicData.Add(Define.BodyDataList, bodyDataList);
@@ -198,7 +199,6 @@ public class DataCenter : Singleton<DataCenter> {
                 try
                 {
                     Type tryType = objType.GetField(bodyDataList[i].Name).FieldType;
-                    //if (objType.GetField(bodyDataList[i].Name).GetType() == typeof(int))
                     if (tryType == typeof(int))
                     {
                         objType.GetField(bodyDataList[i].Name).SetValue(nowBuilding.bodyController, (int)bodyDataList[i].Value.y);
