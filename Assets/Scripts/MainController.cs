@@ -63,26 +63,24 @@ public class MainController : Singleton<MainController>
 	public enum RoofType { Zan_Jian_Ding = 0, Wu_Dian_Ding = 1, Lu_Ding = 2, Juan_Peng = 3, Shya_Shan_Ding = 4, Dome = 8 };//Zan_Jian_Ding攢尖頂, Wu_Dian_Ding廡殿頂,Lu_Ding盝頂,Juan_Peng卷棚,Dome圓頂
 
 	public enum BuildingType { CombinTing = 0, Normal = 1 };
-	public BuildingType buildingType = BuildingType.Normal;
-	public RoofType roofType = RoofType.Dome;
+	public BuildingType buildingType = BuildingType.CombinTing;
+	public RoofType roofType = RoofType.Zan_Jian_Ding;
 	//**********************************************************************************
-	public float initPlatformWidth_DownStair = 20;
-	public float initPlatformLength_DownStair = 20;
+	 float initPlatformWidth_DownStair = Define.initPlatWidth;
+	 float initPlatformLength_DownStair = Define.initPlatLength;
 
 
-	public float initPlatformHeight_DownStair = 5;
-	public float initPlatformHeight_TopStair = 1;
-	public float initEaveColumnHeight = Define.initEaveColumnHeight;
-	public float initGoldColumnHeight = Define.initEaveColumnHeight;
+	 float initPlatformHeight_DownStair = Define.initPlatHeight;
+	 float initPlatformHeight_TopStair = Define.initPlatHeight;
+	 float initEaveColumnHeight = Define.initEaveColumnHeight;
+	 float initGoldColumnHeight = Define.initEaveColumnHeight;
 
-	public float initAllJijaHeight_TopStair = 13f;
-	public float initMainRidgeHeightOffset_TopStair = 0;
-	public float initAllJijaHeight_DownStair;
-	public float initMainRidgeHeightOffset_DownStair;
+	 float initAllJijaHeight_TopStair = Define.initJijaHeight;
+	 float initAllJijaHeight_DownStair = Define.initJijaHeight*0.1f;
 
 
 	public Vector3 buildingCenter = Vector3.zero;
-	public float floorScaleRatio = 0.9f;
+	public float floorScaleRatio = 1.0f;
 	public int buildingCount = 0;
 	// Use this for initialization
 
@@ -113,22 +111,78 @@ public class MainController : Singleton<MainController>
 			}
 		}
 	}
+	List<Vector3> Vector3ListAddVector3(List<Vector3> list,Vector3 value) 
+	{ 
+		List<Vector3> newList=null;
+		if (list!=null)
+		{
+			newList=new List<Vector3>(list);
+			for(int i=0;i<newList.Count;i++)
+			{
+				newList[i]+=value;
+			}
+		}
+		return newList;
+	}
 	public List<BuildingObj> AddBuilding(Vector3 pos, float rotateAngle)
 	{
 		List<BuildingObj> buildings = new List<BuildingObj>();
-		GameObject building = new GameObject("building" + buildingCount++);
-		building.gameObject.AddComponent<BuildingObj>();
-		building.GetComponent<BuildingObj>().InitFunction(building, pos, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_TopStair, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
-		buildings.Add(building.GetComponent<BuildingObj>());
-		Debug.Log("----------------------------------- ----------------------------------- -----------------------------------");
-		Debug.Log("AllBuildings.Count : " + AllBuildings.Count);
+
 		//檢查是否為組合亭
 		if (AllBuildings.Count > 0)
 		{
+			List<BuildingObj> selectBuildings= MainController.Instance.AllBuildings[selectBuildingsIndex];
+			for(int i=0;i<selectBuildings.Count;i++)
+			{
+				GameObject building = new GameObject("building" + buildingCount++);
+				building.gameObject.AddComponent<BuildingObj>();
+				Vector3 revisePos = pos;
+				revisePos.y = selectBuildings[i].platformCenter.y;
+				building.GetComponent<BuildingObj>().InitFunction(building, revisePos, selectBuildings[i].platformController.platLength, selectBuildings[i].platformController.platWidth, selectBuildings[i].platformController.platHeight, selectBuildings[i].bodyController.eaveColumnHeight, selectBuildings[i].bodyController.goldColumnHeight, selectBuildings[i].roofController.mainRidgeHeightOffset, selectBuildings[i].roofController.allJijaHeight, Vector3ListAddVector3(selectBuildings[i].roofController.topFloorBorderList, pos), (int)selectBuildings[i].roofController.roofType, selectBuildings[i].platformController.isStair, rotateAngle);
+				buildings.Add(building.GetComponent<BuildingObj>());
+
+				BuildingObj LTing = building.GetComponent<BuildingObj>();
+				//檢查與其他組合亭有無需要合併
+				for (int j = AllBuildings.Count - 1; j >= 0; j--)
+				{
+					BuildingObj RTing = AllBuildings[j][i];
+					if (isNeedCombine(LTing, RTing))
+					{
+						GameObject combinTing = new GameObject("CombinTing");
+						CombineTing combineTingCtrl = combinTing.AddComponent<CombineTing>();
+						List<BuildingObj> buildingsList = new List<BuildingObj>();
+						if (RTing.transform.GetComponentInParent<CombineTing>())
+						{
+							Debug.Log("Already Has CombineTingoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
+							Destroy(combinTing);
+							combinTing = RTing.transform.GetComponentInParent<CombineTing>().gameObject;
+							combineTingCtrl = RTing.transform.GetComponentInParent<CombineTing>();
+							LTing.transform.parent = combinTing.transform;
+							buildingsList.AddRange(combineTingCtrl.BuildingsList);
+							Destroy(combineTingCtrl.body.gameObject);
+						}
+						else 
+						{
+							LTing.transform.parent = combinTing.transform;
+							RTing.transform.parent = combinTing.transform;
+							buildingsList.Add(RTing);
+			
+						}
+						buildingsList.Add(LTing);
+
+						combineTingCtrl.InitFunction(buildingsList.ToArray());
+
+						AllCT.Add(combineTingCtrl);
+						break;
+					}
+				}
+
+			}
+		/*	
 			List<BuildingObj> LTing = buildings;
+
 			for (int i = AllBuildings.Count-1; i>=0; i--)
 			{
-
 				List<BuildingObj> RTing = AllBuildings[i];
 				if (isNeedCombine(LTing[0], RTing[0]))
 				{
@@ -156,21 +210,23 @@ public class MainController : Singleton<MainController>
 					}
 					buildingsList.Add(LTing[0]);
 					Debug.Log("buildingsList.ToArray().Length : " + buildingsList.ToArray().Length);
-
-
-					//** 摧毀亭的body
-					for (int j = 0; j < buildingsList.Count; j++)
-					{
-						Destroy(buildingsList[j].GetComponent<BuildingObj>().body.gameObject);
-					}
-					
 					
 					combineTingCtrl.InitFunction(buildingsList.ToArray());
 
 
 					break;
 				}
-			}
+			}*/
+		}
+		else 
+		{
+			Debug.Log("FirstBuilding");
+			GameObject building = new GameObject("building" + buildingCount++);
+			building.gameObject.AddComponent<BuildingObj>();
+			building.GetComponent<BuildingObj>().InitFunction(building, pos, initPlatformLength_DownStair, initPlatformWidth_DownStair, initPlatformHeight_DownStair, initEaveColumnHeight, initGoldColumnHeight, 0, initAllJijaHeight_TopStair, null, (int)roofType, false, rotateAngle);
+			buildings.Add(building.GetComponent<BuildingObj>());
+			Debug.Log("----------------------------------- ----------------------------------- -----------------------------------");
+			Debug.Log("AllBuildings.Count : " + AllBuildings.Count);
 		}
 
 		AllBuildings.Add(buildings);
@@ -182,9 +238,6 @@ public class MainController : Singleton<MainController>
 	 */
 	public void InitFunction()
 	{
-		initAllJijaHeight_DownStair = initAllJijaHeight_TopStair / 8.0f;
-		//?????這著值不能亂取
-		initMainRidgeHeightOffset_DownStair = initMainRidgeHeightOffset_TopStair * (1.0f - floorScaleRatio) / (initAllJijaHeight_TopStair / initAllJijaHeight_DownStair);
         if (StyleMainVC.activeInHierarchy && MainUI.activeInHierarchy)
         {
             AllBuildings.Add(AddBuilding(buildingCenter, 0));
@@ -201,6 +254,11 @@ public class MainController : Singleton<MainController>
 	{
 		selectBuildingsIndex=id;
 		Buildings=AllBuildings[selectBuildingsIndex];
+		Debug.Log("SelectBuilding : "+id);
+	}
+	public void SelectFloor(int id)
+	{
+		selectFloor=id;
 	}
 	/**
 	 * 新增樓層
@@ -215,17 +273,15 @@ public class MainController : Singleton<MainController>
 			int type = (int)Buildings[selectFloor].roofController.roofType;
 			float allJijaHeight = (int)Buildings[selectFloor].roofController.allJijaHeight;
 			float mainRidgeHeightOffset = (int)Buildings[selectFloor].roofController.mainRidgeHeightOffset;
-			float platLength = ((selectFloor == 0 && (Buildings.Count > 0)) ? -Buildings[selectFloor].bodyController.eaveColumnRatio2platformOffset : 0) + Buildings[selectFloor].platformController.platLength;
-			float platWidth = ((selectFloor == 0 && (Buildings.Count > 0)) ? -Buildings[selectFloor].bodyController.eaveColumnRatio2platformOffset : 0) + Buildings[selectFloor].platformController.platWidth;
-			//float platLength =  -Buildings[selectFloor].bodyController.eaveColumnRatio2platformOffset + Buildings[selectFloor].platformController.platLength;
-			//float platWidth = -Buildings[selectFloor].bodyController.eaveColumnRatio2platformOffset + Buildings[selectFloor].platformController.platWidth;
+			float platLength =  Buildings[selectFloor].platformController.platLength;
+			float platWidth =  Buildings[selectFloor].platformController.platWidth;
 			//新加入一層樓
 			GameObject newBuilding = new GameObject("building" + buildingCount++);
 			newBuilding.gameObject.AddComponent<BuildingObj>();
 			newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, pos + (initPlatformHeight_TopStair / 2.0f - (allJijaHeight - initAllJijaHeight_DownStair)) * Vector3.up, platLength * floorScaleRatio, platWidth * floorScaleRatio, initPlatformHeight_TopStair, initEaveColumnHeight, initGoldColumnHeight, mainRidgeHeightOffset, allJijaHeight, null, type, false, rotateAngle);
 
 			//重新更新selectFloor屋頂
-			Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, (int)RoofType.Lu_Ding);
+			Buildings[selectFloor].ResetRoofFunction(0, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, (int)RoofType.Lu_Ding);
 
 			Buildings.Add(newBuilding.GetComponent<BuildingObj>());
 
@@ -243,17 +299,17 @@ public class MainController : Singleton<MainController>
 			//紀錄select樓層資訊
 			Vector3 pos = Buildings[selectFloor].roofTopCenter;
 			float rotateAngle= Buildings[selectFloor].rotateAngle;
-			float platLength = ((selectFloor == 0 && (Buildings.Count > 0)) ? -Buildings[selectFloor].platformController.platLength * 0.1f : 0) + Buildings[selectFloor].platformController.platLength;
-			float platWidth = ((selectFloor == 0 && (Buildings.Count > 0)) ? -Buildings[selectFloor].platformController.platWidth * 0.1f : 0) + Buildings[selectFloor].platformController.platWidth;
+			float platLength =  Buildings[selectFloor].platformController.platLength;
+			float platWidth =  Buildings[selectFloor].platformController.platWidth;
 			//新加入一層樓
 			GameObject newBuilding = new GameObject("building" + buildingCount++);
 			newBuilding.gameObject.AddComponent<BuildingObj>();
-			newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, pos + (initPlatformHeight_TopStair / 2.0f) * Vector3.up, platLength * floorScaleRatio, platWidth * floorScaleRatio, initPlatformHeight_TopStair, initEaveColumnHeight, initGoldColumnHeight, initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, Buildings[selectFloor + 1].platformController.platFormStruct.bottomPointPosList, (int)RoofType.Lu_Ding, false, rotateAngle);
+			newBuilding.GetComponent<BuildingObj>().InitFunction(newBuilding, pos + (initPlatformHeight_TopStair / 2.0f) * Vector3.up, platLength * floorScaleRatio, platWidth * floorScaleRatio, initPlatformHeight_TopStair, initEaveColumnHeight, initGoldColumnHeight, 0, initAllJijaHeight_DownStair, Buildings[selectFloor + 1].platformController.platFormStruct.bottomPointPosList, (int)RoofType.Lu_Ding, false, rotateAngle);
 
 			if (selectFloor != 0)
 			{
 
-				Buildings[selectFloor].ResetRoofFunction(initMainRidgeHeightOffset_DownStair, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, (int)RoofType.Lu_Ding);
+				Buildings[selectFloor].ResetRoofFunction(0, initAllJijaHeight_DownStair, newBuilding.GetComponent<BuildingObj>().platformController.platFormStruct.bottomPointPosList, (int)RoofType.Lu_Ding);
 			}
 
 			selectFloor++;
@@ -361,32 +417,64 @@ public class MainController : Singleton<MainController>
 	public void UpdatePlameSliderInfo(Slider slider)
 	{
 		// print(slider.name + " : "+slider.value);
+
 		PlatformController platform = Buildings[selectFloor].platformController;
 		BuildingObj nowBuilding = Buildings[selectFloor];
 		float moveOffset;
+		CombineTing CT = nowBuilding.transform.GetComponentInParent<CombineTing>();
 		switch (slider.name)
 		{
-			case PlamformHandler.WidthSlider_NAME:
-				nowBuilding.ResetPlatformFunction(platform.platLength, Define.initPlatWidth * slider.value, platform.platHeight, platform.isStair);
+			case PlamformMenuHandler.WidthSlider_NAME:
+				if (CT)
+				{
+					for(int i=0;i<CT.BuildingsList.Count;i++)
+					{
+						CT.BuildingsList[i].ResetPlatformFunction(platform.platLength, slider.value, platform.platHeight, platform.isStair);
+					}
+					CT.UpdateFunction();
+				}
+				else 
+					nowBuilding.ResetPlatformFunction(platform.platLength, slider.value, platform.platHeight, platform.isStair);
 				break;
-			case PlamformHandler.DepthSlider_NAME:
-				nowBuilding.ResetPlatformFunction(Define.initPlatLength * slider.value, platform.platWidth, platform.platHeight, platform.isStair);
+			case PlamformMenuHandler.DepthSlider_NAME:
+				if (CT)
+				{
+					for (int i = 0; i < CT.BuildingsList.Count; i++)
+					{
+						CT.BuildingsList[i].ResetPlatformFunction(slider.value, platform.platWidth, platform.platHeight, platform.isStair);
+					}
+					CT.UpdateFunction();
+				}
+				else 
+				nowBuilding.ResetPlatformFunction(slider.value, platform.platWidth, platform.platHeight, platform.isStair);
 				break;
-			case PlamformHandler.HeightSlider_NAME:
-				moveOffset = Define.initPlatHeight * slider.value - platform.platHeight;
-				//Vector3 v = new Vector3(0.0f, 0.01234f, 0.0f);
-				//print("moveOffset : "+ moveOffset+ "  v = "+v);
-				nowBuilding.MoveBuildingBody(new Vector3(0, moveOffset, 0));
-				nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
-				nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, Define.initPlatHeight * slider.value, platform.isStair);
+			case PlamformMenuHandler.HeightSlider_NAME:
+				moveOffset = slider.value - nowBuilding.platformController.platHeight;
+				if (CT)
+				{
+					for (int i = 0; i < CT.BuildingsList.Count; i++)
+					{
+						CT.BuildingsList[i].MoveBuildingBody(new Vector3(0, moveOffset, 0));
+						CT.BuildingsList[i].MoveBuildingRoof(new Vector3(0, moveOffset, 0));
+						CT.BuildingsList[i].ResetPlatformFunction(platform.platLength, platform.platWidth, slider.value, platform.isStair);
+					}
+					CT.UpdateFunction();
+				}
+				else
+				{ 
+					nowBuilding.MoveBuildingBody(new Vector3(0, moveOffset, 0));
+					nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
+					Debug.Log("HeightSlider_NAME.slider.value" + slider.value);
+					nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, slider.value, platform.isStair);
+				}
 				break;
-			case PlamformHandler.StairNumSlider_NAME:
+			case PlamformMenuHandler.StairNumSlider_NAME:
 
 				break;
-			case PlamformHandler.StairLengthSlider_NAME:
+			case PlamformMenuHandler.StairLengthSlider_NAME:
 				nowBuilding.ResetStair(slider.value, platform.stairWidth);  //***參數未設定好
 				break;
-			case PlamformHandler.StairWidthSlider_NAME:
+			case PlamformMenuHandler.StairWidthSlider_NAME:
 				nowBuilding.ResetStair(platform.stairLength, slider.value);  //***參數未設定好
 				break;
 
@@ -401,10 +489,10 @@ public class MainController : Singleton<MainController>
 		BuildingObj nowBuilding = Buildings[selectFloor];
 		switch (toggle.name)
 		{
-			case PlamformHandler.StairToggle_NAME:
+			case PlamformMenuHandler.StairToggle_NAME:
 				nowBuilding.platformController.StartCreateStair(toggle.isOn);
 				break;
-			case PlamformHandler.BorderToggle_NAME:
+			case PlamformMenuHandler.BorderToggle_NAME:
 				nowBuilding.platformController.StartCreateBorder(toggle.isOn);
 				break;
 			default:
@@ -419,40 +507,96 @@ public class MainController : Singleton<MainController>
 	public void UpdateBodySliderInfo(Slider slider)
 	{
 		BuildingObj nowBuilding = Buildings[selectFloor];
+		CombineTing CT = nowBuilding.transform.GetComponentInParent<CombineTing>();
 		switch (slider.name)
 		{
 			case BodyMenuHandler.ColumeHeightSlider_NAME:
 				float moveOffset = slider.value - nowBuilding.bodyController.eaveColumnHeight;
-				nowBuilding.bodyController.eaveColumnHeight = slider.value;
-				nowBuilding.bodyController.goldColumnHeight = slider.value;
-				nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
-				nowBuilding.ResetBodyFunction();
+				if (CT)
+				{
+					for(int i=0;i<CT.BuildingsList.Count;i++)
+					{
+						CT.BuildingsList[i].bodyController.eaveColumnHeight = slider.value;
+						CT.BuildingsList[i].bodyController.goldColumnHeight = slider.value;
+						CT.BuildingsList[i].MoveBuildingRoof(new Vector3(0, moveOffset, 0));
+						CT.BuildingsList[i].ResetBodyFunction();
+					}
+					CT.UpdateFunction();
+				}
+				else 
+				{
+					nowBuilding.bodyController.eaveColumnHeight = slider.value;
+					nowBuilding.bodyController.goldColumnHeight = slider.value;
+					nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
+					nowBuilding.ResetBodyFunction();
+				}
 				break;
 			case BodyMenuHandler.GoldColNumSlider_NAME:
-				nowBuilding.bodyController.goldColumnbayNumber = (int)slider.value;
-				nowBuilding.DeleteGoldColumn();
-				nowBuilding.ResetGoldColumn(true, true);
-				nowBuilding.ResetWindowAndDoorNum();
+				if (CT)
+				{
+					CT.bodyCtrl4CT.goldColumnBayNumber = (int)slider.value;
+					CT.UpdateFunction();
+				}
+				else 
+				{
+					nowBuilding.bodyController.goldColumnbayNumber = (int)slider.value;
+					nowBuilding.DeleteGoldColumn();
+					nowBuilding.ResetGoldColumn(true, true);
+					nowBuilding.ResetWindowAndDoorNum();
+				}
 				break;
-			case BodyMenuHandler.WindowNumSlider_NAME:
-				nowBuilding.bodyController.unitNumberInBay = (int)slider.value;
-				nowBuilding.ResetWindowAndDoorNum();
+			case BodyMenuHandler.UnitInBay_NAME:
+			
+				if (CT)
+				{
+					CT.bodyCtrl4CT.unitNumberInBay = (int)slider.value;
+					CT.UpdateFunction();
+				}
+				else 
+				{
+					nowBuilding.bodyController.unitNumberInBay = (int)slider.value;
+					nowBuilding.ResetWindowAndDoorNum();
+				}
 				break;
 			case BodyMenuHandler.DoorNumSlider_NAME:
-				nowBuilding.bodyController.doorNumber = (int)slider.value;
-				nowBuilding.ResetWindowAndDoorNum();
+				
+				if (CT)
+				{
+					CT.bodyCtrl4CT.doorNumber = (int)slider.value;
+					CT.UpdateFunction();
+				}
+				else
+				{
+					nowBuilding.bodyController.doorNumber = (int)slider.value;
+					nowBuilding.ResetWindowAndDoorNum();
+				}
 				break;
 			case BodyMenuHandler.BodyWidthSlider_NAME:
-				nowBuilding.AdjustBodyWidth(slider.value);
-				nowBuilding.ResetBodyFunction();
-				//nowBuilding.ResetRoofFunction();
+		
+				if (CT)
+				{
+			
+				}
+				else
+				{
+					nowBuilding.AdjustBodyWidth(slider.value);
+					nowBuilding.ResetBodyFunction();
+				}
 				break;
 			case BodyMenuHandler.BodyLengthSlider_NAME:
-				nowBuilding.AdjustBodyLength(slider.value);
-				nowBuilding.ResetBodyFunction();
-				//nowBuilding.ResetRoofFunction();
+
+				if (CT)
+				{
+
+				}
+				else
+				{
+					nowBuilding.AdjustBodyLength(slider.value);
+					nowBuilding.ResetBodyFunction();
+				}
 				break;
 		}
+
 	}
 	public void UpdateBodyToggleInfo(Toggle toggle)
 	{

@@ -21,7 +21,6 @@ public struct RoofTypeInfo
 
 public class MainMenuController : Singleton<MainMenuController>
 {
-
     public GameObject typeMenu;
 	public GameObject floorMenu;
 	public GameObject CTMenu;
@@ -31,6 +30,10 @@ public class MainMenuController : Singleton<MainMenuController>
 	public GameObject FloorBtn;
     List<RoofTypeInfo> typeInfoList;
     public int nowRoofTypeIndex = 0;
+
+	public BodyMenuHandler bodyMenuHandler;
+	public PlamformMenuHandler plamformHandler;
+	public RoofMenuHandler roofMenuHandler;
     // Use this for initialization
     void Start()
     {

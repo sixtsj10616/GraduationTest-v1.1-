@@ -13,21 +13,30 @@ public class DataInfo
 {
     public String Name;
     public Vector3 Value;
+	public string UIName;
 
     public DataInfo()
     {
         Value = Vector3.zero;
     }
-    public DataInfo(String str, Vector3 val)
+    public DataInfo(String str, Vector3 val,string uiName)
     {
         Name = str;
         Value = val;
+		UIName = uiName;
     }
+	public DataInfo(String str, Vector3 val)
+	{
+		Name = str;
+		Value = val;
+		UIName = null;
+	}
     public DataInfo Clone()
     {
         DataInfo data = new DataInfo();
         data.Name = this.Name;
         data.Value = this.Value;
+		data.UIName = this.UIName;
         return data;
     }
 }
@@ -108,67 +117,128 @@ public class DataCenter : Singleton<DataCenter> {
             List<DataInfo> roofDataList = new List<DataInfo>();
             List<DataInfo> bodyDataList = new List<DataInfo>();
             List<DataInfo> platDataList = new List<DataInfo>();
-
-            platDataList.Add(new DataInfo("platWidth", 
-                                            new Vector3(0, nowFloor.platformController.platWidth, 10)));
+			#region PLATFORM_PARAMETER
+            platDataList.Add(new DataInfo("platWidth",
+											new Vector3(Define.Instance.getSetData("platWidth").Value.x,										 nowFloor.platformController.platWidth,
+														Define.Instance.getSetData("platWidth").Value.z),
+											Define.Instance.getSetData("platWidth").UIName));
             platDataList.Add(new DataInfo("platLength",
-                                            new Vector3(0, nowFloor.platformController.platLength, 10)));
+											new Vector3(Define.Instance.getSetData("platLength").Value.x, 
+														nowFloor.platformController.platLength,
+														Define.Instance.getSetData("platLength").Value.z),
+											Define.Instance.getSetData("platLength").UIName));
             platDataList.Add(new DataInfo("platHeight",
-                                            new Vector3(0, nowFloor.platformController.platHeight, 10)));
+											new Vector3(Define.Instance.getSetData("platHeight").Value.x,
+														nowFloor.platformController.platHeight,
+														Define.Instance.getSetData("platHeight").Value.z),
+											Define.Instance.getSetData("platHeight").UIName));
             platDataList.Add(new DataInfo("isStair",
-                                            new Vector3(0, Convert.ToInt32(nowFloor.platformController.isStair), 1)));
+											new Vector3(Define.Instance.getSetData("isStair").Value.x,
+														Convert.ToInt32(nowFloor.platformController.isStair),
+														Define.Instance.getSetData("isStair").Value.z),
+											Define.Instance.getSetData("isStair").UIName));
             platDataList.Add(new DataInfo("isBorder",
-                                            new Vector3(0, Convert.ToInt32(nowFloor.platformController.isBorder), 1)));
+											new Vector3(Define.Instance.getSetData("isBorder").Value.x, 
+														Convert.ToInt32(nowFloor.platformController.isBorder),
+														Define.Instance.getSetData("isBorder").Value.z),
+											Define.Instance.getSetData("isBorder").UIName));
 
-            
-            //bodyDataList.Add(new DataInfo("goldColumnbayNumber",
-            //                                new Vector3(0, nowFloor.bodyController.goldColumnbayNumber, 10)));
+            #endregion
+			#region BODY_PARAMETER
+
+            bodyDataList.Add(new DataInfo("goldColumnbayNumber",
+											new Vector3(Define.Instance.getSetData("goldColumnbayNumber").Value.x, 
+														nowFloor.bodyController.goldColumnbayNumber,
+														Define.Instance.getSetData("goldColumnbayNumber").Value.z),
+											Define.Instance.getSetData("goldColumnbayNumber").UIName));
             //bodyDataList.Add(new DataInfo("eaveColumnbayNumber",
             //                               new Vector3(0, nowFloor.bodyController.eaveColumnbayNumber, 10)));
-            //bodyDataList.Add(new DataInfo("unitNumberInBay",
-            //                                new Vector3(0, nowFloor.bodyController.unitNumberInBay, 10)));
-            //bodyDataList.Add(new DataInfo("doorNumber",
-            //                                new Vector3(0, nowFloor.bodyController.doorNumber, 10)));
+            bodyDataList.Add(new DataInfo("unitNumberInBay",
+											new Vector3(Define.Instance.getSetData("unitNumberInBay").Value.x, 
+														nowFloor.bodyController.unitNumberInBay,
+														Define.Instance.getSetData("unitNumberInBay").Value.z),
+											Define.Instance.getSetData("unitNumberInBay").UIName));
+			//門的最大數量為(金柱數量的一半加一)
+			bodyDataList.Add(new DataInfo("doorNumber",
+											new Vector3(Define.Instance.getSetData("doorNumber").Value.x,
+														 nowFloor.bodyController.doorNumber,
+														Define.Instance.getSetData("doorNumber").Value.y / 2 + 1),
+											Define.Instance.getSetData("doorNumber").UIName));
             //bodyDataList.Add(new DataInfo("eaveColumnRadius",
             //                                new Vector3(0, nowFloor.bodyController.eaveColumnRadius, 10)));
             //bodyDataList.Add(new DataInfo("goldColumnRadius",
             //                                new Vector3(0, nowFloor.bodyController.goldColumnRadius, 10)));
-            bodyDataList.Add(new DataInfo("eaveColOffset",
-                                            new Vector3(-4, nowFloor.bodyController.eaveColOffset, 4)));
+           
+		    bodyDataList.Add(new DataInfo("eaveColOffset",
+											new Vector3(Define.Instance.getSetData("eaveColOffset").Value.x, 
+														nowFloor.bodyController.eaveColOffset,
+														Define.Instance.getSetData("eaveColOffset").Value.z),
+											Define.Instance.getSetData("eaveColOffset").UIName));
+
             bodyDataList.Add(new DataInfo("eaveColRadInflate",
-                                            new Vector3(0.5f, nowFloor.bodyController.eaveColRadInflate, 3)));
+											new Vector3(Define.Instance.getSetData("eaveColRadInflate").Value.x, 
+														nowFloor.bodyController.eaveColRadInflate,
+														Define.Instance.getSetData("eaveColRadInflate").Value.z),
+											Define.Instance.getSetData("eaveColRadInflate").UIName));
             bodyDataList.Add(new DataInfo("eaveColumnHeight",
-                                            new Vector3(7.5f, nowFloor.bodyController.eaveColumnHeight, 22)));
+											new Vector3(Define.Instance.getSetData("eaveColumnHeight").Value.x,
+														nowFloor.bodyController.eaveColumnHeight,
+														Define.Instance.getSetData("eaveColumnHeight").Value.z),
+											Define.Instance.getSetData("eaveColumnHeight").UIName));
             //bodyDataList.Add(new DataInfo("eaveColTopOffset",
             //                               new Vector3(0, nowFloor.bodyController.eaveColTopOffset, 8)));
             //bodyDataList.Add(new DataInfo("eaveColBotOffset",
             //                               new Vector3(0, nowFloor.bodyController.eaveColBotOffset, 8)));
-            //bodyDataList.Add(new DataInfo("isGoldColumn",
-            //                                 new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isGoldColumn), 1)));
-            //bodyDataList.Add(new DataInfo("isFrieze",
-            //                                 new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isFrieze), 1)));
-            //bodyDataList.Add(new DataInfo("isBalustrade",
-            //                                 new Vector3(0, Convert.ToInt32(nowFloor.bodyController.isBalustrade), 1)));
-
+            bodyDataList.Add(new DataInfo("isGoldColumn",
+											 new Vector3(Define.Instance.getSetData("isGoldColumn").Value.x, 
+														 Convert.ToInt32(nowFloor.bodyController.isGoldColumn),
+														 Define.Instance.getSetData("isGoldColumn").Value.z),
+											 Define.Instance.getSetData("isGoldColumn").UIName));
+            bodyDataList.Add(new DataInfo("isFrieze",
+											 new Vector3(Define.Instance.getSetData("isFrieze").Value.x, 
+														 Convert.ToInt32(nowFloor.bodyController.isFrieze),
+														 Define.Instance.getSetData("isFrieze").Value.z),
+											 Define.Instance.getSetData("isFrieze").UIName));
+            bodyDataList.Add(new DataInfo("isBalustrade",
+											 new Vector3(Define.Instance.getSetData("isBalustrade").Value.x,
+														 Convert.ToInt32(nowFloor.bodyController.isBalustrade),
+														 Define.Instance.getSetData("isBalustrade").Value.z),
+											 Define.Instance.getSetData("isBalustrade").UIName));
+			#endregion
+			#region ROOF_PARAMETER 
             roofDataList.Add(new DataInfo("allJijaHeight",
-                                           new Vector3(8, nowFloor.roofController.allJijaHeight, 18)));
+										   new Vector3(Define.Instance.getSetData("allJijaHeight").Value.x, 
+													   nowFloor.roofController.allJijaHeight,
+													   Define.Instance.getSetData("allJijaHeight").Value.z),
+										   Define.Instance.getSetData("allJijaHeight").UIName));
             roofDataList.Add(new DataInfo("mainRidgeHeightOffset",
-                                           new Vector3(-3, nowFloor.roofController.mainRidgeHeightOffset, 3)));
+										   new Vector3(Define.Instance.getSetData("mainRidgeHeightOffset").Value.x, 
+													   nowFloor.roofController.mainRidgeHeightOffset,
+													   Define.Instance.getSetData("mainRidgeHeightOffset").Value.z),
+										  Define.Instance.getSetData("mainRidgeHeightOffset").UIName));
             roofDataList.Add(new DataInfo("flyEaveHeightOffset",
-                                           new Vector3(-3, nowFloor.roofController.flyEaveHeightOffset, 3))); 
+										   new Vector3(Define.Instance.getSetData("flyEaveHeightOffset").Value.x,
+													   nowFloor.roofController.flyEaveHeightOffset,
+													   Define.Instance.getSetData("flyEaveHeightOffset").Value.z),
+											Define.Instance.getSetData("flyEaveHeightOffset").UIName)); 
             roofDataList.Add(new DataInfo("eaveCurveHeightOffset",
-                                           new Vector3(-3, nowFloor.roofController.eaveCurveHeightOffset, 1)));
+										   new Vector3(Define.Instance.getSetData("eaveCurveHeightOffset").Value.x, 
+													   nowFloor.roofController.eaveCurveHeightOffset,
+													   Define.Instance.getSetData("eaveCurveHeightOffset").Value.z),
+											Define.Instance.getSetData("eaveCurveHeightOffset").UIName));
             roofDataList.Add(new DataInfo("roofSurfaceHeightOffset",
-                                           new Vector3(-2, nowFloor.roofController.roofSurfaceHeightOffset, 2)));
-
-            dicData.Add(Define.PlatformDataList, platDataList);
+										   new Vector3(Define.Instance.getSetData("roofSurfaceHeightOffset").Value.x, 
+													   nowFloor.roofController.roofSurfaceHeightOffset,
+													   Define.Instance.getSetData("roofSurfaceHeightOffset").Value.z),
+											Define.Instance.getSetData("roofSurfaceHeightOffset").UIName));
+			#endregion
+			dicData.Add(Define.PlatformDataList, platDataList);
             dicData.Add(Define.BodyDataList, bodyDataList);
             dicData.Add(Define.RoofDataList, roofDataList);
             DataList.Add(dicData);
         }
         return DataList;
     }
-
     /**
      * 將資料陣列轉換成建築資訊
      */
@@ -239,8 +309,17 @@ public class DataCenter : Singleton<DataCenter> {
         //FieldInfo[] tFields = objType.GetFields();
         //print("platWidth : " + objType.GetField("platHeight").GetValue(this));
     }
+	//
+	public void BuildingDataToMenu(List<BuildingObj> Buildings,int floorIndex) 
+	{
+		List<Dictionary<string, List<DataInfo>>> DataList = BuildingDataToArrayMethod3(Buildings);
+		Debug.Log("UpdateArrayDataToBuildingData");
+		Dictionary<string, List<DataInfo>> Data = DataList[floorIndex];
+		MainMenuController.Instance.plamformHandler.UpdateMenuInfo(Data);
+		MainMenuController.Instance.bodyMenuHandler.UpdateMenuInfo(Data);
+		MainMenuController.Instance.roofMenuHandler.UpdateMenuInfo(Data);
 
-
+	}
     /**
      * 將初步得到的檔案資料化為建築資料
      * 目前讀出來初步化簡的格式為 List<object>

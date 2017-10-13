@@ -67,16 +67,17 @@ public class RoofController : MonoBehaviour
 	//Parameter**********************************************************************************
 	
 
-	public float flyEaveHeightOffset = 1.0f;        //飛簷上翹程度
+	public float flyEaveHeightOffset;        //飛簷上翹程度
 	public float mainRidgeHeightOffset;             //主脊曲線上翹程度
-	public float roofSurfaceHeightOffset = -1.0f;   //屋面曲線上翹程度
-	public float eaveCurveHeightOffset = -3f;       //屋簷高度
+	public float roofSurfaceHeightOffset;   //屋面曲線上翹程度
+	public float eaveCurveHeightOffset;       //屋簷高度
 	public float roofSurfaceTileWidth = 1.0f;       //屋面瓦片長度
 	public float roofSurfaceTileHeight = 0.95f;     //屋面瓦片高度
 	public float mainRidgeTileHeight = 0.3f;        //主脊瓦片高度
 
 	public float flyRafterWidth = 0.3f;
 	public float flyRafterHeight = 0.3f;
+	public List<Vector3> topFloorBorderList;
 	//公式變數*************************************************************************************
 	float anchorDis = 0f;//曲線innerPoint換算anchorPoint間距
 
@@ -87,7 +88,7 @@ public class RoofController : MonoBehaviour
 	 * 屋頂初始化
 	 * parentObj : BuildingObj物件 ， columnTopPosList : 柱子位置列表 ，  topFloorBorderList : 上一層邊緣點列表
 	 * platformWidth : 基底寬 ， columnHeight : 柱高 ， mainRidgeHeightOffset : 主脊高
-	 * allJijaHeight : 舉架高 (用來定義roofTopCenter) ， isDownFloor : 有沒有下一層樓 ， roofType : 屋頂類別
+	 * allJijaHeight : 舉架高 (用來定義roofTopCenter)  ， roofType : 屋頂類別
 	 */
 	public void InitFunction(BuildingObj parentObj, List<Vector3> columnTopPosList, List<Vector3> topFloorBorderList, float platformWidth, float columnHeight, float mainRidgeHeightOffset, float allJijaHeight, int roofType)
 	{
@@ -95,6 +96,7 @@ public class RoofController : MonoBehaviour
 		this.parentObj = parentObj;
 		this.allJijaHeight = allJijaHeight;
 		this.mainRidgeHeightOffset = mainRidgeHeightOffset;
+		this.topFloorBorderList=topFloorBorderList;
 		SetRoofType(roofType);
 		eave2eaveColumnOffset = columnHeight * 0.4f;
 		eave2FlyEaveOffset = columnHeight * 0.6f;
@@ -1935,8 +1937,8 @@ public class RoofController : MonoBehaviour
 						{
 							Vector3 p0 = RidgeTopPos;
 							Vector3 p1 = p0;
-							Vector3 p2 = (p0 + Vector3.Normalize(new Vector3(p0.x - parentObj.roofTopCenter.x, 0, p0.z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset/2.0f) - MainController.Instance.initAllJijaHeight_DownStair * Vector3.up;
-							Vector3 p3 = (p2 + eave2eaveColumnOffsetVector / 2.0f);
+							Vector3 p2 = (p0 + Vector3.Normalize(new Vector3(p0.x - parentObj.roofTopCenter.x, 0, p0.z - parentObj.roofTopCenter.z)) * eave2eaveColumnOffset/2.0f) -( Define.initJijaHeight*0.1f) * Vector3.up;
+							Vector3 p3 = (p2 + eave2eaveColumnOffsetVector/2.0f);
 							p2 += mainRidgeHeightOffset * Vector3.up;
 							ctrlPointList.Add(p0);
 							ctrlPointList.Add(p1);

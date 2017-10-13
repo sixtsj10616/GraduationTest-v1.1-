@@ -115,16 +115,28 @@ namespace UnityEngine.UI.Extensions
 			}
 			btnList.Clear();
 			List<Vector3> offsetPosList=new List<Vector3>();
-			//選擇屋頂狀態的icon
+			//選擇不同建築的icon
 			GameObject newSelectBtn = Instantiate(Resources.Load("UI/IconButton")) as GameObject;
 			newSelectBtn.transform.position = transform.position;
 			newSelectBtn.transform.SetParent(this.gameObject.transform);
 			selectBtn=newSelectBtn;
-			UnityEngine.Events.UnityAction actionSelect = () => { MainController.Instance.SelectBuilding(id); };
-			newSelectBtn.GetComponent<Button>().onClick.RemoveAllListeners();
-			newSelectBtn.GetComponent<Button>().onClick.AddListener(
-				actionSelect
+			//更換建築時 強制設定選擇的樓層為0
+			int selectBuildingFloorIndex=0;
 
+			UnityEngine.Events.UnityAction actionSelectA = () => { MainController.Instance.SelectFloor(selectBuildingFloorIndex); };
+			UnityEngine.Events.UnityAction actionSelectB = () => { MainController.Instance.SelectBuilding(id); };
+
+			UnityEngine.Events.UnityAction actionSelectC = () => { DataCenter.Instance.BuildingDataToMenu(MainController.Instance.AllBuildings[id], selectBuildingFloorIndex); };
+			newSelectBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+	
+			newSelectBtn.GetComponent<Button>().onClick.AddListener(
+				actionSelectA
+			);
+			newSelectBtn.GetComponent<Button>().onClick.AddListener(
+				actionSelectB
+			);
+			newSelectBtn.GetComponent<Button>().onClick.AddListener(
+				actionSelectC
 			);
 			//Icon周圍邊對齊與脊對齊的button
 			for (int i = 0; i < VerticesPos.Count - 1; i++)

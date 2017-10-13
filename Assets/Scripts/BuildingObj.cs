@@ -63,6 +63,7 @@ public class BuildingObj : MonoBehaviour {
 
 		platform = new GameObject("platform");
 		platform.transform.parent = this.building.transform;
+		platform.transform.position = platformCenter;
 
 		body = new GameObject("body");
 		body.transform.parent = this.building.transform;
@@ -85,7 +86,7 @@ public class BuildingObj : MonoBehaviour {
 //         }
 //         else
 //         {
-			platformController.InitFunction(this, platformCenter, platWidth, platLength, platHeight, isStair, rotateAngle);
+		platformController.InitFunction(platform,platformCenter, entraneIndexList,platWidth, platLength, platHeight, isStair, rotateAngle);
             bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
 			roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, roofType);
        // }
@@ -98,7 +99,11 @@ public class BuildingObj : MonoBehaviour {
      */
 	public void ResetRoofFunction(float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList, int roofType)
 	{
-		if (roof!=null) Destroy(roof);
+		if (roof != null)
+		{
+			Destroy(roof);
+			roof = null;
+		} 
 		roof = new GameObject("roof");
 		roof.transform.parent = this.building.transform;
 
@@ -129,16 +134,19 @@ public class BuildingObj : MonoBehaviour {
      */
     public void ResetBodyFunction()
     {
-        if (body != null)
-        {
+		if (body != null)
+		{
+			Destroy(body);
+			body = null;
+		} 
             Destroy(body);
             body = new GameObject("body");
             body.transform.parent = this.building.transform;
-
+			Debug.Log("ResetBodyFunction");
             //bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, ColumnHeight, ColumnHeight);
             bodyController.ResetWithSimpleInfo(this, this.platformController.platHeight);
             buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
-        }
+       
     }
     public void AdjustBodyWidth(float width)
     {
@@ -168,13 +176,11 @@ public class BuildingObj : MonoBehaviour {
         //** 重算金柱位置
         if (isReCalculate)
         {
-			Debug.Log("ReCalculateGoldColumn");
             bodyController.goldColumnPosList = bodyController.CalculateGoldColumnPos(bodyController.origBotPosList, entraneIndexList.List, bodyCenter);
         }
         //** 重建金柱
         if (isCreate)
         {
-			Debug.Log("CreateGoldColumn");
             bodyController.goldColumnList = bodyController.CreateRingColumn(this.body, bodyController.goldColumnPosList,
                                                                             bodyController.goldColumnRadius, bodyController.goldColumnRadius,
                                                                             bodyController.goldColumnHeight, bodyController.goldColumnRadius * 1.2f,
@@ -265,7 +271,7 @@ public class BuildingObj : MonoBehaviour {
 		platform = new GameObject("platform");
 		platform.transform.parent = this.building.transform;
 
-		platformController.InitFunction(this, platformCenter, platWidth, platLength, platHeight, isStair);
+		platformController.InitFunction(platform,platformCenter,entraneIndexList, platWidth, platLength, platHeight, isStair);
 		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
 	}
     /**
@@ -296,12 +302,11 @@ public class BuildingObj : MonoBehaviour {
         bodyController.MoveValueUpdate(offset);
     }
     /**
-     * 移動屋身與修改原有資訊
+     * 移動屋身與修改原有資訊 於組合亭時會刪除屋身會有錯誤
      */
     public void MoveBuildingBody(Vector3 offset)
     {
-        print("offset : "+offset);
-        this.body.transform.position += offset;       
+		if (body) this.body.transform.position += offset;       
         bodyCenter += offset;
         bodyController.MoveValueUpdate(offset);
     }
@@ -310,8 +315,7 @@ public class BuildingObj : MonoBehaviour {
      */
     public void MoveBuildingRoof(Vector3 offset)
     {
-        this.roof.transform.position += offset;
+		if (roof) this.roof.transform.position += offset;
         roofTopCenter += offset;
-        //bodyController.MoveValueUpdate(offset);
     }
 }
