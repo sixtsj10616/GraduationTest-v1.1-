@@ -57,6 +57,5 @@ public class CTMenuVC : Singleton<CTMenuVC>
 		Vector3 posInWorld = (new Vector3(pos.x - IconList[0].transform.position.x, 0, pos.y - IconList[0].transform.position.y)) * scale + MainController.Instance.buildingCenter;
 		MainController.Instance.AddBuilding(posInWorld, (-uIPolygon.rotation + initModelRotateAngle+360) % 360);
 		MainController.Instance.SelectBuilding(uIPolygon.id);
-		DataCenter.Instance.BuildingDataToMenu(MainController.Instance.AllBuildings[MainController.Instance.selectBuildingsIndex], MainController.Instance.selectFloor);
 	}
 }

@@ -17,17 +17,6 @@ public class MeshCenter : Singleton<MeshCenter>
 	 */
 	public Vector3 ProjectPointLine(Vector3 point, Vector3 lineStart, Vector3 dir)
 	{
-		/*
-				Vector3 rhs = point - lineStart;
-				Vector3 vector2 = dir;
-				float magnitude = vector2.magnitude;
-				Vector3 lhs = vector2;
-				if (magnitude > 1E-06f)
-				{
-					lhs = (Vector3)(lhs / magnitude);
-				}
-				float num2 = Mathf.Clamp(Vector3.Dot(lhs, rhs), 0f, magnitude);
-				return (lineStart + ((Vector3)(lhs * num2)));*/
 		return Vector3.Project((point - lineStart), dir) + lineStart;
 	}
 	/**

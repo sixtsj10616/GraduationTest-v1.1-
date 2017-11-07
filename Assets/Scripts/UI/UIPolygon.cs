@@ -19,7 +19,7 @@ namespace UnityEngine.UI.Extensions
 		[Range(0, 1)]
 		public float[] VerticesDistances = new float[3];
 
-		GameObject selectBtn;
+		public Button selectBtn=null;
 		public List<Vector2> VerticesPos = new List<Vector2>();
 		public List<GameObject> btnList=new List<GameObject>();
 		public List<int> btnDisableIndexList = new List<int>();
@@ -111,15 +111,18 @@ namespace UnityEngine.UI.Extensions
 			for (int i = 0; i < btnList.Count; i++)
 			{
 				btnList[i].GetComponent<Button>().onClick.RemoveAllListeners();
-				Destroy(btnList[i].gameObject);
+				Destroy(btnList[i].gameObject);	
 			}
 			btnList.Clear();
+			if (selectBtn) { Destroy(selectBtn.gameObject); selectBtn = null; }
+
 			List<Vector3> offsetPosList=new List<Vector3>();
 			//選擇不同建築的icon
 			GameObject newSelectBtn = Instantiate(Resources.Load("UI/IconButton")) as GameObject;
+			newSelectBtn.name="Seletbtn";
 			newSelectBtn.transform.position = transform.position;
 			newSelectBtn.transform.SetParent(this.gameObject.transform);
-			selectBtn=newSelectBtn;
+			selectBtn=newSelectBtn.GetComponent<Button>();
 			//更換建築時 強制設定選擇的樓層為0
 			int selectBuildingFloorIndex=0;
 

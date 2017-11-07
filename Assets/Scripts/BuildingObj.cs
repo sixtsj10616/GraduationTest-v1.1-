@@ -35,7 +35,7 @@ public class EntraneIndexList
 public class BuildingObj : MonoBehaviour {
 
     public GameObject building;
-   
+
     public PlatformController platformController;
     public BodyController bodyController;
     public RoofController roofController;
@@ -51,20 +51,23 @@ public class BuildingObj : MonoBehaviour {
 	public EntraneIndexList entraneIndexList = new EntraneIndexList();
 
 	public float rotateAngle;
+	public MainController.FormFactorSideType sides;
     /**
      * 初始化
      */
-	public void InitFunction(GameObject building, Vector3 position, float platLength, float platWidth, float platHeight, float eaveColumnHeight, float goldColumnHeight, float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList,int roofType, bool isStair,float rotateAngle=0)
+	public void InitFunction(GameObject building, Vector3 position, MainController.FormFactorSideType sides, float platLength, float platWidth, float platHeight, float eaveColumnHeight, float goldColumnHeight, float mainRidgeHeightOffset, float allJijaHeight, List<Vector3> topFloorBorderList, int roofType, bool isStair, float rotateAngle = 0)
 	{
 		this.building=building;
 		this.building.transform.parent = building.transform;
 		this.rotateAngle=rotateAngle;
-		platformCenter=position;
+		this.sides=sides;
 
+		platformCenter = position;
 		platform = new GameObject("platform");
 		platform.transform.parent = this.building.transform;
 		platform.transform.position = platformCenter;
 
+		bodyCenter = platformCenter + (platHeight / 2.0f + eaveColumnHeight / 2.0f) * Vector3.up;
 		body = new GameObject("body");
 		body.transform.parent = this.building.transform;
 
@@ -78,18 +81,11 @@ public class BuildingObj : MonoBehaviour {
 		//入口位置
 		//entraneIndexList.SetEntranceIndex(0);
 
-//         if (MainController.Instance.buildingType == MainController.BuildingType.CombinTing)
-//         {
-// 			platformController.InitFunction(this, platformCenter, platWidth, platLength, platHeight, isStair, rotateAngle);
-// 			bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
-// 			roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, roofType);
-//         }
-//         else
-//         {
-		platformController.InitFunction(platform,platformCenter, entraneIndexList,platWidth, platLength, platHeight, isStair, rotateAngle);
-            bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, eaveColumnHeight, goldColumnHeight);
-			roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, roofType);
-       // }
+
+		platformController.InitFunction(this,platWidth, platLength, platHeight, isStair, rotateAngle);
+        bodyController.InitFunction(this,eaveColumnHeight, goldColumnHeight);
+		roofController.InitFunction(this, bodyController.GetColumnStructTopPosList(bodyController.eaveCornerColumnList), topFloorBorderList, platWidth, eaveColumnHeight, mainRidgeHeightOffset, allJijaHeight, roofType);
+
 		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
 
 	}
@@ -139,12 +135,10 @@ public class BuildingObj : MonoBehaviour {
 			Destroy(body);
 			body = null;
 		} 
-            Destroy(body);
             body = new GameObject("body");
             body.transform.parent = this.building.transform;
-			Debug.Log("ResetBodyFunction");
-            //bodyController.InitFunction(this, platformController.platFormStruct.topPointPosList, platWidth, platHeight, ColumnHeight, ColumnHeight);
-            bodyController.ResetWithSimpleInfo(this, this.platformController.platHeight);
+			bodyCenter = platformCenter + (platformController.platHeight / 2.0f + bodyController.eaveColumnHeight / 2.0f) * Vector3.up;
+			bodyController.InitFunction(this, bodyController.eaveColumnHeight, bodyController.goldColumnHeight);
             buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
        
     }
@@ -152,39 +146,51 @@ public class BuildingObj : MonoBehaviour {
     {
         if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
         {
-            float orgiWidth = (bodyController.origBotPosList[0] - bodyController.origBotPosList[1]).magnitude;
+			float orgiWidth = (bodyController.eaveCornerColumnList[0].bottomPos - bodyController.eaveCornerColumnList[1].bottomPos).magnitude;
             float WidthOffset = (width - orgiWidth)/2 ;
-            bodyController.UpdateOrigBottonPos(WidthOffset, 0);
+			bodyController.UpdateOrigBottomPos(WidthOffset, 0);
         }
     }
     public void AdjustBodyLength(float length)
     {
         if (MainController.Instance.sides == MainController.FormFactorSideType.FourSide)
         {
-            float orgiLength = (bodyController.origBotPosList[0] - bodyController.origBotPosList[3]).magnitude;
+			float orgiLength = (bodyController.eaveCornerColumnList[0].bottomPos - bodyController.eaveCornerColumnList[3].bottomPos).magnitude;
             float LengthOffset = (length - orgiLength )/2;
-            bodyController.UpdateOrigBottonPos(0, LengthOffset);
+			bodyController.UpdateOrigBottomPos(0, LengthOffset);
         }
     }
     /**
      * 重設金柱
-     * 1.isCreate : 是否重建金柱 2.isReCalculate : 是否重算金柱位置
+     * 1.isCreate : 是否重建金柱
      */
-    public void ResetGoldColumn(bool isCreate,bool isReCalculate)
+    public void ResetGoldColumn(bool isCreate)
     {
         bodyController.isGoldColumn = isCreate;
-        //** 重算金柱位置
-        if (isReCalculate)
-        {
-            bodyController.goldColumnPosList = bodyController.CalculateGoldColumnPos(bodyController.origBotPosList, entraneIndexList.List, bodyCenter);
-        }
         //** 重建金柱
         if (isCreate)
         {
-            bodyController.goldColumnList = bodyController.CreateRingColumn(this.body, bodyController.goldColumnPosList,
+			List<Vector3> goldColumnPosList;
+			if (sides == MainController.FormFactorSideType.FourSide)
+			{
+				goldColumnPosList = bodyController.CalculateColumnPos(bodyController.bodyLength * 0.9f, bodyController.bodyWidth * 0.9f, bodyController.goldColumnHeight, bodyController.goldColumnbayNumber, bodyCenter);
+				
+			}
+			else
+			{
+				goldColumnPosList = bodyController.CalculateColumnPos(bodyController.GetColumnStructBottomPosList(bodyController.goldCornerColumnList), bodyController.bodyWidth * 0.9f, bodyController.goldColumnHeight, bodyController.goldColumnbayNumber, bodyCenter);
+			}
+			bodyController.goldColumnList = bodyController.CreateRingColumn(this.body, goldColumnPosList,
                                                                             bodyController.goldColumnRadius, bodyController.goldColumnRadius,
                                                                             bodyController.goldColumnHeight, bodyController.goldColumnRadius * 1.2f,
                                                                             bodyController.columnFundationHeight, "GoldColumn");
+			bodyController.goldCornerColumnList.Clear();
+			if (bodyController.goldColumnbayNumber <= 0) bodyController.goldColumnbayNumber = 1;
+			for (int i = 0, count = 0; i < (int)sides; i++)
+			{
+				bodyController.goldCornerColumnList.Add(bodyController.goldColumnList[count]);
+				count += bodyController.goldColumnbayNumber;
+			}
         }
         else
         {
@@ -218,7 +224,8 @@ public class BuildingObj : MonoBehaviour {
         }
         bodyController.windowObjList.Clear();
         bodyController.doorObjList.Clear();
-		bodyController.CreateRingWall(ModelController.Instance.goldColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.goldColumnList), bodyController.goldColumnRadius, bodyController.unitNumberInBay, bodyController.goldColumnbayNumber, bodyController.doorNumber);
+
+		bodyController.CreateRingWall(body, ModelController.Instance.goldColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.goldColumnList), bodyController.goldColumnRadius, bodyController.unitNumberInBay, bodyController.goldColumnbayNumber, bodyController.doorNumber);
     }
     /**
      * 重設門楣
@@ -228,7 +235,7 @@ public class BuildingObj : MonoBehaviour {
         bodyController.isFrieze = isCreate;
         if (isCreate)
         {
-            bodyController.CreateRingFrieze(ModelController.Instance.eaveColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.eaveColumnList), 
+            bodyController.CreateRingFrieze(body,ModelController.Instance.eaveColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.eaveColumnList), 
                                             bodyController.eaveColumnRadius, 0.7f * bodyController.eaveColumnHeight);
         }
         else
@@ -248,7 +255,7 @@ public class BuildingObj : MonoBehaviour {
         bodyController.isBalustrade = isCreate;
         if (isCreate)
         {
-            bodyController.CreateRingBalustrade(ModelController.Instance.eaveColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.eaveColumnList),
+			bodyController.CreateRingBalustrade(body, (int)sides, entraneIndexList, ModelController.Instance.eaveColumnModelStruct, bodyController.GetColumnStructBottomPosList(bodyController.eaveColumnList),
                                                 bodyController.eaveColumnRadius, 0.1f * bodyController.eaveColumnHeight);
         }
         else
@@ -271,7 +278,7 @@ public class BuildingObj : MonoBehaviour {
 		platform = new GameObject("platform");
 		platform.transform.parent = this.building.transform;
 
-		platformController.InitFunction(platform,platformCenter,entraneIndexList, platWidth, platLength, platHeight, isStair);
+		platformController.InitFunction(this, platWidth, platLength, platHeight, isStair);
 		buildingHeight = Vector3.Distance(roofTopCenter, platformCenter) + platformController.platHeight / 2.0f;
 	}
     /**

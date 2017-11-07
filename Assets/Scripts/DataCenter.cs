@@ -168,12 +168,6 @@ public class DataCenter : Singleton<DataCenter> {
             //                                new Vector3(0, nowFloor.bodyController.eaveColumnRadius, 10)));
             //bodyDataList.Add(new DataInfo("goldColumnRadius",
             //                                new Vector3(0, nowFloor.bodyController.goldColumnRadius, 10)));
-           
-		    bodyDataList.Add(new DataInfo("eaveColOffset",
-											new Vector3(Define.Instance.getSetData("eaveColOffset").Value.x, 
-														nowFloor.bodyController.eaveColOffset,
-														Define.Instance.getSetData("eaveColOffset").Value.z),
-											Define.Instance.getSetData("eaveColOffset").UIName));
 
             bodyDataList.Add(new DataInfo("eaveColRadInflate",
 											new Vector3(Define.Instance.getSetData("eaveColRadInflate").Value.x, 
@@ -299,15 +293,7 @@ public class DataCenter : Singleton<DataCenter> {
                     print("Error :" + roofDataList[i].Name + " have problem");
                 }
             }
-
-
         }
-
-        //Type objType = this.GetType();
-        //objType.GetField("platHeight").SetValue(this, 10);
-        //PropertyInfo[] properties = objType.GetProperties();
-        //FieldInfo[] tFields = objType.GetFields();
-        //print("platWidth : " + objType.GetField("platHeight").GetValue(this));
     }
 	//
 	public void BuildingDataToMenu(List<BuildingObj> Buildings,int floorIndex) 
@@ -363,54 +349,4 @@ public class DataCenter : Singleton<DataCenter> {
 		PlistCS.Plist.writeXml(dicFile, fileName);
 		//CheckDictionary((Dictionary<string, object>)Plist.readPlist(targetXmlPath));
 	}
-
-
-	public class JsonCreator
-	{
-		public void SetJson(BuildingObj buildingObj)
-		{
-			Wrapper wrapper = new Wrapper(buildingObj);
-			string json2 = JsonUtility.ToJson(wrapper);
-			StreamWriter fileWrite = new StreamWriter(Application.dataPath + "/Resources/myPlayer.json");
-			fileWrite.Write(json2);
-			fileWrite.Close();
-		}
-		[Serializable]
-		public class TestA
-		{
-			Wrapper[] testAInfoArray;
-			public TestA(List<BuildingObj> buildingObjList) 
-			{
-				List<Wrapper> testAInfo = new List<Wrapper>();
-				for(int i=0;i<buildingObjList.Count;i++)
-				{
-					Wrapper newTestB = new Wrapper(buildingObjList[i]);
-					testAInfo.Add(newTestB);
-				}
-				testAInfoArray = testAInfo.ToArray();
-			}
-		}
-		[Serializable]
-		public class Wrapper
-		{
-			public List<Vector3>array;
-			public Dictionary<string, object> dicArray = new Dictionary<string, object>();
-			public List<List<Vector3>> listttt =new List<List<Vector3>>();
-			public Wrapper(BuildingObj buildingObj)
-			{
-				array = buildingObj.GetComponent<BodyController>().eaveColumnPosList;
-				dicArray.Add("zzz", array);
-				for(int i=0;i<3;i++)
-				{
-					List<Vector3> listZZZ=new List<Vector3>();
-					listZZZ = new List<Vector3>(buildingObj.GetComponent<BodyController>().eaveColumnPosList);
-					listttt.Add(listZZZ);
-				}
-			}
-			
-		}
-	}
-
-
-
 }
