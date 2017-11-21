@@ -7,12 +7,17 @@ public class CombinedInfo
 {
 	//List<>第幾號亭
 	//Dictionary<交第幾號亭,List<交哪幾號點>>
-	public Dictionary<int, List<int>> Info;
+	public Dictionary<int, List<int>> Info=new Dictionary<int,List<int>>();
 	//累加可以尋訪的數量 一班來說當為亭的邊數時跳出ColListRecursive遞迴 但可能因為某個colIndex交其他兩亭增加(能被尋訪的次數增加)
 	public int count = 0;
+	public int init_Count = 0;
 	public int startCount = 0;
 	//紀錄所有柱子個別交了多少亭
-	public List<int> colStates;
+	public List<int> colStates=new List<int>();
+	public void CountInit()
+	{
+		count=init_Count;
+	}
 }
 public class CombineTing : MonoBehaviour
 {
@@ -151,13 +156,17 @@ public class CombineTing : MonoBehaviour
 		/**
 		 * 初始化基座
 		 */
-		public void InitFunction(CombineTing combineTing, List<Vector3> platTopPosList, float platformHeight, bool isStair)
+		public void InitFunction(CombineTing combineTing, List<Vector3> platTopPosList, float platformHeight, float platWidth)
 		{
+			this.platWidth = platWidth;
 			this.platHeight = platformHeight;
-			this.isStair = isStair;
 			stairHeight = platformHeight;
+			parentObj = combineTing.platform;
+			entraneIndexList = combineTing.entranceIndexList;
+			sides= (int)combineTing.sides;
 			//***********************************************************************
-			platFormStruct = CreatePlatform(combineTing.platform,platTopPosList);
+			platFormStruct = CreatePlatform(combineTing.platform, platTopPosList, -(platWidth - Define.initPlatWidth));
+
 			StartCreateBorder(isBorder);
 			StartCreateStair(isStair);
 
@@ -165,7 +174,7 @@ public class CombineTing : MonoBehaviour
 			/**
 	 * 製作基座
 	 */
-		private PlatFormStruct CreatePlatform(GameObject parent, List<Vector3> platTopPosList) 
+		private PlatFormStruct CreatePlatform(GameObject parent, List<Vector3> platTopPosList,float enlargeOffset=0) 
 		{
 			PlatFormStruct platFormStruct = new PlatFormStruct();
 
@@ -174,18 +183,134 @@ public class CombineTing : MonoBehaviour
 			MeshFilter meshFilter = platformBody.AddComponent<MeshFilter>();
 			MeshRenderer meshRenderer = platformBody.AddComponent<MeshRenderer>();
 			meshRenderer.material.color = Color.white;
+			//enlarge
+			List<Vector2> enlargePosV2List=new List<Vector2>();
+			List<Vector3> enlargePosV3List = new List<Vector3>();
+			for(int i=0;i<platTopPosList.Count;i++)
+			{
+				Vector2 newPos = new Vector2(platTopPosList[i].x, platTopPosList[i].z);
+				enlargePosV2List.Add(newPos);
+			}
+			enlargePosV2List = GetEnlargedPolygon(enlargePosV2List, enlargeOffset);
+			for (int i = 0; i < enlargePosV2List.Count; i++)
+			{
+				Vector3 newPos = new Vector3(enlargePosV2List[i].x, platTopPosList[i].y, enlargePosV2List[i].y);
+				enlargePosV3List.Add(newPos);
+			}
+			MeshCenter.Instance.CreateEarClippingMesh(enlargePosV3List, platHeight, meshFilter);
+			//計算底部與頂部位置
+			platFormStruct.bottomPointPosList.Clear();
+			platFormStruct.topPointPosList.Clear();
+
+			platFormStruct.topPointPosList=enlargePosV3List;
+			for (int i = 0; i < platFormStruct.topPointPosList.Count; i++)
+			{
+				Vector3 btmPos = platFormStruct.topPointPosList[i] - Vector3.up * platHeight;
+				platFormStruct.bottomPointPosList.Add(btmPos);
+			}
+			//計算facadeDir與stair位置
+			platFormStruct.facadeDir.Clear();
+			platFormStruct.stairPosList.Clear();
+			for (int index = 0; index < platFormStruct.topPointPosList.Count; index++)
+			{
+				Vector3 dir = Vector3.Cross(Vector3.up, platFormStruct.topPointPosList[(index + 1) % platFormStruct.topPointPosList.Count] - platFormStruct.topPointPosList[index]).normalized;
+
+				Vector3 stairPos = (platFormStruct.topPointPosList[index] + platFormStruct.topPointPosList[(index + 1) % platFormStruct.topPointPosList.Count]) / 2.0f;
+				stairPos.y = (platFormStruct.topPointPosList[index].y + platFormStruct.bottomPointPosList[index].y) / 2.0f;
+
+				platFormStruct.facadeDir.Add(dir);
+				platFormStruct.stairPosList.Add(stairPos);
+			}
+
 
 			return platFormStruct;
 
 		}
+		// Return points representing an enlarged polygon.
+		private List<Vector2> GetEnlargedPolygon( List<Vector2> old_points, float offset)
+		{
+			List<Vector2> enlarged_points = new List<Vector2>();
+			int num_points = old_points.Count;
+			for (int j = 0; j < num_points; j++)
+			{
+				// Find the new location for point j.
+				// Find the points before and after j.
+				int i = (j - 1);
+				if (i < 0) i += num_points;
+				int k = (j + 1) % num_points;
+
+				// Move the points by the offset.
+				Vector2 v1 = new Vector2(
+					old_points[j].x - old_points[i].x,
+					old_points[j].y - old_points[i].y);
+				v1.Normalize();
+				v1 *= offset;
+				Vector2 n1 = new Vector2(-v1.y, v1.x);
+
+				Vector2 pij1 = new Vector2(
+					(float)(old_points[i].x + n1.x),
+					(float)(old_points[i].y + n1.y));
+				Vector2 pij2 = new Vector2(
+					(float)(old_points[j].x + n1.x),
+					(float)(old_points[j].y + n1.y));
+
+				Vector2 v2 = new Vector2(
+					old_points[k].x - old_points[j].x,
+					old_points[k].y - old_points[j].y);
+				v2.Normalize();
+				v2 *= offset;
+				Vector2 n2 = new Vector2(-v2.y, v2.x);
+
+				Vector2 pjk1 = new Vector2(
+					(float)(old_points[j].x + n2.x),
+					(float)(old_points[j].y + n2.y));
+				Vector2 pjk2 = new Vector2(
+					(float)(old_points[k].x + n2.x),
+					(float)(old_points[k].y + n2.y));
+
+				// See where the shifted lines ij and jk intersect.
+				bool lines_intersect = false;
+				Vector2 poi=GetIntersectionPointCoordinates(pij1, pij2, pjk1, pjk2,
+					out lines_intersect);
+				if (lines_intersect) enlarged_points.Add(poi);
+			}
+
+			return enlarged_points;
+		}
+		public Vector2 GetIntersectionPointCoordinates(Vector2 A1, Vector2 A2, Vector2 B1, Vector2 B2, out bool found)
+		{
+			float tmp = (B2.x - B1.x) * (A2.y - A1.y) - (B2.y - B1.y) * (A2.x - A1.x);
+
+			if (tmp == 0)
+			{
+				// No solution!
+				found = false;
+				return Vector2.zero;
+			}
+
+			float mu = ((A1.x - B1.x) * (A2.y - A1.y) - (A1.y - B1.y) * (A2.x - A1.x)) / tmp;
+
+			found = true;
+
+			return new Vector2(
+				B1.x + (B2.x - B1.x) * mu,
+				B1.y + (B2.y - B1.y) * mu
+			);
+		}
+
+		private static bool same_sign(float a, float b)
+		{
+			return ((a * b) >= 0f);
+		}
+ 
 	}
 	public enum AlignType { EdgeAlign, RidgeAlign };
 	public AlignType alignType = AlignType.EdgeAlign;
 
 	public List<BuildingObj> BuildingsList = new List<BuildingObj>();
 	public BodyController4CT bodyController;
+	public PlatformController4CT platformController;
 	public List<CombinedInfo> combinedInfos = new List<CombinedInfo>();
-
 	public GameObject body;
 	public GameObject platform;
 	public void InitFunction(params BuildingObj[] buildingsList)
@@ -221,31 +346,81 @@ public class CombineTing : MonoBehaviour
 // 
 // 		}
 		//**************************************屋身*********************************************
+		InitBody();
+		//**************************************基座*********************************************
+		InitPlatform();
+		//**************************************屋面*********************************************
+		//切割交界的脊與屋面
+		CheckAllSurface();		
+	}
+	/**
+  * 移動屋身與修改原有資訊
+  */
+	public void MoveBuildingBody(Vector3 offset)
+	{
+		if (body) this.body.transform.position += offset;
+		bodyController.MoveValueUpdate(offset);
+	}
+	private void InitBody()
+	{
 		//** 調整組合亭中的柱子列表，再創造出柱子位置
-		List<Vector3> eaveColList = new List<Vector3>();
-		List<Vector3> goldColList = new List<Vector3>();
-		AdjustColPos(BuildingsList, ref eaveColList, ref goldColList);
+		List<List<Vector3>> allEaveColList = new List<List<Vector3>>();
+		for (int i = 0; i < BuildingsList.Count; i++)
+		{
+			List<Vector3> newPosList = BuildingsList[i].bodyController.GetColumnStructBottomPosList(BuildingsList[i].bodyController.eaveCornerColumnList);
+			allEaveColList.Add(newPosList);
+		}
+		List<List<Vector3>> allGoldColList = new List<List<Vector3>>();
+		for (int i = 0; i < BuildingsList.Count; i++)
+		{
+			List<Vector3> newPosList = BuildingsList[i].bodyController.GetColumnStructBottomPosList(BuildingsList[i].bodyController.goldCornerColumnList);
+			allGoldColList.Add(newPosList);
+		}
+		List<List<Vector3>> newColLists = new List<List<Vector3>>();
+		newColLists = AdjustColPos(BuildingsList, allEaveColList, allGoldColList);
 		body = new GameObject("body");
 		body.transform.parent = this.transform;
 		if (!bodyController) bodyController = this.gameObject.AddComponent<BodyController4CT>();
-		bodyController.InitFunction(this, eaveColList, goldColList, BuildingsList[0].bodyController.eaveColumnHeight);
+		bodyController.InitFunction(this, newColLists[0], newColLists[1], (bodyController.eaveColumnHeight == 0) ? BuildingsList[0].bodyController.eaveColumnHeight : bodyController.eaveColumnHeight);
 		sides = BuildingsList[0].sides;
 		//** 摧毀亭的body
 		for (int j = 0; j < BuildingsList.Count; j++)
 		{
 			Destroy(BuildingsList[j].body.gameObject);
 		}
-		//切割交界的脊與屋面
-		CheckAllSurface();		
 	}
-	public void UpdateFunction()
+	private void InitPlatform() 
+	{
+		platform = new GameObject("platform");
+		platform.transform.parent = this.transform;
+		if (!platformController) 
+			platformController = this.gameObject.AddComponent<PlatformController4CT>();
+		if(bodyController.eaveCornerColumnList.Count>0)
+			platformController.InitFunction(this, bodyController.GetColumnStructBottomPosList(bodyController.eaveCornerColumnList), (platformController.platHeight == 0) ? BuildingsList[0].platformController.platHeight : platformController.platHeight, (platformController.platWidth == 0) ?
+			BuildingsList[0].platformController.platWidth : platformController.platWidth);
+		//** 摧毀亭的platform
+		for (int j = 0; j < BuildingsList.Count; j++)
+		{
+			Destroy(BuildingsList[j].platform.gameObject);
+		}
+	}
+	public void UpdateBodyFunction()
 	{
 		if (body != null) 
 		{
 			Destroy(body);
 			body=null;
 		}
-		InitFunction(BuildingsList.ToArray());
+		InitBody();
+	}
+	public void UpdatePlatformFunction()
+	{
+		if (platform != null)
+		{
+			Destroy(platform);
+			platform = null;
+		}
+		InitPlatform();
 	}
 	//此buildingIndex號亭中startColIndex是否是交界點
 	bool IsConnectCol(int buildingIndex, int startColIndex)
@@ -366,7 +541,10 @@ public class CombineTing : MonoBehaviour
 				}
 			}
 		}
-
+		for(int i=0;i<combinedInfos.Count;i++)
+		{
+			combinedInfos[i].init_Count = combinedInfos[i].count;
+		}
 		return combinedInfos;
 	}
 	/**
@@ -413,7 +591,7 @@ public class CombineTing : MonoBehaviour
 		}
 		return !(outPointCount2Point == newRTingColPos.Count) || !(outPointCount2Center == newRTingColPos.Count);
 	}
-	void ZZZ(ref List<Vector3> eaveColList, ref List<Vector3> goldColList, int fromBuildingIndex, int buildingIndex, int startColIndex, ref bool counterclockwise)
+	void ConnectionRecursive(ref List<Vector3> resultList, int fromBuildingIndex, int buildingIndex, int startColIndex, ref bool counterclockwise, List<List<Vector3>> AllposList)
 	{
 		//左右亭中心
 		Vector3 LTingCenter = BuildingsList[buildingIndex].platformCenter;
@@ -421,29 +599,16 @@ public class CombineTing : MonoBehaviour
 		//左右亭交界平面法向量與距離
 		Vector3 siftDir = new Vector3();
 		Plane midPlan = new Plane();
-		//調整的檐柱與金柱位置
-		Vector3 adjEavePos = Vector3.zero;
-		Vector3 adjGoldPos = Vector3.zero;
-		List<ColumnStruct> eaveCorColList = BuildingsList[buildingIndex].bodyController.eaveCornerColumnList;
-		//檐柱位置
-		List<Vector3> eaveColPosList = BuildingsList[buildingIndex].bodyController.GetColumnStructBottomPosList(eaveCorColList);
-		//金柱位置
-		List<Vector3> golColPosList = BuildingsList[buildingIndex].bodyController.GetColumnStructBottomPosList(BuildingsList[buildingIndex].bodyController.goldCornerColumnList);
-
-
+		//調整的位置
+		Vector3 adjPos = Vector3.zero;
 		AlignType mode = AlignType.RidgeAlign;
-		//Debug.Log("buildingIndex" + buildingIndex + "	combinedInfos[buildingIndex].count" + combinedInfos[buildingIndex].count);
-		if (combinedInfos[buildingIndex].count < eaveCorColList.Count)
+
+		if (combinedInfos[buildingIndex].count < (int)BuildingsList[buildingIndex].sides)
 		{
 			combinedInfos[buildingIndex].count++;
 
-			//Debug.Log("buildingIndex" + buildingIndex + "startColIndex" + startColIndex);
-			//Debug.Log("colStates" + combinedInfos[buildingIndex].colStates[startColIndex]);
-			eaveColList.Add(BuildingsList[buildingIndex].bodyController.GetColumnStructBottomPosList(eaveCorColList)[startColIndex]);
-			if (BuildingsList[buildingIndex].bodyController.isGoldColumn)
-			{
-				goldColList.Add(BuildingsList[buildingIndex].bodyController.GetColumnStructBottomPosList(BuildingsList[buildingIndex].bodyController.goldCornerColumnList)[startColIndex]);
-			}
+			resultList.Add(AllposList[buildingIndex][startColIndex]);
+	
 			//檢查該buildingIndex的startColIndex是否是交界點
 			if (IsConnectCol(buildingIndex, startColIndex))
 			{
@@ -461,39 +626,32 @@ public class CombineTing : MonoBehaviour
 						//Debug.Log("mode " + mode);
 						#region AdjCol
 						//下一亭交buildingIndex的號碼
-						int nextTingIntersectionColIndexZ = FindOtherSideCloserIndex(buildingIndex, nextBuildingIndex, BuildingsList[buildingIndex].bodyController.GetColumnStructBottomPosList(eaveCorColList)[startColIndex]);
+						int nextTingIntersectionColIndexZ = FindOtherSideCloserIndex(buildingIndex, nextBuildingIndex, AllposList[buildingIndex][startColIndex], AllposList);
 						//Debug.Log("nextTingIntersectionColIndexZ " + nextTingIntersectionColIndexZ);
 						//Debug.Log("combinedInfos[buildingIndex].count " + combinedInfos[buildingIndex].count);
 						//counterclockwise 需要反向(從逆時針便順時針)
 						if (mode == AlignType.EdgeAlign && (combinedInfos[buildingIndex].count - combinedInfos[buildingIndex].startCount) == 1)
 							{
-								//Debug.Log("counterclockwise ZZZZ");
-								if (combinedInfos[nextBuildingIndex].Info[buildingIndex].Contains((nextTingIntersectionColIndexZ + 1) % BuildingsList[nextBuildingIndex].bodyController.eaveCornerColumnList.Count))
+								if (combinedInfos[nextBuildingIndex].Info[buildingIndex].Contains((nextTingIntersectionColIndexZ + 1) % (int)BuildingsList[nextBuildingIndex].sides))
 								{
 									counterclockwise = false;
 								}
 							}
 							//Debug.Log("counterclockwise " + counterclockwise);
-						//下一亭檐柱位置
-						List<Vector3> nextEaveColPosList = BuildingsList[nextBuildingIndex].bodyController.GetColumnStructBottomPosList(BuildingsList[nextBuildingIndex].bodyController.eaveCornerColumnList);
-						//下一亭金柱位置
-						List<Vector3> nextGolColPosList = BuildingsList[nextBuildingIndex].bodyController.GetColumnStructBottomPosList(BuildingsList[nextBuildingIndex].bodyController.goldCornerColumnList);
+						//下一亭位置
+						List<Vector3> nextEaveColPosList = AllposList[nextBuildingIndex];
 
 						//交界平面
 						RTingCenter = BuildingsList[nextBuildingIndex].platformCenter;
 						midPlan = new Plane((LTingCenter - RTingCenter).normalized, (LTingCenter + RTingCenter) / 2.0f);
-						siftDir = (counterclockwise) ? ((eaveColPosList[(startColIndex - 1 + eaveColPosList.Count) % eaveColPosList.Count] - eaveColPosList[startColIndex]).normalized) : ((eaveColPosList[(startColIndex + 1) % eaveColPosList.Count] - eaveColPosList[startColIndex]).normalized);
-			
-						int nextIntersectionStartIndex = (counterclockwise) ? (nextTingIntersectionColIndexZ + 1) % nextEaveColPosList.Count : (nextTingIntersectionColIndexZ - 1 + nextEaveColPosList.Count) % eaveCorColList.Count;
+						siftDir = (counterclockwise) ? ((AllposList[buildingIndex][(startColIndex - 1 + AllposList[buildingIndex].Count) % AllposList[buildingIndex].Count] - AllposList[buildingIndex][startColIndex]).normalized) : ((AllposList[buildingIndex][(startColIndex + 1) % AllposList[buildingIndex].Count] - AllposList[buildingIndex][startColIndex]).normalized);
+
+						int nextIntersectionStartIndex = (counterclockwise) ? (nextTingIntersectionColIndexZ + 1) % nextEaveColPosList.Count : (nextTingIntersectionColIndexZ - 1 + nextEaveColPosList.Count) % (int)BuildingsList[buildingIndex].sides;
 						//調整位置 非為長寬不同之矩形platform和正規多邊形
-						//調整檐柱
-						AdjColPos(ref adjEavePos, (int)MainController.Instance.sides, nextEaveColPosList[nextTingIntersectionColIndexZ], eaveColPosList[startColIndex], mode, midPlan, siftDir);
-						//調整金柱
-						AdjColPos(ref adjGoldPos, (int)MainController.Instance.sides, nextGolColPosList[nextTingIntersectionColIndexZ], golColPosList[startColIndex], mode, midPlan, siftDir);
+						AdjColPos(ref adjPos, (int)MainController.Instance.sides, nextEaveColPosList[nextTingIntersectionColIndexZ], AllposList[buildingIndex][startColIndex], mode, midPlan, siftDir);
 						#endregion
 
-						if (eaveColList.Count > 0) eaveColList[eaveColList.Count - 1] = adjEavePos;
-						if (goldColList.Count > 0) goldColList[goldColList.Count - 1] = adjGoldPos;
+						if (resultList.Count > 0) resultList[resultList.Count - 1] = adjPos;
 
 						combinedInfos[nextBuildingIndex].count++;
 						if (mode == AlignType.RidgeAlign)
@@ -523,14 +681,13 @@ public class CombineTing : MonoBehaviour
 								combinedInfos[nextBuildingIndex].count--;
 							}
 						}
-						ZZZ(ref eaveColList, ref goldColList, buildingIndex, nextBuildingIndex, nextIntersectionStartIndex, ref counterclockwise);
+						ConnectionRecursive(ref resultList, buildingIndex, nextBuildingIndex, nextIntersectionStartIndex, ref counterclockwise, AllposList);
 					}
 				}
 			}
-			int nextStartIndex = (counterclockwise) ? (startColIndex + 1) % eaveCorColList.Count : (startColIndex - 1 + eaveCorColList.Count) % eaveCorColList.Count;
-			ZZZ(ref eaveColList, ref goldColList, fromBuildingIndex, buildingIndex, nextStartIndex, ref counterclockwise);
+			int nextStartIndex = (counterclockwise) ? (startColIndex + 1) % (int)BuildingsList[buildingIndex].sides : (startColIndex - 1 + (int)BuildingsList[buildingIndex].sides) % (int)BuildingsList[buildingIndex].sides;
+			ConnectionRecursive(ref resultList, fromBuildingIndex, buildingIndex, nextStartIndex, ref counterclockwise, AllposList);
 		}
-
 	}
 	//計算調整後的檐柱與金柱位置
 	void AdjColPos(ref Vector3 adjPos, int sides, Vector3 nextColIntersectPos, Vector3 startColIntersectPos, AlignType mode, Plane midPlan, Vector3 siftDir)
@@ -560,9 +717,10 @@ public class CombineTing : MonoBehaviour
 		}
 	}
 	//** 於init創建並調整組合亭中的角柱列表，再創造出柱子位置(eaveColList與goldColList作為output)
-	public void AdjustColPos(List<BuildingObj> buildingsList, ref List<Vector3> eaveColList, ref List<Vector3> goldColList)
+	public List<List<Vector3>> AdjustColPos(List<BuildingObj> buildingsList, params List<List<Vector3>>[] allColList)
 	{
-		if (buildingsList.Count < 2) return;
+		List<List<Vector3>> resultList=new List<List<Vector3>>();
+		if (buildingsList.Count < 2) return null;
 		//起始編號
 		int startIndex = 0;
 		int buildingIndex = 0;
@@ -581,16 +739,22 @@ public class CombineTing : MonoBehaviour
 					}
 				}
 		}
-		//Debug.Log("buildingIndex " + buildingIndex + "startIndex " + startIndex);
-		bool counterclockwise = true;
-		//ColListRecursive(ref eaveColList, ref goldColList, 0, 0, startIndex);
-		ZZZ(ref eaveColList, ref goldColList, 0, buildingIndex, startIndex, ref counterclockwise);
-		if (counterclockwise == false)
+		for (int i = 0; i < allColList.Length; i++)
 		{
-			eaveColList.Reverse();
-			goldColList.Reverse();
+			bool counterclockwise = true;
+			 List<Vector3> colList=new List<Vector3>();
+			 ConnectionRecursive(ref colList, 0, buildingIndex, startIndex, ref counterclockwise, allColList[i]);
+			for (int j = 0; j < combinedInfos.Count; j++)
+			{
+				combinedInfos[j].CountInit();
+			}
+			if (counterclockwise == false)
+			{
+				colList.Reverse();
+			}
+			resultList.Add(colList);
 		}
-
+		return resultList;
 	}
 	//檢查亭與亭中交界點對應編號
 	//tingColPos中交界的編號(intersectionIndexList)與pos最近的idex
@@ -609,12 +773,12 @@ public class CombineTing : MonoBehaviour
 		}
 		return index;
 	}
-	int FindOtherSideCloserIndex(int buildingIndex, int nextBuildingIndex, Vector3 pos)
+	int FindOtherSideCloserIndex(int buildingIndex, int nextBuildingIndex, Vector3 pos, List<List<Vector3>> AllposList)
 	{
 		float RIntersectionMinDis = float.MaxValue;
 		int index = 0;
 		List<int> intersectionIndexList = combinedInfos[nextBuildingIndex].Info[buildingIndex];
-		List<Vector3> nextTingColPos = BuildingsList[nextBuildingIndex].bodyController.GetColumnStructBottomPosList(BuildingsList[nextBuildingIndex].bodyController.eaveCornerColumnList);
+		List<Vector3> nextTingColPos = AllposList[nextBuildingIndex];
 		for (int i = 0; i < intersectionIndexList.Count; i++)
 		{
 			float dis = Vector3.Distance(pos, nextTingColPos[intersectionIndexList[i]]);

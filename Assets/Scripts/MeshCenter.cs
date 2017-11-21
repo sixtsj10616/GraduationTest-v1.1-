@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class MeshCenter : Singleton<MeshCenter>
 {
-
 	/**
 	 * 點到線距離
 	 */
@@ -18,6 +17,84 @@ public class MeshCenter : Singleton<MeshCenter>
 	public Vector3 ProjectPointLine(Vector3 point, Vector3 lineStart, Vector3 dir)
 	{
 		return Vector3.Project((point - lineStart), dir) + lineStart;
+	}
+	/**
+	 * 建立自訂義的Mesh
+	 */
+	 public void CreateEarClippingMesh(List<Vector3> posList,float height, MeshFilter meshFilter)
+	{
+		Mesh mesh = new Mesh();
+		meshFilter.mesh = mesh;
+		mesh.Clear();
+
+		//EarClipping
+		EarClipperLib.EarClipping earClipping = new EarClipperLib.EarClipping();
+		List<EarClipperLib.Vector3m> points=new List<EarClipperLib.Vector3m>();
+		for(int i=0;i<posList.Count;i++)
+		{
+			EarClipperLib.Vector3m point = new EarClipperLib.Vector3m(posList[i].x, posList[i].y, posList[i].z);
+			points.Add(point);
+
+		}
+		earClipping.SetPoints(points);
+		earClipping.Triangulate();
+		var res = earClipping.Result;
+		res.Reverse();
+		int vert = 0;
+		#region Vertices
+		Vector3[] vertices = new Vector3[res.Count * 2 + 6 * posList.Count];
+		//Top cap
+		for (int i = 0; i < res.Count; i+=3)
+		{
+			vertices[vert++] = new Vector3(res[i].X, res[i].Y, res[i].Z);
+			vertices[vert++] = new Vector3(res[i+1].X, res[i+1].Y, res[i+1].Z);
+			vertices[vert++] = new Vector3(res[i+2].X, res[i+2].Y, res[i+2].Z);
+		}
+		//Buttom cap
+		for (int i = 0; i < res.Count; i += 3)
+		{
+			vertices[vert++] = new Vector3(res[i + 2].X, res[i + 2].Y, res[i + 2].Z) - Vector3.up * height;
+			vertices[vert++] = new Vector3(res[i + 1].X, res[i + 1].Y, res[i + 1].Z) - Vector3.up * height;
+			vertices[vert++] = new Vector3(res[i].X, res[i].Y, res[i].Z) - Vector3.up * height;
+		}// Sides
+		for (int i = 0; i < posList.Count; i++)
+		{
+			vertices[vert++] = posList[i];
+			vertices[vert++] = posList[(i + 1) % posList.Count];
+			vertices[vert++] = posList[i] - Vector3.up * height;
+	
+
+			vertices[vert++] = posList[i] - Vector3.up * height;
+			vertices[vert++] = posList[(i + 1) % posList.Count];
+			vertices[vert++] = posList[(i + 1) % posList.Count] - Vector3.up * height;
+
+		}
+		#endregion
+		#region Normales
+		Vector3[] normales = new Vector3[vertices.Length];
+		vert = 0;
+		for (int i = 0; i < normales.Length; i+=3)
+		{
+			Vector3 nor = Vector3.Cross(vertices[i + 1] - vertices[i], vertices[i + 2] - vertices[i]).normalized;
+			for(int j=0;j<3;j++)
+			{
+				normales[vert++] = nor;
+			}
+		}
+		#endregion
+		#region Triangles
+		int[] triangles = new int[vertices.Length];
+		vert = 0;
+		for (int i = 0; i < triangles.Length; i++)
+		{
+			triangles[vert++] = i;
+		}
+		#endregion
+		mesh.vertices = vertices;
+		mesh.normals = normales;
+		mesh.triangles = triangles;
+
+		mesh.RecalculateBounds();
 	}
 	/**
 	 * 建立長方體的Mesh

@@ -160,6 +160,7 @@ public class MainController : Singleton<MainController>
 							LTing.transform.parent = combinTing.transform;
 							buildingsList.AddRange(combineTingCtrl.BuildingsList);
 							Destroy(combineTingCtrl.body.gameObject);
+							Destroy(combineTingCtrl.platform.gameObject);
 						}
 						else
 						{
@@ -379,43 +380,40 @@ public class MainController : Singleton<MainController>
 	{
 		PlatformController platform = Buildings[selectFloor].platformController;
 		BuildingObj nowBuilding = Buildings[selectFloor];
-		float moveOffset;
 		CombineTing CT = nowBuilding.transform.GetComponentInParent<CombineTing>();
 		switch (slider.name)
 		{
 			case PlamformMenuHandler.WidthSlider_NAME:
 				if (CT)
 				{
-
+					CT.platformController.platWidth = slider.value;
+					CT.UpdatePlatformFunction();
 				}
 				else
 					nowBuilding.ResetPlatformFunction(platform.platLength, slider.value, platform.platHeight, platform.isStair);
 				break;
 			case PlamformMenuHandler.DepthSlider_NAME:
-				if (CT)
-				{
-
-				}
-				else
 					nowBuilding.ResetPlatformFunction(slider.value, platform.platWidth, platform.platHeight, platform.isStair);
 				break;
 			case PlamformMenuHandler.HeightSlider_NAME:
-				moveOffset = slider.value - nowBuilding.platformController.platHeight;
+			
 				if (CT)
 				{
+
+					float moveOffset = (slider.value - CT.platformController.platHeight) / 2;
+					CT.MoveBuildingBody(new Vector3(0, moveOffset, 0));
 					for (int i = 0; i < CT.BuildingsList.Count; i++)
 					{
-						CT.BuildingsList[i].MoveBuildingBody(new Vector3(0, moveOffset, 0));
 						CT.BuildingsList[i].MoveBuildingRoof(new Vector3(0, moveOffset, 0));
-						CT.BuildingsList[i].ResetPlatformFunction(platform.platLength, platform.platWidth, slider.value, platform.isStair);
 					}
-					CT.UpdateFunction();
+					CT.platformController.platHeight = slider.value;
+					CT.UpdatePlatformFunction();
 				}
 				else
 				{
+					float moveOffset = (slider.value - nowBuilding.platformController.platHeight)/2;
 					nowBuilding.MoveBuildingBody(new Vector3(0, moveOffset, 0));
 					nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
-					Debug.Log("HeightSlider_NAME.slider.value" + slider.value);
 					nowBuilding.ResetPlatformFunction(platform.platLength, platform.platWidth, slider.value, platform.isStair);
 				}
 				break;
@@ -445,6 +443,7 @@ public class MainController : Singleton<MainController>
 			case PlamformMenuHandler.StairToggle_NAME:
 				if (CT)
 				{
+					CT.platformController.StartCreateStair(toggle.isOn);
 				}
 				else
 					nowBuilding.platformController.StartCreateStair(toggle.isOn);
@@ -452,6 +451,7 @@ public class MainController : Singleton<MainController>
 			case PlamformMenuHandler.BorderToggle_NAME:
 				if (CT)
 				{
+					CT.platformController.StartCreateBorder(toggle.isOn);
 				}
 				else
 					nowBuilding.platformController.StartCreateBorder(toggle.isOn);
@@ -472,20 +472,21 @@ public class MainController : Singleton<MainController>
 		switch (slider.name)
 		{
 			case BodyMenuHandler.ColumeHeightSlider_NAME:
-				float moveOffset = slider.value - nowBuilding.bodyController.eaveColumnHeight;
+				
 				if (CT)
 				{
+					float moveOffset = slider.value - CT.bodyController.eaveColumnHeight;
 					for (int i = 0; i < CT.BuildingsList.Count; i++)
 					{
-						CT.BuildingsList[i].bodyController.eaveColumnHeight = slider.value;
-						CT.BuildingsList[i].bodyController.goldColumnHeight = slider.value;
 						CT.BuildingsList[i].MoveBuildingRoof(new Vector3(0, moveOffset, 0));
-						CT.BuildingsList[i].ResetBodyFunction();
 					}
-					CT.UpdateFunction();
+					CT.bodyController.eaveColumnHeight = slider.value;
+					CT.bodyController.goldColumnHeight = slider.value;
+					CT.UpdateBodyFunction();
 				}
 				else
 				{
+					float moveOffset = slider.value - nowBuilding.bodyController.eaveColumnHeight;
 					nowBuilding.bodyController.eaveColumnHeight = slider.value;
 					nowBuilding.bodyController.goldColumnHeight = slider.value;
 					nowBuilding.MoveBuildingRoof(new Vector3(0, moveOffset, 0));
@@ -496,7 +497,7 @@ public class MainController : Singleton<MainController>
 				if (CT)
 				{
 					CT.bodyController.goldColumnbayNumber = (int)slider.value;
-					CT.UpdateFunction();
+					CT.UpdateBodyFunction();
 				}
 				else
 				{
@@ -511,7 +512,7 @@ public class MainController : Singleton<MainController>
 				if (CT)
 				{
 					CT.bodyController.unitNumberInBay = (int)slider.value;
-					CT.UpdateFunction();
+					CT.UpdateBodyFunction();
 				}
 				else
 				{
@@ -524,7 +525,7 @@ public class MainController : Singleton<MainController>
 				if (CT)
 				{
 					CT.bodyController.doorNumber = (int)slider.value;
-					CT.UpdateFunction();
+					CT.UpdateBodyFunction();
 				}
 				else
 				{
@@ -536,7 +537,10 @@ public class MainController : Singleton<MainController>
 
 				if (CT)
 				{
-
+					nowBuilding.bodyController.bodyWidth = slider.value;
+					nowBuilding.ResetBodyFunction();
+					CT.UpdateBodyFunction();
+					CT.UpdatePlatformFunction();
 				}
 				else
 				{
@@ -548,7 +552,10 @@ public class MainController : Singleton<MainController>
 
 				if (CT)
 				{
-
+					nowBuilding.bodyController.bodyLength = slider.value;
+					nowBuilding.ResetBodyFunction();
+					CT.UpdateBodyFunction();
+					CT.UpdatePlatformFunction();
 				}
 				else
 				{

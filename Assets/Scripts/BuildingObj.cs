@@ -293,7 +293,7 @@ public class BuildingObj : MonoBehaviour {
         {
             Destroy(stairInfo.stairList[iIndex]);
         }
-        stairInfo.stairList = this.platformController.CreateRingStair(this.platform, stairInfo.borderColumnList, stairInfo.stairPosList, stairInfo.facadeDir, this.platformController.stairHeight, StairLength,StairWidth);
+		stairInfo.stairList = this.platformController.CreateRingStair(this.platform, stairInfo.borderColumnList, stairInfo.stairPosList, stairInfo.facadeDir, this.platformController.stairHeight, this.platformController.stairLength);
     }
     /**
      * 移動整棟樓層與修改原有資訊
